@@ -33,9 +33,9 @@ sub initialize {
     my $self = shift;
     
     $self->{VTABLE} = {};
-    $self->{ITABLE} = [];
+    $self->{ITABLE} = [];	# list of initialization statements in Perl
     $self->{STABLE} = [];
-
+    
     $self->{VINDEX} = 0;
 }
 
@@ -50,20 +50,39 @@ sub DESTROY {
 # ===========================================================
 
 # add_init_stmt : Parse an initialization statement, and add it to the
-# model.
+# model.  These are run (as Perl code) before the model is started up,
+# to initialize variables.
 
 sub add_init_stmt {
 
     my ($self, %args) = @_;
     
-    my $stmt = $args{stmt};
-    
-    my @vars = $what =~ /\$(\w+)/gm;
-    
-    for my $name (@vars) 
+    if ($args{const})
     {
-	my $var = $self->recognize($name);
-	
+	$self->set_const($args{name});
+    }
+    
+    if (defined $args{expr})
+    {
+	push @ITABLE, "$name = $expr;\n";
+    }
+    
+}
 
+
+# add_step_stmt : Parse a step statement, and add it to the model.  
+
+sub add_step_stmt {
+
+    my ($self, %args) = @_;
     
+    my $source = $args{source};
+    my $sink = $args{sink};
+    my $flow = $args{flow};
+    my ($source_id, $sink_id);
     
+    given ($source)
+    {
+	where (/^\w+$/) {
+	    $source_id = $self->lookup_var($_);
+	    
