@@ -1,7 +1,0 @@
-init $POOL_A = 100
-init const $RATE_AB = 0.1
-init const $RATE_BC = 0.1
-
-step $POOL_A -> ($RATE_AB) $POOL_B
-step $POOL_B -> ($RATE_BC) $POOL_C
-step ENDLESS -> [$C_EXTRA] $POOL_C
