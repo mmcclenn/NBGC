@@ -1,0 +1,11 @@
+init $pool_a = 100
+init const $rate_ab = 0.1
+init const $rate_bc = 0.1
+init $population = 50;
+init const $growth_rate = 0.01
+
+$pool_a * $rate_ab -> $pool_b
+$pool_b * $rate_bc -> $pool_c
+endless -> $population * $growth_rate
+
+
