@@ -144,13 +144,13 @@ sub add_init_stmt {
     
     if ($args{const})
     {
-	$self->set_const($args{name});
+	$self->mark_constant($args{name});
     }
     
     if (defined $args{expr})
     {
-	push @ITABLE, "$name = $expr;\n";
-    }    
+	push @ITABLE, "$args{name} = $args{expr};\n";
+    }
 }
 
 
@@ -202,7 +202,7 @@ sub add_step_stmt {
     
     my $source = $args{source};
     my $sink = $args{sink};
-    my $flow = $args{flow};
+    my $rate1 = $args{rate1};
     my ($source_id, $sink_id);
     
     given ($source)
@@ -210,8 +210,21 @@ sub add_step_stmt {
 	when ('ENDLESS') {
 	    die "You cannot use a proportional flow from an endless source\n"
 		if $args{type} eq 'PROP';
-	    
+	} 
 	
 	when (/^\w+$/) {
 	    $source_id = $self->lookup_var($_);
 	    
+	}
+    }
+}
+
+
+# mark_constant : create a new record in the variable hash (unless one
+# already exists for the given name) and mark it as a constant. 
+
+sub mark_constant {
+
+    my ($self, $variable_name) = @_;
+    
+    $self->VHASH{
