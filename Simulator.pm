@@ -77,11 +77,10 @@ sub new {
     $self->{id} = $id;
     $self->{namespace} = "NBGC::Run_$id";
     
-    $self->{ctable} = {};    	# Table of constants
     $self->{vtable} = {};	# Table of variables
     $self->{vvector} = [];	# Vector of variables
     $self->{initlist} = [];	# List of initialization statements in Perl
-    $self->{load_line} = 0;	# Number of lines loaded as individual statements
+    $self->{flowlist} = [];     # List of flow statements in Perl
     
     return $self;
 } 
@@ -157,94 +156,148 @@ sub process_line {
 
 
 # Parse an "init" statement from the model.  If it specifies a constant,
-# register that constant.  If it specifies an initialization expression, put 
+# register that constant.  If it specifies an initialization expression, add
+# that to the simulation's list of initialization statements.
 
 sub parse_init_stmt {
 
-    my ($self, $what) = @_;
-    my $const;
-
-    if ( $what =~ / ^ (const\s+)? (.*) (?: \s* = \s* (.*))/xoi )
+    my ($self, $stmt) = @_;
+    
+    if ( $stmt =~ / ^ (const\s+)? (.*) (?: \s* = \s* (.*))/xoi )
     {
-	$self->register_constant($2) if $1 ne '';
-	$self->add_init_expr($2, $3) if $3 ne '';
+	if ( $1 ne '' ) {
+	    $self->register_variable($2, type => 'const');
+	}
+	else {
+	    $self->register_variable($2);
+	}
+	
+	if ( $3 ne '' ) {
+	    $self->add_init_expr($2, $3);
+	}
     }
     
     else
     {
- 	die "Invalid statement '$what' at $INPUT_FILE, line $INPUT_LINE\n";
+ 	die "Invalid init statement '$stmt' at $INPUT_FILE, line $INPUT_LINE\n";
     }
 }
 
+
+# Parse a "run" statement from the model.  Currently, the only valid run
+# statements are flow specifiers.
 
 sub parse_run_stmt {
     
-    my ($self, $what) = @_;
+    my ($self, $stmt) = @_;
     
-    given ($what)
+    if ( $stmt =~ / ^ \$ (\w+) \s* -> \s* \$ (\w+) \s* : 
+		    \s* \$ (\w+) \s* \* \s* \$ (\w+) $ /xo )
     {
-	when ( / ^ \$ (\w+) \s* -> \s* \$ (\w+) \s* : 
-		 \s* \$ (\w+) \s* \* \s* \$ (\w+) $ /xo )
-	{
-	    $self->add_flow(source => $1, sink => $2, rate1 => $3, rate2 => $4);
-	}
+	$self->add_flow({source => $1, sink => $2, rate1 => $3, rate2 => $4});
+    }
 	
-	when ( / ^ \$ (\w+) \s* -> \s* \$ (\w+) \s* : \s* \$ (\w+) $ /xo )
-	{
-	    $self->add_flow(source => $1, sink => $2, rate1 => $3, rate2 => 1);
-	}
+    elsif ( $stmt =~ / ^ \$ (\w+) \s* -> \s* \$ (\w+) \s* : \s* \$ (\w+) $ /xo )
+    {
+	$self->add_flow({source => $1, sink => $2, rate1 => $3, rate2 => 1});
+    }
+    
+    elsif ( $stmt =~ / ^ \$ (\w+) \s* -> \s* \$ (\w+) \s* : \s* (.+) /xo )
+    {
+	$self->add_flow({source => $1, sink => $2, rate_expr => $3});
+    }
+    
+    elsif ( $stmt =~ / ^ \$ (\w+) \s* \* \s* \$ (\w+) \s* -> \s* \$ (\w+) $ /xo )
+    { 
+	$self->add_flow({source => $1, sink => $3, rate1 => $1, rate2 => $2});
+    }
+    
+    elsif ( $stmt =~ / ^ \$ (\w+) \s* -> \s* \$ (\w+) \s* \* \s* \$ (\w+) $ /xo )
+    {
+	$self->add_flow({source => $1, sink => $2, rate1 => $2, rate2 => $3});
+    }
 	
-	when ( / ^ \$ (\w+) \s* -> \s* \$ (\w+) \s* : \s* (.+) /xo )
-	{
-	    $self->add_flow(source => $1, sink => $2, rate_expr => $3);
-	}
-	
-	when ( / ^ \$ (\w+) \s* \* \s* \$ (\w+) \s* -> \s* \$ (\w+) $ /xo )
-	{
-	    $self->add_flow(source => $1, sink => $3, rate1 => $1, rate2 => $2);
-	}
-	
-	when ( / ^ \$ (\w+) \s* -> \s* \$ (\w+) \s* \* \s* \$ (\w+) $ /xo )
-	{
-	    $self->add_flow(source => $1, sink => $3, rate1 => $3, rate2 => $2);
-	}	
-	
-	default
-	{
-	    die "Invalid statement '$what' at $INPUT_FILE, line $INPUT_LINE\n";
-	}
+    else
+    {
+	die "Invalid statement '$stmt' at $INPUT_FILE, line $INPUT_LINE\n";
     }
 }
 
 
-# add_step_stmt : Parse a step statement, and add it to the model.  
+# Add a flow record to the simulation.
 
-sub add_step_stmt {
-
-    my ($self, %args) = @_;
+sub add_flow {
     
-    my $source_id = $self->register_variable($args{source});
-    my $sink_id = $self->register_variable($args{sink});
+    my ($self, $flow) = @_;
     
-    if ( defined $args{rate_expr} ) {
-	die "Arbtrary rate expressions are not yet supported.\n";
+    # First look at the source; "endless" and "growth" mean a limitless source
+    
+    if ( $flow->{source} =~ /endless|growth/i ) {
+	$flow->{source} = "_";
+    }
+    else {
+	$self->register_variable($flow->{source}, type => 'variable');
     }
     
-    my $const_1 = $self->is_constant($args{rate1});
-    my $const_2 = $self->is_constant($args{rate2});
+    # Similarly, "endless" and "decay" mean a limitless sink
     
-    my $rate1_id = $const_1 ? 0 : $self->register_variable($args{rate1});
-    my $rate2_id = $const_2 ? 0 : $self->register_variable($args{rate2});
+    if ( $flow->{sink} =~ /endless|decay/i ) {
+	$flow->{sink} = "_";
+    }
+    else {
+	$self->register_variable($flow->{sink}, type => 'variable');
+    }
     
+    # We need to expand the set of supported expressions
+    
+    if ( defined $flow->{rate_expr} ) {
+	die "Arbtrary rate expressions are not yet supported. \
+At $INPUT_FILE, line $INPUT_LINE\n";
+    }
+    
+    # Limitless quantities are not valid as rates
+    
+    if ( $flow->{rate1} =~ /endless|growth|decay/i ) {
+	die "Invalid rate coefficient: $flow->{rate1} at $INPUT_FILE, line $INPUT_LINE\n";
+    }
+    else {
+	$self->register_variable($flow->{rate1});
+    }
+    
+    if ( $flow->{rate2} =~ /endless|growth|decay/i ) {
+	die "Invalid rate coefficient: $flow->{rate2} at $INPUT_FILE, line $INPUT_LINE\n";
+    }
+    else {
+	$self->register_variable($flow->{rate2});
+    }
+
+    # Now that we've validated it, add the flow to the list.
+    
+    push @{$self->{flowlist}}, $flow;
 }
 
 
-# register_variable : Given a name, enter it into the model's variable
-# table and vector unless it already occurs there.  Return the
-# variable's index in the vector.
+# Note that a variable has been mentioned in the model.  Depending on how it
+# is mentioned, it may have type 'const' or 'variable'.  This routine will be
+# called more than once for most variables; it is an error to redefine one
+# from 'const' to 'variable' or vice versa.
 
 sub register_variable {
 
-    my ($self, $name) = @_;
-}   
+    my ($self, $name, undef, $type) = @_;
     
+    my $var = ($self->{vtable}{$name}) || 
+              ($self->{vtable}{$name} = new NBGC::Variable $name);
+    
+    if ( defined $type && defined $var->{type} && $var->{type} ne $type ) {
+	die "Invalid redeclaration of variable $name to constant \
+at $INPUT_FILE, line $INPUT_LINE.\n";
+    }
+    
+    elsif ( defined $type ) {
+	$var->{type} = $type;
+    }
+}
+    
+
+
