@@ -33,12 +33,13 @@
 #   $sim = new NBGC::Simulator;
 #   
 #   $sim->load(file => "model.txt");
+#
 #   $sim->initial_value(name => 'somevar', value => 3);
-#   
 #   $sim->init();
+#
 #   $sim->spinup();
 #   
-#   $sim->record(interval => 1, variables => qw(var1 var2 var3));
+#   $sim->track(interval => 1, variables => qw(var1 var2 var3));
 #   $sim->run(start => 0, limit => 300);
 #   
 #   $sim->write_data(file => "output.txt");
@@ -111,7 +112,7 @@ sub load {
     if ( $selector eq 'file' ) {
 	local($INPUT_NAME) = shift;
 	local($INPUT_LINE) = 0;
-	open($infile, $INPUT_NAME) || carp "Could not open file '$INPUT_NAME': $!";
+	open($infile, $INPUT_NAME) || croak "Could not open file '$INPUT_NAME': $!";
 	
 	while (<$infile>) {
 	    $INPUT_LINE++;
@@ -162,18 +163,26 @@ sub process_line {
 sub parse_init_stmt {
 
     my ($self, $stmt) = @_;
+    my ($const, $name, $expr);
     
-    if ( $stmt =~ / ^ (const\s+)? (.*) (?: \s* = \s* (.*))/xoi )
+    if ( ($const, $name, $expr) = 
+	 $stmt =~ / ^ (const\s+)? (\w+) (?: \s* = \s* (.*))/xoi )
     {
-	if ( $1 ne '' ) {
+	# Check for the 'const' keyword, and register the
+	# identifier $name as either a constant or a variable accordingly.
+	
+	if ( $const ) {
 	    $self->register_variable($2, type => 'const');
 	}
 	else {
 	    $self->register_variable($2);
 	}
 	
-	if ( $3 ne '' ) {
-	    $self->add_init_expr($2, $3);
+	# If an initialization expression was given, add it to the
+	# initialization list for this simulation.
+	
+	if ( $expr ne '' ) {
+	    $self->add_init({var => $2, expr => $3});
 	}
     }
     
@@ -221,6 +230,16 @@ sub parse_run_stmt {
     {
 	die "Invalid statement '$stmt' at $INPUT_FILE, line $INPUT_LINE\n";
     }
+}
+
+
+# Add an initialization record to the simulation.
+
+sub add_init {
+
+    my ($self, $init) = @_;
+    
+    push @{self->{initlist}}, $init;
 }
 
 
@@ -286,8 +305,20 @@ sub register_variable {
 
     my ($self, $name, undef, $type) = @_;
     
+    # First make sure that we actually have a valid identifier
+    
+    unless ( $name =~ / ^ [a-zA-Z_] \w* $ /xoi ) {
+	die "Invalid identifier '$name' at $INPUT_FILE, line $INPUT_LINE\n";
+    }
+    
+    # Then create a new variable record and add it to the variable table.
+    
     my $var = ($self->{vtable}{$name}) || 
               ($self->{vtable}{$name} = new NBGC::Variable $name);
+    
+    # It is not allowed to redefine a variable as a constant or vice
+    # versa.  But if the given name was previously used but not
+    # given a type, we can assign one now.
     
     if ( defined $type && defined $var->{type} && $var->{type} ne $type ) {
 	die "Invalid redeclaration of variable $name to constant \
@@ -300,4 +331,44 @@ at $INPUT_FILE, line $INPUT_LINE.\n";
 }
     
 
+# Methods for phase 2 -- init
+# ===========================
 
+# initial_value ( name, value )
+#
+# Specifies an initial value for the given identifier (variable or
+# constant).  An undefined value means to use the initial value
+# specified in the model.
+
+sub initial_value {
+
+    my ($self, %args) = @_;
+    
+    # First look up the identifier, and make sure that it is defined.
+    
+    my $var = $self->{vtable}{$args{name}};
+    
+    unless ( ref $var eq 'Variable' ) {
+	carp "Unknown identifier '$args{name}'";
+	return undef;
+    }
+    
+    # Set the value and return true.
+    
+    $self->{vtable}{initial} = $args{value};
+    return 1;
+}
+
+
+# init ( )
+# 
+# Initialize the model variables prior to a run.  Use the initial
+# values specified in the model, unless these were overridden by calls
+# to the initial_value() method.  Throw an exception if any of the
+# model variables are left without a value.
+
+sub init {
+
+
+
+}
