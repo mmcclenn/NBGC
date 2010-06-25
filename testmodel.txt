@@ -6,6 +6,6 @@ init const $growth_rate = 0.01
 
 $pool_a * $rate_ab -> $pool_b
 $pool_b * $rate_bc -> $pool_c
-endless -> $population * $growth_rate
+growth -> $population * $growth_rate
 
 

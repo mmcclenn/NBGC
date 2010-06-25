@@ -33,11 +33,12 @@
 #   $sim = new NBGC::Simulator;
 #   
 #   $sim->load(file => "model.txt");
-#
-#   $sim->initial_value(name => 'somevar', value => 3);
+#   
+#   $sim->set_value(name => 'some_constant', value => 3);
 #   $sim->init();
-#
+#   
 #   $sim->spinup();
+#   $sim->set_value(name => 'other_constant', value => 5.012);
 #   
 #   $sim->track(interval => 1, variables => qw(var1 var2 var3));
 #   $sim->run(start => 0, limit => 300);
@@ -53,13 +54,21 @@ use warnings;
 use Carp;
 use PDL;
 
-our ($SIM_ID, $INPUT_NAME, $INPUT_LINE, $LOAD_LINE); 
+our ($SIM_ID, $INPUT_NAME, $INPUT_LINE, $LOAD_LINE, 
+     $OBJECT_METHOD, $INTEGRATION_METHOD); 
 
 $SIM_ID = 0;			# Gives each Simulator a unique ID number
 $INPUT_NAME = '<none>';	        # Name of the input file being currently read
 $INPUT_LINE = 0;		# Current input line number
 $LOAD_LINE = 0;			# Current input line number when loading
                                 # individual statements
+
+$OBJECT_METHOD = 'PERL';	# Which method to use for generating
+                                # object code.  Options are: 'perl' and
+                                # 'pdl'.
+
+$INTEGRATION_METHOD = 'SIMPLE';	# Which method of numerical
+                                # integration to use.
 
 # Constructor, destructor and related methods
 # ===========================================
@@ -77,6 +86,13 @@ sub new {
     my $id = $NBGC::SIM_ID++;
     $self->{id} = $id;
     $self->{namespace} = "NBGC::Run_$id";
+    $self->{state} = 'CLEAR';	# States are:
+    				#   CLEAR - empty, waiting for a model
+				#   LOAD - a model is being loaded
+				#   READY - the model is ready to run
+				#   INIT - the vars are being initialized
+				#   SPINUP - running in spinup mode
+    				#   RUN - running in regular mode
     
     $self->{vtable} = {};	# Table of variables
     $self->{vvector} = [];	# Vector of variables
@@ -109,6 +125,13 @@ sub load {
     my $self = shift;
     my $selector = shift;
     
+    if ( $self->{state} ne 'CLEAR' && $self->{state} ne 'LOAD' ) {
+	carp "Simulator must be cleared with the clear() method before loading another model";
+	return 0;
+    }
+    
+    $self->{state} = 'LOAD';
+    
     if ( $selector eq 'file' ) {
 	local($INPUT_NAME) = shift;
 	local($INPUT_LINE) = 0;
@@ -130,6 +153,8 @@ sub load {
 	    &process_line($_);
 	}
     }
+    
+    return 1;
 }
 
 # Handle one input line.  Any statement starting with "init" pertains to the
@@ -329,18 +354,52 @@ at $INPUT_FILE, line $INPUT_LINE.\n";
 	$var->{type} = $type;
     }
 }
+
+
+# clear ( ) - Clear the simulator completely, so that another model can be
+# loaded. 
+
+sub clear {    
+
+    my $self = shift;
     
+    $self->{state} = 'CLEAR';    
+    $self->{vtable} = {};
+    $self->{vvector} = [];
+    $self->{initlist} = [];
+    $self->{flowlist} = [];
+    
+    $self->clear_namespace();
+}
+
+
+# clear_namespace ( ) - Remove all variables in the package used for running
+# this simulator.
+
+sub clear_namespace {
+
+    my $self = shift;
+    my $id = $self->{id};
+    my $pkgname = "NBGC::Run_$id::";
+    
+    my @vars = keys %$pkgname;
+    
+    foreach $var (@vars) {
+	undef $$pkgname{$var};
+    }
+}
+
 
 # Methods for phase 2 -- init
 # ===========================
 
-# initial_value ( name, value )
+# set_value ( name, value )
 #
-# Specifies an initial value for the given identifier (variable or
-# constant).  An undefined value means to use the initial value
-# specified in the model.
+# Specifies a value for the given identifier (variable or constant),
+# overriding any value specified in the model. An undefined value
+# means to revert to the value specified in the model.
 
-sub initial_value {
+sub set_value {
 
     my ($self, %args) = @_;
     
@@ -355,20 +414,68 @@ sub initial_value {
     
     # Set the value and return true.
     
-    $self->{vtable}{initial} = $args{value};
+    $self->{vtable}{set} = $args{value};
     return 1;
 }
 
 
 # init ( )
 # 
-# Initialize the model variables prior to a run.  Use the initial
-# values specified in the model, unless these were overridden by calls
-# to the initial_value() method.  Throw an exception if any of the
-# model variables are left without a value.
+# If the model has not yet been compiled, do so.  Then initialize the
+# model variables in order to start run.  Use the initial values
+# specified in the model, unless these were overridden by calls to the
+# set_value() method.  Throw an exception if any of the model
+# variables are left without a value.
 
 sub init {
 
+    my ($self) = @_;
+    
+    # First check if we have a model loaded yet.
+    
+    if ( $self->{state} eq 'CLEAR' ) {
+	carp "No model loaded.";
+	return undef;
+    }
+    
+    # If we have a model loaded but not compiled, do that now.  That will make
+    # us ready to initialize.
+    
+    elsif ( $self->{state} eq 'LOAD' ) {
+	$self->compile($OBJECT_METHOD);
+    }
+    
+    # Otherwise, if the state is anything but READY, reset the simulator
+    # first.
+    
+    elsif ( $self->{state} ne 'READY' ) {
+	$self->reset();
+    }
+    
+    # Now, we are ready to initialize.
+    
+    # ...
+    
+    return 1;
+}
 
 
+# Compile the model
+
+sub compile {
+
+    my ($self, $method) = @_;
+    
+    if ( $method eq 'PERL' ) {
+    }
+
+    elsif ( $method eq 'PDL' ) {
+    }
+    
+    else {
+	carp "Inalid compilation method: $method.";
+	return undef;
+    }
+    
+    return 1;
 }
