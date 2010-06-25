@@ -34,7 +34,7 @@
 #   
 #   $sim->load(file => "model.txt");
 #   
-#   $sim->set_value(name => 'some_constant', value => 3);
+#   $sim->set_init_value(name => 'some_constant', value => 3);
 #   $sim->init();
 #   
 #   $sim->spinup();
@@ -94,6 +94,7 @@ sub new {
 				#   SPINUP - running in spinup mode
     				#   RUN - running in regular mode
     
+    $self->{compiled} = undef;	# Which method was used to compile the code
     $self->{vtable} = {};	# Table of variables
     $self->{vvector} = [];	# Vector of variables
     $self->{initlist} = [];	# List of initialization statements in Perl
@@ -364,6 +365,7 @@ sub clear {
     my $self = shift;
     
     $self->{state} = 'CLEAR';    
+    $self->{compiled} = undef;
     $self->{vtable} = {};
     $self->{vvector} = [];
     $self->{initlist} = [];
@@ -393,13 +395,15 @@ sub clear_namespace {
 # Methods for phase 2 -- init
 # ===========================
 
-# set_value ( name, value )
+# set_init_value ( name, value )
 #
-# Specifies a value for the given identifier (variable or constant),
-# overriding any value specified in the model. An undefined value
-# means to revert to the value specified in the model.
+# Specifies an initial value for the given identifier (variable or constant),
+# overriding any value specified in the model. This routine is only
+# immediately effective if called before init(), or just after a reset(). An
+# undefined value means to revert to the value specified in the model. The
+# results of this call are persistent across model runs.
 
-sub set_value {
+sub set_init_value {
 
     my ($self, %args) = @_;
     
@@ -413,6 +417,49 @@ sub set_value {
     }
     
     # Set the value and return true.
+    
+    $self->{vtable}{initial} = $args{value};
+    return 1;
+}
+
+
+# set_run_value ( name, value )
+# 
+# Specifies a new value for the given identifier (variable or constant),
+# overriding any value specified in the model.  This routine can be called at
+# any point in the simulation, but its effects only last until the variable is
+# changed by the model code or until the next reset() upon which time the
+# variable or constant is reset to its initial value as specified in the model
+# or overridden by set_init_value().
+
+sub set_run_value {
+
+    my ($self, %args) = @_;
+    
+    # First look up the identifier, and make sure that it is defined.
+    
+    my $var = $self->{vtable}{$args{name}};
+    
+    unless ( ref $var eq 'Variable' ) {
+	carp "Unknown identifier '$args{name}'";
+	return undef;
+    }
+    
+    # Set the value.  Exactly how this is done depends on which method was
+    # used to compile the model.
+    
+    if ( $self->{compiled} eq 'PERL' ) {
+	eval "package $self->{namespace}; $args{name} = $args{value};";
+    }
+    
+    elsif ( $self->{compiled} eq 'PDL' ) {
+	# still have to write this one...
+    }
+    
+    else {
+	carp "Variables cannot be set until the model is compiled.";
+	return undef;
+    }
     
     $self->{vtable}{set} = $args{value};
     return 1;
@@ -460,16 +507,34 @@ sub init {
 }
 
 
-# Compile the model
+# Compile the model, or re-compile it if it has already been compiled.
 
 sub compile {
 
     my ($self, $method) = @_;
     
-    if ( $method eq 'PERL' ) {
+    # First check if we have a model loaded yet.
+    
+    if ( $self->{state} eq 'CLEAR' ) {
+	carp "No model loaded.";
+	return undef;
     }
-
+    
+    # Otherwise, if the state is anything but LOAD, reset the simulator
+    # first.
+    
+    elsif ( $self->{state} ne 'LOAD' ) {
+	$self->reset();
+    }
+    
+    # Now we are ready to compile or re-complile.
+    
+    if ( $method eq 'PERL' ) {
+	$self->compile_PERL();	
+    }
+    
     elsif ( $method eq 'PDL' ) {
+	$self->compile_PDL();
     }
     
     else {
@@ -479,3 +544,33 @@ sub compile {
     
     return 1;
 }
+
+
+# Compile the model that was loaded into this Simulator object using the PERL
+# method -- the initialization and each step of the model become pure Perl
+# functions.  Variable values are all kept in the package Run_$id where $id is
+# a unique identifier assigned to this Simulator object.
+
+sub compile_PERL {
+
+    my $self = shift;
+    
+    # First, compile the initialization step.
+    
+    my $CODE = "package $self->{namespace};\n\n";
+    
+    foreach my $init (@{$self->{initlist}}) {
+	my ($name, $expr) = @$init;
+	
+	$CODE .= "$name = $expr;\n";
+    }
+    
+    $self->{initprog} = eval("sub { $CODE }");
+    
+
+
+
+
+# We have to end the module with a true value.
+
+1;
