@@ -87,7 +87,7 @@ sub new {
     
     my $id = $NBGC::SIM_ID++;
     $self->{id} = $id;
-    $self->{namespace} = "NBGC::Run_$id";
+    $self->{runspace} = "NBGC::Run_$id";
     $self->{state} = 'CLEAR';	# States are:
     				#   CLEAR - empty, waiting for a model
 				#   LOAD - a model is being loaded
@@ -105,6 +105,7 @@ sub new {
     $self->{tracelist} = [];	# List of expressions to trace during a run
     $self->{initprog} = undef;	# code ref for initialization
     $self->{runprog} = undef;	# code ref for one run step
+    $self->{tiprog} = undef; 	# code ref for trace initialization
     $self->{traceprog} = undef;	# code ref for one data trace step
     $self->{run_start} = undef; # at what value of t did the last run start?
     $self->{run_end} = undef;	# at what value of t did the last run end?
@@ -379,27 +380,40 @@ sub clear {
     $self->{vvector} = [];
     $self->{initlist} = [];
     $self->{flowlist} = [];
-    
-    $self->clear_namespace();
 }
 
 
-# clear_namespace ( ) - Remove all variables in the package used for running
-# this simulator.
+# init_runspace ( ) - Make sure that the package used as the namespace for
+# running the model is clear of everything except the necessary variables.
+# This should be called once before every run, so that each run is done de novo.
 
-sub clear_namespace {
+sub init_runspace {
 
     my $self = shift;
-    my $id = $self->{id};
-    my $pkgname = "NBGC::Run_$id";
+    my $pkgname = $self->{runspace} . '::';
     
+    no strict 'refs';
     my @vars = keys %$pkgname;
     
     foreach my $var (@vars) {
 	undef $$pkgname{$var};
     }
     
-    eval "\$${pkgname}::T = 0; *${pkgname}::t = \$${pkgname}::T;";
+    my $CODE = "package $pkgname; no strict 'vars';\n\n";
+    $CODE .= "\$T = 0; *t = \\\$T; \$_TRACE{'T'} = [];\n";
+    
+    foreach my $expr (@{$self->{tracelist}}) {
+	if ( $expr =~ /^\w/ ) { $expr = '$' . $expr; }
+	$CODE .= "\$_TRACE{'$expr'} = [];\n";
+    }
+    
+    eval $CODE;
+    
+    if ( $@ ) {
+	croak "Error in runspace init: $@";
+    }
+    
+    return 1;
 }
 
 
@@ -460,7 +474,7 @@ sub set_run_value {
     # used to compile the model.
     
     if ( $self->{compiled} eq 'PERL' ) {
-	eval "package $self->{namespace}; $args{name} = $args{value};";
+	eval "package $self->{runspace}; $args{name} = $args{value};";
     }
     
     elsif ( $self->{compiled} eq 'PDL' ) {
@@ -510,10 +524,12 @@ sub init {
 	$self->reset();
     }
     
-    # Now, we are ready to initialize.
+    # Now, we are ready to initialize.  First initialize the namespace, then
+    # the variables.
     
     $self->{state} = 'INIT';
-    &{$self->{initprog}} if defined $self->{initprog};
+    $self->init_runspace();
+    &{$self->{initprog}};
     
     return 1;
 }
@@ -571,7 +587,7 @@ sub compile_PERL {
     
     # First, compile the initialization step.
     
-    my $CODE = "package $self->{namespace};\nno strict 'vars';\n\n";
+    my $CODE = "package $self->{runspace};\nno strict 'vars';\n\n";
     
     foreach my $init (@{$self->{initlist}}) {
 	my ($name, $expr) = ($init->{var}, $init->{expr});
@@ -581,42 +597,49 @@ sub compile_PERL {
     
     eval("\$self->{initprog} = sub {\n$CODE\n}");
     
+    if ( $@ ) {
+	croak "Error in initialization program: $@";
+    }
+    
     # Next, compile the run step.
     
-    $CODE = "package $self->{namespace};\nno strict 'vars';\n\n";
+    $CODE = "package $self->{runspace};\nno strict 'vars';\n\n";
     
     foreach my $flow (@{$self->{flowlist}}) {
 	my $source = $flow->{source};
 	my $sink = $flow->{sink};
 	if ( defined $flow->{rate_expr} ) {
 	    if ( $source eq '_' ) {
-		$CODE .= "$sink += $flow->{rate_expr};\n";
+		$CODE .= "\$$sink += $flow->{rate_expr};\n";
 	    }
 	    elsif ( $sink eq '_' ) {
-		$CODE .= "$source -= $flow->{rate_expr};\n";
+		$CODE .= "\$$source -= $flow->{rate_expr};\n";
 	    }
 	    else {
-		$CODE .= "{ my \$val = $flow->{rate_expr}; \
-$source -= \$val; $sink += \$val; }\n";
+		$CODE .= "{\nmy \$val = $flow->{rate_expr};\n";
+		$CODE .= "\$$source -= \$val; \$$sink += \$val;\n}\n";
 	    }
 	}
 	
 	elsif ( $flow->{rate2} eq '1' ) {
-	    $CODE .= "$source -= \$$flow->{rate1}; " if $source ne '_';
-	    $CODE .= "$sink += \$$flow->{rate1}; " if $sink ne '_';
-	    $CODE .= "\n";
+	    $CODE .= "\$$source -= \$$flow->{rate1};\n" if $source ne '_';
+	    $CODE .= "\$$sink += \$$flow->{rate1};\n" if $sink ne '_';
 	}
 	
 	else {
-	    $CODE .= "$source -= \$$flow->{rate1} * \$$flow->{rate2}; " if $source ne '_';
-	    $CODE .= "$sink += \$$flow->{rate1} * \$$flow->{rate2}; " if $sink ne '_';
+	    $CODE .= "\$$source -= \$$flow->{rate1} * \$$flow->{rate2}; " if $source ne '_';
+	    $CODE .= "\$$sink += \$$flow->{rate1} * \$$flow->{rate2}; " if $sink ne '_';
 	    $CODE .= "\n";
 	}
     }
     
     eval("\$self->{runprog} = sub {\n$CODE\n}");
     
-    $self->clear_namespace();
+    if ( $@ ) {
+	croak "Error in run program: $@";
+    }
+    
+    $self->init_runspace();
     $self->{state} = 'READY';
 }
 
@@ -662,25 +685,29 @@ sub clear_trace {
 }
 
 
-# Compile the trace program
+# Compile the trace program.  There are actually two: the trace initialization
+# program, which sets up the trace hash, and the trace program, which records
+# the actual values.
 
 sub compile_trace {
 
     my $self = shift;
     
-    if ( scalar(@{$self->{tracelist}}) ) {
-	my $CODE = "package $self->{namespace};\nno strict 'vars';\n\n\
-%_TRACE{'T'} = T;\n";
-	
-	foreach my $expr (@{$self->{tracelist}}) {
-	    $CODE .= "\$_TRACE{'$expr'} = $expr;\n";
-	}
-	
-	eval("\$self->{traceprog} = sub {\n$CODE\n}");
+    # Start setting up the code for both programs
+    
+    my $CODE = "package $self->{runspace};\nno strict 'vars';\n\n";
+    $CODE .= "push \@{\$_TRACE{'T'}}, \$T;\n";
+    
+    foreach my $expr (@{$self->{tracelist}}) {
+	if ( $expr =~ /^\w/ ) { $expr = '$' . $expr; }
+	$CODE .= "push \@{\$_TRACE{'$expr'}}, \$T;\n";
+	$CODE .= "push \@{\$_TRACE{'$expr'}}, $expr;\n";
     }
     
-    else {
-	$self->{traceprog} = undef;
+    eval("\$self->{traceprog} = sub {\n$CODE\n}");
+    
+    if ( $@ ) {
+	croak "Error in trace program: $@";
     }
     
     $self->{trace_compiled} = 1;
@@ -693,43 +720,57 @@ sub compile_trace {
 # Methods for phase 4 -- run
 # ==========================
 
-# run ( start, limit, increment )
+# run ( start, limit, increment, continue )
 # 
 # Run the model.  The start parameter, if given, specifies the initial time.
 # It defaults to 0, unless we are continuing a previous run in which case it
 # defaults to the time at the end of the previous run. The limit, if given,
 # specifies the ending time.  The increment, if given, specifies the time
-# increment and defaults to 1.
+# increment and defaults to 1.  If continue is given a true value, we will
+# continue the run from where we previously left off.
 
 sub run {
 
     my ($self, %args) = @_;
     
-    my $start = $args{start} > 0 ? $args{start} :
-		$self->{run_end} > 0 ? $self->{run_end} : 0;
+    my $start = $args{start} > 0 ? $args{start} : 0;
+    
+    if ( $args{continue} ) {
+	if ( defined $self->{run_end} ) {
+	    $start = $self->{run_end};
+	}
+	
+	else {
+	    croak "No run to continue from.";
+	}
+    }
     
     my $limit = $args{limit};
     
-    my $increment = $args{increment} || 0;
+    my $increment = $args{increment} || 1;
     
     $self->{state} = 'RUN';
+    
+    # Make sure the trace program is compiled.
+    
+    $self->compile_trace() unless $self->{trace_compiled};
     
     # Find the time variable, and initialize it.
     
     my $T;
     
-    eval("\$T = \\\$$self->{namespace}::T");
+    eval("\$T = \\\$$self->{runspace}::T");
     $$T = $self->{run_start} = $start;
     
     # If we are just starting up, do an initial trace.
     
     unless ( defined $self->{run_end} && $self->{run_end} == $$T ) {
-	&{$self->{traceprog}} if defined $self->{traceprog};
+	&{$self->{traceprog}};
     }
     
     # Now, loop through run steps
     
-    until ( $$T == $limit ) {
+    until ( $$T >= $limit ) {
 	
 	&{$self->{runprog}} if defined $self->{runprog};
 	$$T++;
@@ -758,13 +799,13 @@ sub write_data {
     my $fh = $args{file};
     
     my $dataref;
-    eval "\$dataref = \\\%$self->{namespace}::_TRACE";
+    eval "\$dataref = \\\%$self->{runspace}::_TRACE";
     my $datacount = scalar @{$dataref->{T}};
     
     foreach my $i (0..$datacount-1) {
 	print $fh $dataref->{T}[$i], "\t";
 	foreach my $var (@vars) {
-	    print $fh $dataref->{$var}[$i], "\t";
+	    print $fh $dataref->{$var}[2*$i+1], "\t";
 	}
 	print $fh "\n";
     }
