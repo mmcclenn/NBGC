@@ -40,19 +40,21 @@
 #   $sim->spinup();
 #   $sim->set_value(name => 'other_constant', value => 5.012);
 #   
-#   $sim->track(interval => 1, variables => qw(var1 var2 var3));
+#   $sim->trace(interval => 1, variables => qw(var1 var2 var3));
 #   $sim->run(start => 0, limit => 300);
 #   
 #   $sim->write_data(file => "output.txt");
 #   $sim->plot_var(file => 'var1_plot.png', variable => 'var1');
 
 
-package NBGC::Simulator;
+package Simulator;
 
 use strict;
 use warnings;
 use Carp;
-use PDL;
+#use PDL;
+
+use Variable;
 
 our ($SIM_ID, $INPUT_NAME, $INPUT_LINE, $LOAD_LINE, 
      $OBJECT_METHOD, $INTEGRATION_METHOD); 
@@ -95,10 +97,17 @@ sub new {
     				#   RUN - running in regular mode
     
     $self->{compiled} = undef;	# Which method was used to compile the code
+    $self->{trace_compiled} = undef; # Have we compiled the trace list?
     $self->{vtable} = {};	# Table of variables
     $self->{vvector} = [];	# Vector of variables
-    $self->{initlist} = [];	# List of initialization statements in Perl
-    $self->{flowlist} = [];     # List of flow statements in Perl
+    $self->{initlist} = [];	# List of initialization records (hashes)
+    $self->{flowlist} = [];     # List of flow records (hashes)
+    $self->{tracelist} = [];	# List of expressions to trace during a run
+    $self->{initprog} = undef;	# code ref for initialization
+    $self->{runprog} = undef;	# code ref for one run step
+    $self->{traceprog} = undef;	# code ref for one data trace step
+    $self->{run_start} = undef; # at what value of t did the last run start?
+    $self->{run_end} = undef;	# at what value of t did the last run end?
     
     return $self;
 } 
@@ -136,11 +145,11 @@ sub load {
     if ( $selector eq 'file' ) {
 	local($INPUT_NAME) = shift;
 	local($INPUT_LINE) = 0;
-	open($infile, $INPUT_NAME) || croak "Could not open file '$INPUT_NAME': $!";
+	open(my $infile, $INPUT_NAME) || croak "Could not open file '$INPUT_NAME': $!";
 	
 	while (<$infile>) {
 	    $INPUT_LINE++;
-	    &process_line($_);
+	    $self->process_line($_);
 	}
     }
     
@@ -151,7 +160,7 @@ sub load {
 	foreach (@_) {
 	    $INPUT_LINE++;
 	    $self->{load_line}++;
-	    &process_line($_);
+	    $self->process_line($_);
 	}
     }
     
@@ -164,7 +173,7 @@ sub load {
 
 sub process_line {
 
-    my ($line) = @_;
+    my ($self, $line) = @_;
     
     return unless $line =~ /\S/;   # ignore blank lines
     s/^\s*//;			   # take out initial whitespace
@@ -172,12 +181,12 @@ sub process_line {
     
     if ( $line =~ / ^ init \s+ (.*) /xoi )
     {
-	&parse_init_stmt($1);
+	$self->parse_init_stmt($1);
     }
     
     else
     {
-	&parse_run_stmt($line);
+	$self->parse_run_stmt($line);
     }
 }
 
@@ -192,7 +201,7 @@ sub parse_init_stmt {
     my ($const, $name, $expr);
     
     if ( ($const, $name, $expr) = 
-	 $stmt =~ / ^ (const\s+)? (\w+) (?: \s* = \s* (.*))/xoi )
+	 $stmt =~ / ^ (const\s+)? \$ (\w+) (?: \s* = \s* (.*))/xoi )
     {
 	# Check for the 'const' keyword, and register the
 	# identifier $name as either a constant or a variable accordingly.
@@ -214,7 +223,7 @@ sub parse_init_stmt {
     
     else
     {
- 	die "Invalid init statement '$stmt' at $INPUT_FILE, line $INPUT_LINE\n";
+ 	die "Invalid init statement '$stmt' at $INPUT_NAME, line $INPUT_LINE\n";
     }
 }
 
@@ -247,14 +256,14 @@ sub parse_run_stmt {
 	$self->add_flow({source => $1, sink => $3, rate1 => $1, rate2 => $2});
     }
     
-    elsif ( $stmt =~ / ^ \$ (\w+) \s* -> \s* \$ (\w+) \s* \* \s* \$ (\w+) $ /xo )
+    elsif ( $stmt =~ / ^ \$? (\w+) \s* -> \s* \$ (\w+) \s* \* \s* \$ (\w+) $ /xo )
     {
 	$self->add_flow({source => $1, sink => $2, rate1 => $2, rate2 => $3});
     }
 	
     else
     {
-	die "Invalid statement '$stmt' at $INPUT_FILE, line $INPUT_LINE\n";
+	die "Invalid statement '$stmt' at $INPUT_NAME, line $INPUT_LINE\n";
     }
 }
 
@@ -265,7 +274,7 @@ sub add_init {
 
     my ($self, $init) = @_;
     
-    push @{self->{initlist}}, $init;
+    push @{$self->{initlist}}, $init;
 }
 
 
@@ -297,20 +306,20 @@ sub add_flow {
     
     if ( defined $flow->{rate_expr} ) {
 	die "Arbtrary rate expressions are not yet supported. \
-At $INPUT_FILE, line $INPUT_LINE\n";
+At $INPUT_NAME, line $INPUT_LINE\n";
     }
     
     # Limitless quantities are not valid as rates
     
-    if ( $flow->{rate1} =~ /endless|growth|decay/i ) {
-	die "Invalid rate coefficient: $flow->{rate1} at $INPUT_FILE, line $INPUT_LINE\n";
+    if ( $flow->{rate1} =~ /^(endless|growth|decay)$/i ) {
+	die "Invalid rate coefficient: $flow->{rate1} at $INPUT_NAME, line $INPUT_LINE\n";
     }
     else {
 	$self->register_variable($flow->{rate1});
     }
     
-    if ( $flow->{rate2} =~ /endless|growth|decay/i ) {
-	die "Invalid rate coefficient: $flow->{rate2} at $INPUT_FILE, line $INPUT_LINE\n";
+    if ( $flow->{rate2} =~ /^(endless|growth|decay)$/i ) {
+	die "Invalid rate coefficient: $flow->{rate2} at $INPUT_NAME, line $INPUT_LINE\n";
     }
     else {
 	$self->register_variable($flow->{rate2});
@@ -334,7 +343,7 @@ sub register_variable {
     # First make sure that we actually have a valid identifier
     
     unless ( $name =~ / ^ [a-zA-Z_] \w* $ /xoi ) {
-	die "Invalid identifier '$name' at $INPUT_FILE, line $INPUT_LINE\n";
+	die "Invalid identifier '$name' at $INPUT_NAME, line $INPUT_LINE\n";
     }
     
     # Then create a new variable record and add it to the variable table.
@@ -348,7 +357,7 @@ sub register_variable {
     
     if ( defined $type && defined $var->{type} && $var->{type} ne $type ) {
 	die "Invalid redeclaration of variable $name to constant \
-at $INPUT_FILE, line $INPUT_LINE.\n";
+at $INPUT_NAME, line $INPUT_LINE.\n";
     }
     
     elsif ( defined $type ) {
@@ -382,13 +391,15 @@ sub clear_namespace {
 
     my $self = shift;
     my $id = $self->{id};
-    my $pkgname = "NBGC::Run_$id::";
+    my $pkgname = "NBGC::Run_$id";
     
     my @vars = keys %$pkgname;
     
-    foreach $var (@vars) {
+    foreach my $var (@vars) {
 	undef $$pkgname{$var};
     }
+    
+    eval "\$${pkgname}::T = 0; *${pkgname}::t = \$${pkgname}::T;";
 }
 
 
@@ -489,7 +500,7 @@ sub init {
     # us ready to initialize.
     
     elsif ( $self->{state} eq 'LOAD' ) {
-	$self->compile($OBJECT_METHOD);
+	$self->compile($OBJECT_METHOD) or return undef;
     }
     
     # Otherwise, if the state is anything but READY, reset the simulator
@@ -501,7 +512,8 @@ sub init {
     
     # Now, we are ready to initialize.
     
-    # ...
+    $self->{state} = 'INIT';
+    &{$self->{initprog}} if defined $self->{initprog};
     
     return 1;
 }
@@ -534,7 +546,9 @@ sub compile {
     }
     
     elsif ( $method eq 'PDL' ) {
-	$self->compile_PDL();
+	carp "PDL compilation not yet enabled.";
+	return undef;
+	# $self->compile_PDL();
     }
     
     else {
@@ -557,18 +571,206 @@ sub compile_PERL {
     
     # First, compile the initialization step.
     
-    my $CODE = "package $self->{namespace};\n\n";
+    my $CODE = "package $self->{namespace};\nno strict 'vars';\n\n";
     
     foreach my $init (@{$self->{initlist}}) {
-	my ($name, $expr) = @$init;
+	my ($name, $expr) = ($init->{var}, $init->{expr});
 	
-	$CODE .= "$name = $expr;\n";
+	$CODE .= "\$$name = $expr;\n";
     }
     
-    $self->{initprog} = eval("sub { $CODE }");
+    eval("\$self->{initprog} = sub {\n$CODE\n}");
     
+    # Next, compile the run step.
+    
+    $CODE = "package $self->{namespace};\nno strict 'vars';\n\n";
+    
+    foreach my $flow (@{$self->{flowlist}}) {
+	my $source = $flow->{source};
+	my $sink = $flow->{sink};
+	if ( defined $flow->{rate_expr} ) {
+	    if ( $source eq '_' ) {
+		$CODE .= "$sink += $flow->{rate_expr};\n";
+	    }
+	    elsif ( $sink eq '_' ) {
+		$CODE .= "$source -= $flow->{rate_expr};\n";
+	    }
+	    else {
+		$CODE .= "{ my \$val = $flow->{rate_expr}; \
+$source -= \$val; $sink += \$val; }\n";
+	    }
+	}
+	
+	elsif ( $flow->{rate2} eq '1' ) {
+	    $CODE .= "$source -= \$$flow->{rate1}; " if $source ne '_';
+	    $CODE .= "$sink += \$$flow->{rate1}; " if $sink ne '_';
+	    $CODE .= "\n";
+	}
+	
+	else {
+	    $CODE .= "$source -= \$$flow->{rate1} * \$$flow->{rate2}; " if $source ne '_';
+	    $CODE .= "$sink += \$$flow->{rate1} * \$$flow->{rate2}; " if $sink ne '_';
+	    $CODE .= "\n";
+	}
+    }
+    
+    eval("\$self->{runprog} = sub {\n$CODE\n}");
+    
+    $self->clear_namespace();
+    $self->{state} = 'READY';
+}
 
 
+# trace ( interval, exprlist )
+# 
+# Add the given expressions to the trace list.
+
+sub trace {
+    
+    my ($self, %args) = @_;
+    
+    my $interval = $args{interval} || 1;
+    my $varcount = 0;
+    
+    my (@vars) = split /\s*,\s*/, $args{vars};
+    if ( uc $vars[0] eq 'ALL' ) {
+	@vars = grep { $self->{vtable}{$_}{type} eq 'variable' } keys %{$self->{vtable}};
+    }
+    
+    foreach my $expr (@vars) {
+	$varcount++;
+	my $var = $self->{vtable}{$expr} or
+	    carp "Warning: '$expr' is not a known variable";
+	push @{$self->{tracelist}}, $expr;
+    }
+    
+    $self->{trace_compiled} = undef;
+}
+
+
+# clear_trace ( )
+# 
+# Clear the trace list
+
+sub clear_trace {
+    
+    my $self = shift;
+    
+    $self->{tracelist} = [];
+    $self->{traceprog} = undef;
+    $self->{trace_compiled} = 1;
+}
+
+
+# Compile the trace program
+
+sub compile_trace {
+
+    my $self = shift;
+    
+    if ( scalar(@{$self->{tracelist}}) ) {
+	my $CODE = "package $self->{namespace};\nno strict 'vars';\n\n\
+%_TRACE{'T'} = T;\n";
+	
+	foreach my $expr (@{$self->{tracelist}}) {
+	    $CODE .= "\$_TRACE{'$expr'} = $expr;\n";
+	}
+	
+	eval("\$self->{traceprog} = sub {\n$CODE\n}");
+    }
+    
+    else {
+	$self->{traceprog} = undef;
+    }
+    
+    $self->{trace_compiled} = 1;
+}
+
+
+# Methods for phase 3 -- spinup
+# ============================
+
+# Methods for phase 4 -- run
+# ==========================
+
+# run ( start, limit, increment )
+# 
+# Run the model.  The start parameter, if given, specifies the initial time.
+# It defaults to 0, unless we are continuing a previous run in which case it
+# defaults to the time at the end of the previous run. The limit, if given,
+# specifies the ending time.  The increment, if given, specifies the time
+# increment and defaults to 1.
+
+sub run {
+
+    my ($self, %args) = @_;
+    
+    my $start = $args{start} > 0 ? $args{start} :
+		$self->{run_end} > 0 ? $self->{run_end} : 0;
+    
+    my $limit = $args{limit};
+    
+    my $increment = $args{increment} || 0;
+    
+    $self->{state} = 'RUN';
+    
+    # Find the time variable, and initialize it.
+    
+    my $T;
+    
+    eval("\$T = \\\$$self->{namespace}::T");
+    $$T = $self->{run_start} = $start;
+    
+    # If we are just starting up, do an initial trace.
+    
+    unless ( defined $self->{run_end} && $self->{run_end} == $$T ) {
+	&{$self->{traceprog}} if defined $self->{traceprog};
+    }
+    
+    # Now, loop through run steps
+    
+    until ( $$T == $limit ) {
+	
+	&{$self->{runprog}} if defined $self->{runprog};
+	$$T++;
+	&{$self->{traceprog}} if defined $self->{traceprog};
+    }
+    
+    # Finish up
+    
+    $self->{run_end} = $$T;
+    return 1;
+}
+    
+# Methods for phase 5 -- output
+# =============================
+
+sub write_data {
+
+    my ($self, %args) = @_;
+    
+    my (@vars) = split( /\*,\*/, $args{vars} );
+    
+    unless (@vars) {
+	@vars = @{$self->{tracelist}};
+    }
+    
+    my $fh = $args{file};
+    
+    my $dataref;
+    eval "\$dataref = \\\%$self->{namespace}::_TRACE";
+    my $datacount = scalar @{$dataref->{T}};
+    
+    foreach my $i (0..$datacount-1) {
+	print $fh $dataref->{T}[$i], "\t";
+	foreach my $var (@vars) {
+	    print $fh $dataref->{$var}[$i], "\t";
+	}
+	print $fh "\n";
+    }
+}
+
+	
 
 
 # We have to end the module with a true value.

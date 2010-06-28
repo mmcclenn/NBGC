@@ -34,7 +34,7 @@ sub new {
     my $self = {};
     bless $self, $class;
     
-    carp "Invalid variable name '$name'" unless $name =~ /^\w+$/
+    carp "Invalid variable name '$name'" unless $name =~ /^\w+$/;
     $self->{name} = $name;
     
     return $self;
@@ -47,6 +47,7 @@ sub new {
 sub DESTROY {
 }
 
+1;
 
 =head1 NAME
 

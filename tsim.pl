@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl
+#!/usr/bin/perl
 #
 # An ambitious project (so far unnamed) to create a general-purpose dynamic 
 # systems simulation package using Perl and PDL.
@@ -7,21 +7,30 @@
 
 
 use strict;
-use feature "switch";
-
-use TSIM.pm;
-use TVAR.pm;
+use Getopt::Std;
 
 
-my $sim = TSIM->new('simvar');
+use Simulator;
+
+our(%opts);
+
+# Process options
+
+getopts('v:o:', %opts);
+
+# Create simulator and load the model
+
+my $sim = new Simulator;
 
 while (<>)
 {
-    $sim->load($_);
+    $sim->load(stmt => $_);
 }
 
+$sim->trace(vars => 'all');
+$sim->init();
+$sim->run(limit => 50);
 
-my $a = 0;
-
+$sim->write_data(file => \*STDOUT);
 
 
