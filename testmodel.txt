@@ -1,11 +1,15 @@
 init $pool_a = 100
 init const $rate_ab = 0.1
-init const $rate_bc = 0.1
-init $population = 50;
-init const $growth_rate = 0.01
+init const $rate_bc = 0.05
+init $population = 30;
+init const $growth_rate = 0.05;
+init const $b_sink = 0.002
 
 $pool_a * $rate_ab => $pool_b
 $pool_b * $rate_bc => $pool_c
+
 growth => $population * $growth_rate
+
+#$pool_b => $pool_d : $population * $b_sink
 
 
