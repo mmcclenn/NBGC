@@ -1,7 +1,7 @@
 #
 # NBGC Project
 # 
-# Simulator::PDL - subclass of Simulator that compiles to PDL.
+# Simulator::PDL - subclass of Simulator that uses PDL internally.
 # 
 # Author: Michael McClennen
 # Copyright (c) 2010 University of Wisconsin-Madison
@@ -13,7 +13,7 @@ use strict;
 use warnings;
 use Carp;
 use PDL;
-
+use PDL::NiceSlice;
 
 # This subclass needs its own constructor method, which will call the base
 # constructor method and then re-bless the object into our own class and add
@@ -31,7 +31,7 @@ sub new {
 
     
 # Compile the model that is currently loaded into the given Simulator object.
-# The state of the model is kept as a piddle.  Variable values are all kept in
+# The model state is kept as a piddle.  Variable values are all kept in
 # the package NBGC::Run_$id where $id is a unique identifier assigned to this
 # Simulator object.
 
@@ -39,40 +39,57 @@ sub compile_runprog {
 
     my $self = shift;
     
-    # First, compile the initialization step.
+    # First, go through the variable/constant table to generate a vector of
+    # actual variables.
     
-    my $CODE = "package $self->{runspace};\nno strict 'vars';\n\n";
+    $vindex = 2;		# position 0 is for the time, and position 1
+                                # is for the constant 1.
+    
+    my @vv = (undef, undef);
+    
+    foreach my $var (@{$self->{vsequence}}) {
+	if ( $var->{type} eq 'variable' ) {
+	    $var->{index} = $vindex;
+	    $vv[$vindex++] = $var;
+	}
+    }
+    
+    $self->{vvector} = \@vv;
+    my $vlen = scalar(@vv);
+    
+    # Now we generate code to create a piddle to hold the variable vector
+    
+    my $CODE = <<ENDCODE;
+package $self->{runspace};
+no strict 'vars';
+
+our (\$STATE, \$LINTRAN);
+
+\$STATE = zeros($vlen);			# state vector, first pos is time 
+\$STATE(1) .= 1;			# second pos is constant 1
+\$LINTRAN = zeros($vlen, $vlen);	# linear transformation matrix
+\$LINTRAN->diagonal(0,1)++;
+\$LINTRAN(0,1) .= 1;			# increment time by 1 each step
+ENDCODE
+    
+    # Then we add initializers for each of the other variables
     
     foreach my $init (@{$self->{initlist}}) {
 	my ($name, $expr) = ($init->{var}, $init->{expr});
-	
-	$CODE .= "\$$name = $expr;\n";
+	my $index = $self->{vtable}{$name}{index};
+	$CODE .= "\$STATE($index) .= $expr;\n";
     }
     
-    eval("\$self->{initprog} = sub {\n$CODE\n}");
+    $CODE .= "\n";
     
-    if ( $@ ) {
-	croak "Error in initialization program: $@";
-    }
-    
-    # Next, compile the run step.
-    
-    $CODE = "package $self->{runspace};\nno strict 'vars';\n\n";
+    # and initializers for the linear transformation matrix based on
+    # the flows
     
     foreach my $flow (@{$self->{flowlist}}) {
 	my $source = $flow->{source};
 	my $sink = $flow->{sink};
 	if ( defined $flow->{rate_expr} ) {
-	    if ( $source eq '_' ) {
-		$CODE .= "\$$sink += $flow->{rate_expr};\n";
-	    }
-	    elsif ( $sink eq '_' ) {
-		$CODE .= "\$$source -= $flow->{rate_expr};\n";
-	    }
-	    else {
-		$CODE .= "{\nmy \$val = $flow->{rate_expr};\n";
-		$CODE .= "\$$source -= \$val; \$$sink += \$val;\n}\n";
-	    }
+	    croak "Arbitrary rate expressions not yet allowed with PDL.";
 	}
 	
 	elsif ( $flow->{rate2} eq '1' ) {
@@ -81,11 +98,31 @@ sub compile_runprog {
 	}
 	
 	else {
+	    my $rate1name = $flow->{rate1};
+	    my $rate1var = $self->{vtable}{$rate1name};
+	    my $rate1value = $self->{
 	    $CODE .= "\$$source -= \$$flow->{rate1} * \$$flow->{rate2}; " if $source ne '_';
 	    $CODE .= "\$$sink += \$$flow->{rate1} * \$$flow->{rate2}; " if $sink ne '_';
 	    $CODE .= "\n";
 	}
     }
+
+    eval("\$self->{initprog} = sub {\n$CODE\n}");
+    
+    if ( $@ ) {
+	croak "Error in initialization program: $@";
+    }
+    
+    
+    
+    # Next, compile the run step.
+    
+    $CODE = <<ENDCODE;
+package $self->{runspace};
+no strict 'vars';
+
+our(\$STATE);
+    
     
     eval("\$self->{runprog} = sub {\n$CODE\n}");
     
