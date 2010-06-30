@@ -1,0 +1,9 @@
+# ignore the following
+NBGC project.xcodeproj/
+build/
+plplot-test.pl
+# ignore emacs backup files
+*~
+# ignore objects and archives
+*.[oa]
+
