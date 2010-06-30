@@ -53,11 +53,11 @@ use strict;
 use warnings;
 use Carp;
 
-use Variable;
-use Object::PurePerl;
+use NBGC::Variable;
+use NBGC::Simulator::Perl;
 
 our ($SIM_ID, $INPUT_NAME, $INPUT_LINE, $LOAD_LINE, 
-     $OBJECT_METHOD, $INTEGRATION_METHOD); 
+     $INTEGRATION_METHOD); 
 
 $SIM_ID = 0;			# Gives each Simulator a unique ID number
 $INPUT_NAME = '<none>';	        # Name of the input file being currently read
@@ -79,11 +79,15 @@ sub new {
 
     my $class = shift;
     my $self = {};
+    
+    # Bless us into the proper class.  By default, we use the 'Perl' subclass.
+    
+    if ( $class eq 'NBGC::Simulator' ) { $class = 'NBGC::Simulator::Perl'; }
     bless $self, $class;
     
     my $id = $NBGC::SIM_ID++;
     $self->{id} = $id;
-    $self->{runspace} = "NBGC_Run_$id";
+    $self->{runspace} = "NBGC::Run_$id";
     $self->{state} = 'CLEAR';	# States are:
     				#   CLEAR - empty, waiting for a model
 				#   LOAD - a model is being loaded
@@ -101,7 +105,6 @@ sub new {
     $self->{tracelist} = [];	# List of expressions to trace during a run
     $self->{initprog} = undef;	# code ref for initialization
     $self->{runprog} = undef;	# code ref for one run step
-    $self->{tiprog} = undef; 	# code ref for trace initialization
     $self->{traceprog} = undef;	# code ref for one data trace step
     $self->{run_start} = undef; # at what value of t did the last run start?
     $self->{run_end} = undef;	# at what value of t did the last run end?
@@ -172,9 +175,10 @@ sub process_line {
 
     my ($self, $line) = @_;
     
-    return unless $line =~ /\S/;   # ignore blank lines
-    s/^\s*//;			   # take out initial whitespace
-    s/\s*$//;			   # take out final whitespace
+    $line =~ s/#.*//;			# take out comments
+    $line =~ s/^\s*//;			# take out initial whitespace
+    $line =~ s/\s*$//;			# take out final whitespace
+    return unless $line =~ /\S/;	# ignore blank lines
     
     if ( $line =~ / ^ init \s+ (.*) /xoi )
     {
@@ -379,40 +383,6 @@ sub clear {
 }
 
 
-# init_runspace ( ) - Make sure that the package used as the namespace for
-# running the model is clear of everything except the necessary variables.
-# This should be called once before every run, so that each run is done de novo.
-
-sub init_runspace {
-
-    my $self = shift;
-    my $pkgname = $self->{runspace} . '::';
-    
-    no strict 'refs';
-    my @vars = keys %$pkgname;
-    
-    foreach my $var (@vars) {
-	undef $$pkgname{$var};
-    }
-    
-    my $CODE = "package $pkgname; no strict 'vars';\n\n";
-    $CODE .= "\$T = 0; *t = \\\$T; \$_TRACE{'T'} = [];\n";
-    
-    foreach my $expr (@{$self->{tracelist}}) {
-	if ( $expr =~ /^\w/ ) { $expr = '$' . $expr; }
-	$CODE .= "\$_TRACE{'$expr'} = [];\n";
-    }
-    
-    eval $CODE;
-    
-    if ( $@ ) {
-	croak "Error in runspace init: $@";
-    }
-    
-    return 1;
-}
-
-
 # Methods for phase 2 -- init
 # ===========================
 
@@ -510,7 +480,7 @@ sub init {
     # us ready to initialize.
     
     elsif ( $self->{state} eq 'LOAD' ) {
-	$self->compile($OBJECT_METHOD) or return undef;
+	$self->compile_runprog() or return undef;
     }
     
     # Otherwise, if the state is anything but READY, reset the simulator
@@ -553,23 +523,8 @@ sub compile {
     
     # Now we are ready to compile or re-complile.
     
-    $method = $OBJECT_METHOD unless $method;   # If no method is specified, use default.
-    
-    if ( $method eq 'PERL' ) {
-	$self->compile_PurePerl();
-    }
-    
-    elsif ( $method eq 'PDL' ) {
-	carp "PDL compilation not yet enabled.";
-	return undef;
-	# $self->compile_PDL();
-    }
-    
-    else {
-	carp "Inalid compilation method: $method.";
-	return undef;
-    }
-    
+    $self->compile_runprog();
+    $self->{state} = 'READY';
     return 1;
 }
 
@@ -615,32 +570,21 @@ sub clear_trace {
 }
 
 
-# Compile the trace program.  There are actually two: the trace initialization
-# program, which sets up the trace hash, and the trace program, which records
-# the actual values.
+# Generate the trace program
 
-sub compile_trace {
+sub setup_trace {
 
     my $self = shift;
     
-    # Start setting up the code for both programs
+    # First check if we have a model loaded yet.
     
-    my $CODE = "package $self->{runspace};\nno strict 'vars';\n\n";
-    $CODE .= "push \@{\$_TRACE{'T'}}, \$T;\n";
-    
-    foreach my $expr (@{$self->{tracelist}}) {
-	if ( $expr =~ /^\w/ ) { $expr = '$' . $expr; }
-	$CODE .= "push \@{\$_TRACE{'$expr'}}, \$T;\n";
-	$CODE .= "push \@{\$_TRACE{'$expr'}}, $expr;\n";
+    unless ( $self->{compiled} ) {
+	carp "No model loaded.";
+	return undef;
     }
     
-    eval("\$self->{traceprog} = sub {\n$CODE\n}");
-    
-    if ( $@ ) {
-	croak "Error in trace program: $@";
-    }
-    
-    $self->{trace_compiled} = 1;
+    $self->compile_traceprog();
+    return 1;
 }
 
 
@@ -663,7 +607,7 @@ sub run {
 
     my ($self, %args) = @_;
     
-    my $start = $args{start} > 0 ? $args{start} : 0;
+    my $start = ($args{start} && $args{start} > 0) ? $args{start} : 0;
     
     if ( $args{continue} ) {
 	if ( defined $self->{run_end} ) {
@@ -683,7 +627,7 @@ sub run {
     
     # Make sure the trace program is compiled.
     
-    $self->compile_trace() unless $self->{trace_compiled};
+    $self->compile_traceprog() unless $self->{trace_compiled};
     
     # Find the time variable, and initialize it.
     
@@ -716,33 +660,23 @@ sub run {
 # Methods for phase 5 -- output
 # =============================
 
-sub write_data {
+# implemented by subclass : dump_trace	
 
-    my ($self, %args) = @_;
+# minmax_values ( @values ) - return the minimum and maximum of the list of values.
+
+sub minmax_values {
+
+    my $self = shift;
+    my $min = shift;
+    my $max = shift;
     
-    my (@vars) = split( /\*,\*/, $args{vars} );
-    
-    unless (@vars) {
-	@vars = @{$self->{tracelist}};
+    foreach (@_) {
+	$min = $_ if $_ < $min;
+	$max = $_ if $_ > $max;
     }
     
-    my $fh = $args{file};
-    
-    my $dataref;
-    eval "\$dataref = \\\%$self->{runspace}::_TRACE";
-    my $datacount = scalar @{$dataref->{T}};
-    
-    foreach my $i (0..$datacount-1) {
-	print $fh $dataref->{T}[$i], "\t";
-	foreach my $var (@vars) {
-	    print $fh $dataref->{$var}[2*$i+1], "\t";
-	}
-	print $fh "\n";
-    }
+    return ($min, $max);
 }
-
-	
-
 
 # We have to end the module with a true value.
 
