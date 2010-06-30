@@ -7,10 +7,11 @@
 
 
 use strict;
+use warnings;
 use Getopt::Std;
 
-
-use Simulator;
+use NBGC::Simulator;
+use Graphics::PLplot;
 
 our(%opts);
 
@@ -20,7 +21,7 @@ getopts('v:o:', %opts);
 
 # Create simulator and load the model
 
-my $sim = new Simulator;
+my $sim = new NBGC::Simulator;
 
 while (<>)
 {
@@ -31,6 +32,26 @@ $sim->trace(vars => 'all');
 $sim->init();
 $sim->run(limit => 50);
 
-$sim->write_data(file => \*STDOUT);
+#$sim->dump_trace(file => \*STDOUT);
 
+my (@t) = $sim->get_values('T');
+my ($tmin, $tmax) = $sim->minmax_values(@t);
+my (@values);
+my (@colors) = (1, 3, 9, 13, 8);
+my $textcoord = 9;
+
+plsdev ("aqt");
+plinit ();
+plscolbg (255, 255, 255);
+plenv ($tmin, $tmax, 0, 100, 0, 2);
+
+foreach my $var (sort $sim->trace_vars()) {
+    @values = $sim->get_values($var);
+    plcol0 (shift @colors);
+    plline(\@t, \@values);
+    my ($varname) = $var; $varname =~ s/^\$//;
+    plptex(5, ($textcoord-- * 10) + 5, 1, 0, 0, $varname);
+}
+
+plend ();
 
