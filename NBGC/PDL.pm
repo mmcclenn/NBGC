@@ -85,9 +85,11 @@ ENDCODE
 
 our (\$STATE);
 
-\$STATE = zeros($vlen);			# state vector, first pos is time
+\$STATE = zeros($vlen);			# vector of state vectors, first pos is
+                                        # time, second pos is time unit
+\$self->{STATE} = \\\$STATE;
 my \$tmp;
-(\$tmp = \$STATE(1)) .= 1;			# second pos is constant 1
+(\$tmp = \$STATE(1)) .= $self->{t_unit};
 ENDCODE
     
     # Now initialize each of the other positions in the state vector according
@@ -106,9 +108,10 @@ ENDCODE
 
     $CODE .= <<ENDCODE;
     
-\$LINTRAN = zeros($vlen, $vlen);	# start with an empty matrix
-\$tmp = \$LINTRAN->diagonal(0,1); \$tmp++;		# add in the identity matrix
-(\$tmp = \$LINTRAN(0,1)) .= 1;			# increment time by 1 each step
+\$LINTRAN = zeros($vlen, $vlen);		# start with an empty matrix
+\$self->{LINTRAN} = \\\$LINTRAN;
+\$tmp = \$LINTRAN->diagonal(0,1); \$tmp++;	# add in the identity matrix
+(\$tmp = \$LINTRAN(0,1)) .= 1;			# increment time by t_unit each step
 ENDCODE
     
     # Now, for each flow, set the necessary coefficients.
@@ -137,21 +140,21 @@ ENDCODE
 	
 	if ( $rate->{type} eq 'literal' ) {
 	    $rate_coeff = $rate->{value};
-	    $rate_var_index = 1; # index of constant 1 in state vector
+	    $rate_var_index = 1; # index of t_unit in state vector
 	}
 	
 	elsif ( $rate->{type} eq 'const' ) {
-	    $rate_coeff = '$' . $rate->{name};
-	    $rate_var_index = 1; # index of constant 1 in state vector
+	    $rate_coeff = "\$$rate->{name} * $self->{t_unit}";
+	    $rate_var_index = 1; # index of t_unit in state vector
 	}
 	
 	elsif ( $rate->{type} eq 'var' ) {
-	    $rate_coeff = '1';
+	    $rate_coeff = $self->{t_unit};
 	    $rate_var_index = $rate->{index};
 	}
 	
 	elsif ( $rate->{type} eq 'prod' ) {
-	    $rate_coeff = '1';
+	    $rate_coeff = $self->{t_unit};
 	    $rate_var_index = 1; # will be overridden if a child is of type 'var'
 	    foreach my $child (@{$rate->{child}}) {
 		if ( $child->{type} eq 'var' ) {
@@ -194,7 +197,7 @@ no strict 'vars';
 use PDL;
 
 our(\$STATE, \$LINTRAN);
-    
+
 \$STATE = \$STATE x \$LINTRAN;
 
 ENDCODE
@@ -215,20 +218,12 @@ sub compile_traceprog {
 
     my $self = shift;
     
-    my $CODE = <<ENDCODE;
-package $self->{runspace};
-no strict 'vars';
-
-my \$n = \$STATE;
-\$n->sever();
-push \@_TRACE, \$n;
-ENDCODE
-
-    eval("\$self->{traceprog} = sub {\n$CODE\n}");
+    $self->{TRACECOUNT} = 0;
     
-    if ( $@ ) {
-	croak "Error in trace program: $@";
-    }
+    $self->{traceprog} = sub {
+	my $tmp = $self->{TRACE}->slice($self->{TRACECOUNT}++);
+	$tmp .= $self->{STATE}->copy();
+    };
     
     $self->{trace_compiled} = 1;
 }
@@ -238,32 +233,12 @@ ENDCODE
 # running the model is clear of everything except the necessary variables.
 # This should be called once before every run, so that each run is done de novo.
 
-sub init_runspace {
-
-    my $self = shift;
-    my $pkgname = $self->{runspace} . '::';
+sub init_trace {
     
-    no strict 'refs';
-    my @vars = keys %$pkgname;
+    my ($self, $tracesize) = @_;
+    my $vlen = scalar(@{$self->{vvector}});
     
-    foreach my $var (@vars) {
-	undef $$pkgname{$var};
-    }
-    
-    my $CODE = "package $pkgname; no strict 'vars';\n\n";
-    $CODE .= "\$T = 0; *t = \\\$T; \$_TRACE{'T'} = [];\n";
-    
-    foreach my $expr (@{$self->{tracelist}}) {
-	if ( $expr =~ /^\w/ ) { $expr = '$' . $expr; }
-	$CODE .= "\$_TRACE{'$expr'} = [];\n";
-    }
-    
-    eval $CODE;
-    
-    if ( $@ ) {
-	croak "Error in runspace init: $@";
-    }
-    
+    $self->{TRACE} = zeros($vlen, $tracesize);
     return 1;
 }
 
@@ -288,7 +263,7 @@ sub increment_run_time {
     
     my ($self, $t_ref, $start_time) = @_;
     
-    $$t_ref++;
+    $$t_ref = $;
 }
 
 

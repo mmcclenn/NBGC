@@ -13,34 +13,35 @@
 # time steps, using various methods of approximation.  This is referred to as
 # "running" the model.
 # 
-# A model run consists of 5 phases, all of which are optional except the first.
+# A model run consists of 4 phases:
 # 
-# 1. load	Read in a model and set up the framework necessary to run it
-# 2. init	Initialize the model's variables
-# 3. spinup	Run the model long enough to establish a steady state, or 
-#                 until some specified condition is reached
-# 4. run	Run the model for a specified number of time steps, or until a 
+# 1. init	Initialize the model's variables
+# 2. spinup	Run the model long enough to establish a steady state, or 
+#                 until some specified condition is reached (optional)
+# 3. run	Run the model for a specified number of time steps, or until a 
 #                 specified condition is reached
-# 5. output	Display, write or otherwise make available the values of one
+# 4. output	Display, write or otherwise make available the values of one
 #                 or more of the model variables.
 # 
-# Flags, initial variable values, etc. can be set by the calling package, and
-# thus the model can be parametrized.
+# Flags, initial variable values, etc. can be set at any time, in order to
+# parametrize the model.
 # 
 # 
 # Here is an example of usage:
 # 
+#   $model = new NBGC::Model;
+#   $model->load(file => "model.txt");
+#   
 #   $sim = new NBGC::Simulator;
 #   
-#   $sim->load(file => "model.txt");
-#   
-#   $sim->set_init_value(name => 'some_constant', value => 3);
+#   $sim->load($model);
+#   $sim->initial_value('some_constant', 3);
 #   $sim->init();
 #   
 #   $sim->spinup();
-#   $sim->set_value(name => 'other_constant', value => 5.012);
+#   $sim->set_value('other_constant', 5.012);
 #   
-#   $sim->trace(interval => 1, variables => qw(var1 var2 var3));
+#   $sim->trace('all');
 #   $sim->run(start => 0, limit => 300);
 #   
 #   $sim->write_data(file => "output.txt");
@@ -53,20 +54,11 @@ use strict;
 use warnings;
 use Carp;
 
-use NBGC::Variable;
-use NBGC::Simulator::Perl;
-
-our ($SIM_ID, $INPUT_NAME, $INPUT_LINE, $LOAD_LINE, 
-     $INTEGRATION_METHOD); 
+our ($SIM_ID, $INTEGRATION_METHOD); 
 
 $SIM_ID = 0;			# Gives each Simulator a unique ID number
-$INPUT_NAME = '<none>';	        # Name of the input file being currently read
-$INPUT_LINE = 0;		# Current input line number
-$LOAD_LINE = 0;			# Current input line number when loading
-                                # individual statements
-
 $INTEGRATION_METHOD = 'SIMPLE';	# Which method of numerical
-                                # integration to use.
+                                # Integration to use.
 
 # Constructor, destructor and related methods
 # ===========================================
@@ -78,11 +70,10 @@ $INTEGRATION_METHOD = 'SIMPLE';	# Which method of numerical
 sub new {
 
     my $class = shift;
-    my $self = {};
+
+    # Create a new instance and bless into the proper class.
     
-    # Bless us into the proper class.  By default, we use the 'Perl' subclass.
-    
-    if ( $class eq 'NBGC::Simulator' ) { $class = 'NBGC::Simulator::Perl'; }
+    my $self = {};    
     bless $self, $class;
     
     my $id = $NBGC::SIM_ID++;
@@ -90,19 +81,17 @@ sub new {
     $self->{runspace} = "NBGC::Run_$id";
     $self->{state} = 'CLEAR';	# States are:
     				#   CLEAR - empty, waiting for a model
-				#   LOAD - a model is being loaded
 				#   READY - the model is ready to run
 				#   INIT - the vars are being initialized
 				#   SPINUP - running in spinup mode
     				#   RUN - running in regular mode
     
-    $self->{compiled} = undef;	# Which method was used to compile the code
-    $self->{trace_compiled} = undef; # Have we compiled the trace list?
-    $self->{vtable} = {};	# Table of variables
-    $self->{vvector} = [];	# Vector of variables
-    $self->{initlist} = [];	# List of initialization records (hashes)
-    $self->{flowlist} = [];     # List of flow records (hashes)
-    $self->{tracelist} = [];	# List of expressions to trace during a run
+    $self->{model} = undef;     # The model.  Next few are model components
+    $self->{stable} = undef;	#   symbol table
+    $self->{sseq} = undef;	#   symbol sequence list
+    $self->{initlist} = undef;	#   list of symbol initializations
+    $self->{flowlist} = undef;  #   list of flows
+    $self->{itable} = {};	# table of initial symbol value overrides
     $self->{initprog} = undef;	# code ref for initialization
     $self->{runprog} = undef;	# code ref for one run step
     $self->{traceprog} = undef;	# code ref for one data trace step
@@ -110,7 +99,7 @@ sub new {
     $self->{run_end} = undef;	# at what value of t did the last run end?
     
     return $self;
-} 
+}
 
 # DESTROY ()
 # 
@@ -120,273 +109,190 @@ sub DESTROY {
 }
 
 
-# Methods for phase 1 -- load
+# Methods for loading a model
 # ===========================
 
-# load ( stmt => @stmts )
-# load ( file => filename or filehandle )
-# 
-# Load one or more statements in the Model Definition Language recognized by
-# this project.  These are added to any that have already been loaded.  If it
-# is desired to reload or redefine the model, clear() must be used.
+# load ( model ) - load in a model
 
-sub load {
+sub load {    
+
+    my ($self, $model, $time_unit) = @_;
     
+    croak "Valid model required" unless ref $model eq 'NBGC::Model';
+    croak "Interval must be >= 1" if defined $interval and !($interval > 1);
+    
+    $self->{model} = $model;
+    $self->{t_unit} = $time_unit || 1;
+    $self->{stable} = $model->{stable};
+    $self->{sseq} = $model->{sseq};
+    $self->{initlist} = $model->{initlist};
+    $self->{flowlist} = $model->{flowlist};
+    
+    $self->compile_runprog();
+    $self->compile_traceprog();
+    $self->init_runspace();
+    $self->{state} = 'READY';
+}
+
+
+# Compile the model that is currently loaded into the given Simulator object
+# using the PERL method -- the initialization and each step of the model
+# become pure Perl functions.  Variable values are all kept in the package
+# NBGC_Run_$id where $id is a unique identifier assigned to this Simulator object.
+
+sub compile_runprog {
+
     my $self = shift;
-    my $selector = shift;
     
-    if ( $self->{state} ne 'CLEAR' && $self->{state} ne 'LOAD' ) {
-	carp "Simulator must be cleared with the clear() method before loading another model";
-	return 0;
+    # First, compile the initialization step.
+    
+    my $CODE = "package $self->{runspace};\nno strict 'vars';\n\n";
+    
+    foreach my $init (@{$self->{initlist}}) {
+	my ($sym, $expr) = ($init->{sym}, $init->{expr});
+	my $name = $sym->{name};
+	
+	$CODE .= "\$$name = (defined \$self->{itable}{'$name'} ? \$self->{itable}{'$name'} : $expr);\n";
     }
     
-    $self->{state} = 'LOAD';
+    eval("\$self->{initprog} = sub {\n$CODE\n}");
     
-    if ( $selector eq 'file' ) {
-	local($INPUT_NAME) = shift;
-	local($INPUT_LINE) = 0;
-	open(my $infile, $INPUT_NAME) || croak "Could not open file '$INPUT_NAME': $!";
+    if ( $@ ) {
+	croak "Error in initialization program: $@";
+    }
+    
+    # Next, compile the run step.
+    
+    $CODE = "package $self->{runspace};\nno strict 'vars';\n\n";
+    
+    foreach my $flow (@{$self->{flowlist}}) {
+	my $source = $flow->{source};
+	my $sink = $flow->{sink};
+	if ( defined $flow->{rate_expr} ) {
+	    if ( !defined($source) ) {
+		$CODE .= "\$$sink->{name} += $flow->{rate_expr};\n";
+	    }
+	    elsif ( !defined($sink) ) {
+		$CODE .= "\$$source->{name} -= $flow->{rate_expr};\n";
+	    }
+	    else {
+		$CODE .= "{\nmy \$val = $flow->{rate_expr};\n";
+		$CODE .= "\$$source->{name} -= \$val; \$$sink->{name} += \$val;\n}\n";
+	    }
+	}
 	
-	while (<$infile>) {
-	    $INPUT_LINE++;
-	    $self->process_line($_);
+	elsif ( $flow->{rate2} eq '1' ) {
+	    $CODE .= "\$$source -= \$$flow->{rate1};\n" if $source ne '_';
+	    $CODE .= "\$$sink += \$$flow->{rate1};\n" if $sink ne '_';
+	}
+	
+	else {
+	    $CODE .= "\$$source->{name} -= \$$flow->{rate1}{name} * \$$flow->{rate2}{name}; " if defined($source);
+	    $CODE .= "\$$sink->{name} += \$$flow->{rate1}{name} * \$$flow->{rate2}{name}; " if defined($sink);
+	    $CODE .= "\n";
 	}
     }
     
-    elsif ( $selector eq 'stmt' ) {
-	local($INPUT_NAME) = '<input>';
-	local($INPUT_LINE) = $self->{load_line};
-	
-	foreach (@_) {
-	    $INPUT_LINE++;
-	    $self->{load_line}++;
-	    $self->process_line($_);
-	}
+    eval("\$self->{runprog} = sub {\n$CODE\n}");
+    
+    if ( $@ ) {
+	croak "Error in run program: $@";
     }
     
     return 1;
 }
 
-# Handle one input line.  Any statement starting with "init" pertains to the
-# initialization phase (2), while all other statements pertain to the spinup
-# and run phases (3 and 4).
 
-sub process_line {
+# List all of the model's variables
 
-    my ($self, $line) = @_;
-    
-    $line =~ s/#.*//;			# take out comments
-    $line =~ s/^\s*//;			# take out initial whitespace
-    $line =~ s/\s*$//;			# take out final whitespace
-    return unless $line =~ /\S/;	# ignore blank lines
-    
-    if ( $line =~ / ^ init \s+ (.*) /xoi )
-    {
-	$self->parse_init_stmt($1);
-    }
-    
-    else
-    {
-	$self->parse_run_stmt($line);
-    }
+sub variables {
+
+    my $self = shift;
+
+    my @vars = map { $_->{name} } grep { $_->{type} eq 'var' } @{$self->{sseq}};
+    return @vars;
 }
 
 
-# Parse an "init" statement from the model.  If it specifies a constant,
-# register that constant.  If it specifies an initialization expression, add
-# that to the simulation's list of initialization statements.
+# Create a trace function for the current model.
 
-sub parse_init_stmt {
-
-    my ($self, $stmt) = @_;
-    my ($const, $name, $expr);
-    
-    if ( ($const, $name, $expr) = 
-	 $stmt =~ / ^ (const\s+)? \$ (\w+) (?: \s* = \s* (.*))/xoi )
-    {
-	# Check for the 'const' keyword, and register the
-	# identifier $name as either a constant or a variable accordingly.
-	
-	if ( $const ) {
-	    $self->register_variable($2, type => 'const');
-	}
-	else {
-	    $self->register_variable($2);
-	}
-	
-	# If an initialization expression was given, add it to the
-	# initialization list for this simulation.
-	
-	if ( $expr ne '' ) {
-	    $self->add_init({var => $2, expr => $3});
-	}
-    }
-    
-    else
-    {
- 	die "Invalid init statement '$stmt' at $INPUT_NAME, line $INPUT_LINE\n";
-    }
-}
-
-
-# Parse a "run" statement from the model.  Currently, the only valid run
-# statements are flow specifiers.
-
-sub parse_run_stmt {
-    
-    my ($self, $stmt) = @_;
-    
-    if ( $stmt =~ / ^ \$ (\w+) \s* => \s* \$ (\w+) \s* : 
-		    \s* \$ (\w+) \s* \* \s* \$ (\w+) $ /xo )
-    {
-	$self->add_flow({source => $1, sink => $2, rate1 => $3, rate2 => $4});
-    }
-	
-    elsif ( $stmt =~ / ^ \$ (\w+) \s* => \s* \$ (\w+) \s* : \s* \$ (\w+) $ /xo )
-    {
-	$self->add_flow({source => $1, sink => $2, rate1 => $3, rate2 => 1});
-    }
-    
-    elsif ( $stmt =~ / ^ \$ (\w+) \s* => \s* \$ (\w+) \s* : \s* (.+) /xo )
-    {
-	$self->add_flow({source => $1, sink => $2, rate_expr => $3});
-    }
-    
-    elsif ( $stmt =~ / ^ \$ (\w+) \s* \* \s* \$ (\w+) \s* => \s* \$ (\w+) $ /xo )
-    { 
-	$self->add_flow({source => $1, sink => $3, rate1 => $1, rate2 => $2});
-    }
-    
-    elsif ( $stmt =~ / ^ \$? (\w+) \s* => \s* \$ (\w+) \s* \* \s* \$ (\w+) $ /xo )
-    {
-	$self->add_flow({source => $1, sink => $2, rate1 => $2, rate2 => $3});
-    }
-	
-    else
-    {
-	die "Invalid statement '$stmt' at $INPUT_NAME, line $INPUT_LINE\n";
-    }
-}
-
-
-# Add an initialization record to the simulation.
-
-sub add_init {
-
-    my ($self, $init) = @_;
-    
-    push @{$self->{initlist}}, $init;
-}
-
-
-# Add a flow record to the simulation.
-
-sub add_flow {
-    
-    my ($self, $flow) = @_;
-    
-    # First look at the source; "endless" and "growth" mean a limitless source
-    
-    if ( $flow->{source} =~ /endless|growth/i ) {
-	$flow->{source} = "_";
-    }
-    else {
-	$self->register_variable($flow->{source}, type => 'variable');
-    }
-    
-    # Similarly, "endless" and "decay" mean a limitless sink
-    
-    if ( $flow->{sink} =~ /endless|decay/i ) {
-	$flow->{sink} = "_";
-    }
-    else {
-	$self->register_variable($flow->{sink}, type => 'variable');
-    }
-    
-    # We need to expand the set of supported expressions
-    
-    if ( defined $flow->{rate_expr} ) {
-	die "Arbtrary rate expressions are not yet supported. \
-At $INPUT_NAME, line $INPUT_LINE\n";
-    }
-    
-    # Limitless quantities are not valid as rates
-    
-    if ( $flow->{rate1} =~ /^(endless|growth|decay)$/i ) {
-	die "Invalid rate coefficient: $flow->{rate1} at $INPUT_NAME, line $INPUT_LINE\n";
-    }
-    else {
-	$self->register_variable($flow->{rate1});
-    }
-    
-    if ( $flow->{rate2} =~ /^(endless|growth|decay)$/i ) {
-	die "Invalid rate coefficient: $flow->{rate2} at $INPUT_NAME, line $INPUT_LINE\n";
-    }
-    else {
-	$self->register_variable($flow->{rate2});
-    }
-
-    # Now that we've validated it, add the flow to the list.
-    
-    push @{$self->{flowlist}}, $flow;
-}
-
-
-# Note that a variable has been mentioned in the model.  Depending on how it
-# is mentioned, it may have type 'const' or 'variable'.  This routine will be
-# called more than once for most variables; it is an error to redefine one
-# from 'const' to 'variable' or vice versa.
-
-sub register_variable {
-
-    my ($self, $name, undef, $type) = @_;
-    
-    # First make sure that we actually have a valid identifier
-    
-    unless ( $name =~ / ^ [a-zA-Z_] \w* $ /xoi ) {
-	die "Invalid identifier '$name' at $INPUT_NAME, line $INPUT_LINE\n";
-    }
-    
-    # Then create a new variable record and add it to the variable table.
-    
-    my $var = ($self->{vtable}{$name}) || 
-              ($self->{vtable}{$name} = new NBGC::Variable $name);
-    
-    # It is not allowed to redefine a variable as a constant or vice
-    # versa.  But if the given name was previously used but not
-    # given a type, we can assign one now.
-    
-    if ( defined $type && defined $var->{type} && $var->{type} ne $type ) {
-	die "Invalid redeclaration of variable $name to constant \
-at $INPUT_NAME, line $INPUT_LINE.\n";
-    }
-    
-    elsif ( defined $type ) {
-	$var->{type} = $type;
-    }
-}
-
-
-# clear ( ) - Clear the simulator completely, so that another model can be
-# loaded. 
-
-sub clear {    
+sub compile_traceprog {
 
     my $self = shift;
     
-    $self->{state} = 'CLEAR';    
-    $self->{compiled} = undef;
-    $self->{vtable} = {};
-    $self->{vvector} = [];
-    $self->{initlist} = [];
-    $self->{flowlist} = [];
+    # First get a list of all of the variables
+    
+    my @vars = $self->variables();
+    
+    # Then generate code to trace them
+    
+    my $CODE = "package $self->{runspace};\nno strict 'vars';\n\n";
+    $CODE .= "push \@{\$_TRACE{'T'}}, \$T;\n";
+    
+    foreach my $var (@vars) {
+	$CODE .= "push \@{\$_TRACE{'$var'}}, \$$var;\n";
+    }
+    
+    eval("\$self->{traceprog} = sub {\n$CODE\n}");
+    
+    if ( $@ ) {
+	croak "Error in trace program: $@";
+    }
+    
+    return 1;
 }
 
 
-# Methods for phase 2 -- init
+# init_runspace ( ) - Make sure that the package used as the namespace for
+# running the model is clear of everything except the necessary variables.
+# This should be called once before every run, so that each run is done de novo.
+
+sub init_runspace {
+
+    my $self = shift;
+    my $pkgname = $self->{runspace} . '::';
+    
+    no strict 'refs';
+    my @vars = keys %$pkgname;
+    
+    foreach my $var (@vars) {
+	undef $$pkgname{$var};
+    }
+    
+    my $CODE << ENDCODE;
+package $pkgname;
+no strict 'vars';
+our (\$T, \$t);
+
+\$T = 0;
+*t = \\\$T;
+ENDCODE
+    
+    eval $CODE;
+    
+    if ( $@ ) {
+	croak "Error in runspace init: $@";
+    }
+    
+    return 1;
+}
+
+
+# reset ( ) - reset the simulator for another model run
+
+sub reset {
+    
+    my $self = shift;
+    
+    $self->init_runspace();
+    $self->{state} = 'READY';
+}
+
+
+# Methods for phase 1 -- init
 # ===========================
 
-# set_init_value ( name, value )
+# initial_value ( name, value )
 #
 # Specifies an initial value for the given identifier (variable or constant),
 # overriding any value specified in the model. This routine is only
@@ -394,27 +300,27 @@ sub clear {
 # undefined value means to revert to the value specified in the model. The
 # results of this call are persistent across model runs.
 
-sub set_init_value {
+sub initial_value {
 
-    my ($self, %args) = @_;
+    my ($self, $name, $value) = @_;
     
     # First look up the identifier, and make sure that it is defined.
     
-    my $var = $self->{vtable}{$args{name}};
+    my $sym = $self->{stable}{$name};
     
-    unless ( ref $var eq 'Variable' ) {
-	carp "Unknown identifier '$args{name}'";
+    unless ($sym) {
+	carp "Unknown variable '$name'";
 	return undef;
     }
     
     # Set the value and return true.
     
-    $self->{vtable}{initial} = $args{value};
+    $self->{itable}{$name} = $value;
     return 1;
 }
 
 
-# set_run_value ( name, value )
+# set_value ( name, value )
 # 
 # Specifies a new value for the given identifier (variable or constant),
 # overriding any value specified in the model.  This routine can be called at
@@ -423,47 +329,32 @@ sub set_init_value {
 # variable or constant is reset to its initial value as specified in the model
 # or overridden by set_init_value().
 
-sub set_run_value {
+sub set_value {
 
-    my ($self, %args) = @_;
+    my ($self, $name, $value) = @_;
     
     # First look up the identifier, and make sure that it is defined.
     
-    my $var = $self->{vtable}{$args{name}};
+    my $sym = $self->{stable}{$name};
     
-    unless ( ref $var eq 'Variable' ) {
-	carp "Unknown identifier '$args{name}'";
+    unless ($sym) {
+	carp "Unknown variable '$name'";
 	return undef;
     }
     
-    # Set the value.  Exactly how this is done depends on which method was
-    # used to compile the model.
+    # Set the value.
     
-    if ( $self->{compiled} eq 'PERL' ) {
-	eval "package $self->{runspace}; $args{name} = $args{value};";
-    }
+    eval "package $self->{runspace}; no strict 'vars'; \$$name = $value;";
     
-    elsif ( $self->{compiled} eq 'PDL' ) {
-	# still have to write this one...
-    }
-    
-    else {
-	carp "Variables cannot be set until the model is compiled.";
-	return undef;
-    }
-    
-    $self->{vtable}{set} = $args{value};
     return 1;
 }
 
 
 # init ( )
 # 
-# If the model has not yet been compiled, do so.  Then initialize the
-# model variables in order to start run.  Use the initial values
-# specified in the model, unless these were overridden by calls to the
-# set_value() method.  Throw an exception if any of the model
-# variables are left without a value.
+# Reset the simulator (if necessary) and then initialize the model variables
+# for a new run. Use the initial values specified in the model, unless these
+# were overridden by calls to the initial_value() method.
 
 sub init {
 
@@ -472,59 +363,22 @@ sub init {
     # First check if we have a model loaded yet.
     
     if ( $self->{state} eq 'CLEAR' ) {
-	carp "No model loaded.";
+	croak "No model loaded.";
 	return undef;
     }
     
-    # If we have a model loaded but not compiled, do that now.  That will make
-    # us ready to initialize.
-    
-    elsif ( $self->{state} eq 'LOAD' ) {
-	$self->compile_runprog() or return undef;
-    }
-    
-    # Otherwise, if the state is anything but READY, reset the simulator
+    # If the state is anything but READY, reset the simulator
     # first.
     
     elsif ( $self->{state} ne 'READY' ) {
 	$self->reset();
     }
     
-    # Now, we are ready to initialize.  First initialize the namespace, then
-    # the variables.
+    # Now, we are ready to initialize the variables.
     
     $self->{state} = 'INIT';
-    $self->init_runspace();
     &{$self->{initprog}};
     
-    return 1;
-}
-
-
-# Compile the model, or re-compile it if it has already been compiled.
-
-sub compile {
-
-    my ($self, $method) = @_;
-    
-    # First check if we have a model loaded yet.
-    
-    if ( $self->{state} eq 'CLEAR' ) {
-	carp "No model loaded.";
-	return undef;
-    }
-    
-    # Otherwise, if the state is anything but LOAD, reset the simulator
-    # first.
-    
-    elsif ( $self->{state} ne 'LOAD' ) {
-	$self->reset();
-    }
-    
-    # Now we are ready to compile or re-complile.
-    
-    $self->compile_runprog();
-    $self->{state} = 'READY';
     return 1;
 }
 
@@ -570,24 +424,6 @@ sub clear_trace {
 }
 
 
-# Generate the trace program
-
-sub setup_trace {
-
-    my $self = shift;
-    
-    # First check if we have a model loaded yet.
-    
-    unless ( $self->{compiled} ) {
-	carp "No model loaded.";
-	return undef;
-    }
-    
-    $self->compile_traceprog();
-    return 1;
-}
-
-
 # Methods for phase 3 -- spinup
 # ============================
 
@@ -621,8 +457,6 @@ sub run {
     
     my $limit = $args{limit};
     
-    my $increment = $args{increment} || 1;
-    
     $self->{state} = 'RUN';
     
     # Make sure the trace program is compiled.
@@ -631,36 +465,131 @@ sub run {
     
     # Find the time variable, and initialize it.
     
-    my $T;
+    my $t_ref = $self->init_run_time($start);
     
-    eval("\$T = \\\$$self->{runspace}::T");
-    $$T = $self->{run_start} = $start;
+    # If we are just starting up, set up the trace do an initial trace.
     
-    # If we are just starting up, do an initial trace.
-    
-    unless ( defined $self->{run_end} && $self->{run_end} == $$T ) {
+    unless ( defined $self->{run_end} && $self->{run_end} == $start ) {
+	$self->init_trace(($limit - $start + 1) * $self->{t_unit});
 	&{$self->{traceprog}};
     }
     
     # Now, loop through run steps
     
-    until ( $$T >= $limit ) {
+    until ( $$t_ref >= $limit ) {
 	
 	&{$self->{runprog}} if defined $self->{runprog};
-	$$T++;
+	$self->increment_run_time($t_ref);
 	&{$self->{traceprog}} if defined $self->{traceprog};
     }
     
     # Finish up
     
-    $self->{run_end} = $$T;
+    $self->{run_end} = $$t_ref;
     return 1;
 }
+
+
+# Set the initial time, and return a reference to the time variable.
+
+sub init_run_time {
     
+    my ($self, $start_time) = @_;
+    
+    my $t_ref;
+    eval("\$t_ref = \\\$$self->{runspace}::T");
+    $$t_ref = $self->{run_start} = $start_time;
+    
+    return $t_ref;
+}
+
+
+sub increment_run_time {
+    
+    my ($self, $t_ref) = @_;
+    
+    $$t_ref += $self->{t_unit};
+}
+
+
+# set up for the trace program
+
+sub init_trace {
+    
+    my ($self, $tracesize) = @_;
+    my $traceref;
+    
+    eval("package $self->{runspace}; \%_TRACE = (); \$traceref = \\\%_TRACE;");
+    
+    $traceref->{'T'} = [];
+    
+    foreach my $expr (@{$self->{tracelist}}) {
+	if ( $expr =~ /^\w/ ) { $expr = '$' . $expr; }
+	$traceref->{'$expr'} = [];
+    }
+    
+    return 1;
+}
+
 # Methods for phase 5 -- output
 # =============================
 
-# implemented by subclass : dump_trace	
+# trace_vars ( ) - return a list of variables being traced
+
+sub trace_vars { 
+
+    my $self = shift;
+    
+    return @{$self->{tracelist}};
+}
+
+# dump_trace ( ) - dump the trace data to the given file handle
+
+sub dump_trace {
+
+    my ($self, %args) = @_;
+    
+    my $fh = $args{file};
+    my @vars = $self->variables();
+    
+    my $dataref;
+    eval "\$dataref = \\\%$self->{runspace}::_TRACE";
+    my $datacount = scalar @{$dataref->{T}};
+    
+    foreach my $i (0..$datacount-1) {
+	print $fh $dataref->{T}[$i], "\t";
+	foreach my $var (@vars) {
+	    print $fh $dataref->{$var}[$i], "\t";
+	}
+	print $fh "\n";
+    }
+}
+
+
+# get_values ( variable ) - returns a list of the trace values of the
+# given variable.  T returns time.
+
+sub get_values {
+    
+    my ($self, $expr) = @_;
+    
+    my $dataref;
+    eval "\$dataref = \\\%$self->{runspace}::_TRACE";
+    my $datacount = scalar @{$dataref->{T}};
+    
+    if ( $expr eq 'T' ) {
+	return @{$dataref->{$expr}};
+    }
+    
+    else {
+	my @vals;
+	foreach my $i (0..$datacount-1) {
+	    push @vals, $dataref->{$expr}[$i];
+	}
+	return @vals;
+   }
+}
+
 
 # minmax_values ( @values ) - return the minimum and maximum of the list of values.
 
