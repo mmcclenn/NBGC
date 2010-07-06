@@ -16,20 +16,6 @@ use PDL;
 use PDL::NiceSlice;
 use PDL::Graphics::PLplot;
 
-# This subclass needs its own constructor method, which will call the base
-# constructor method and then re-bless the object into our own class and add
-# the additional fields we need.
-
-sub new {
-
-    my $class = shift;
-    my $self = NBGC::Simulator->new();
-    
-    bless $self, $class;
-    return $self;
-}
-
-
 # Compile the model that is currently loaded into this Simulator object.
 # The model state is kept as a piddle.  Variable values are all kept in
 # the package NBGC::Run_$id where $id is a unique identifier assigned to this
@@ -57,13 +43,23 @@ sub compile_runprog {
     $self->{vvector} = \@vv;
     my $vlen = scalar(@vv);
     
+    # First generate the state vector and linear transformation vector, and
+    # add them to the simulator object.
+    
+    my ($tmp);
+    $self->{STATE} = zeros($vlen);
+    ($tmp = $self->{STATE}->slice('1')) .= $self->{t_unit};
+    
+    $self->{LINTRAN} = zeros($vlen, $vlen);
+    ($tmp = $self->{LINTRAN}->diagonal(0,1))++;
+    ($tmp = $self->{LINTRAN}->slice('0,1')) .= 1;
+    
     # Our generated code goes in the 'runspace' package.
     
     my $CODE = <<ENDCODE;
 package $self->{runspace};
 no strict 'vars';
 use PDL;
-PDL::import('zeros', 'diagonal');
 
 ENDCODE
     
@@ -77,27 +73,13 @@ ENDCODE
 ENDCODE
     }
     
-    # Then generate code to create the variable vector and initialize each of
-    # the positions in it based on the results of these initialization
-    # expressions. 
-    
-    $CODE .= <<ENDCODE;
-
-our (\$STATE);
-
-\$STATE = zeros($vlen);			# vector of state vectors, first pos is
-                                        # time, second pos is time unit
-\$self->{STATE} = \\\$STATE;
-my \$tmp;
-(\$tmp = \$STATE(1)) .= $self->{t_unit};
-ENDCODE
-    
-    # Now initialize each of the other positions in the state vector according
-    # to the corresponding variable in the 'runstate' package.
+    # Then generate code to initialize each of the positions in the state
+    # vector (except for 0 and 1) based on the results of these initialization
+    # expressions.
     
     foreach my $i (2..$#vv) {
 	$CODE .= <<ENDCODE;
-(\$tmp = \$STATE($i)) .= \$$vv[$i]{name};
+(\$tmp = \$self->{STATE}->slice('$i')) .= \$$vv[$i]{name};
 ENDCODE
     }
     
@@ -106,16 +88,6 @@ ENDCODE
     # quite sparse.  Flows which are not linear will have to be taken care of
     # in the next step.
 
-    $CODE .= <<ENDCODE;
-    
-\$LINTRAN = zeros($vlen, $vlen);		# start with an empty matrix
-\$self->{LINTRAN} = \\\$LINTRAN;
-\$tmp = \$LINTRAN->diagonal(0,1); \$tmp++;	# add in the identity matrix
-(\$tmp = \$LINTRAN(0,1)) .= 1;			# increment time by t_unit each step
-ENDCODE
-    
-    # Now, for each flow, set the necessary coefficients.
-    
     foreach my $flow (@{$self->{flowlist}}) {
 	
 	my $rate = $flow->{rate};
@@ -175,12 +147,20 @@ ENDCODE
 	# that will put that information into the linear transformation matrix.
 	
 	$CODE .= <<ENDCODE unless $flow->{source}{type} eq 'flowlit';
-(\$tmp = \$LINTRAN($flow->{source}{index},$rate_var_index)) -= $rate_coeff;
+(\$tmp = \$self->{LINTRAN}->slice('$flow->{source}{index},$rate_var_index')) -=
+     $rate_coeff;
 ENDCODE
 	$CODE .= <<ENDCODE unless $flow->{sink}{type} eq 'flowlit';
-(\$tmp = \$LINTRAN($flow->{sink}{index},$rate_var_index)) += $rate_coeff;
+(\$tmp = \$self->{LINTRAN}->slice('$flow->{sink}{index},$rate_var_index')) +=
+     $rate_coeff;
 
 ENDCODE
+    }
+    
+    if ( $self->{debug_level} > 0 ) {
+	print "=========== initprog ===========\n";
+	print $CODE;
+	print "=========== initprog ===========\n";
     }
     
     eval("\$self->{initprog} = sub {\n$CODE\n}");
@@ -191,18 +171,11 @@ ENDCODE
     
     # Next, compile the run step.
     
-    $CODE = <<ENDCODE;
-package $self->{runspace};
-no strict 'vars';
-use PDL;
-
-our(\$STATE, \$LINTRAN);
-
-\$STATE = \$STATE x \$LINTRAN;
-
-ENDCODE
-    
-    eval("\$self->{runprog} = sub {\n$CODE\n}");
+    $self->{runprog} = sub {
+	my ($s) = @_;
+	
+	$s->{STATE} = $s->{STATE} x $s->{LINTRAN};
+    };
     
     if ( $@ ) {
 	croak "Error in run program: $@";
@@ -221,8 +194,9 @@ sub compile_traceprog {
     $self->{TRACECOUNT} = 0;
     
     $self->{traceprog} = sub {
-	my $tmp = $self->{TRACE}->slice($self->{TRACECOUNT}++);
+	my $tmp = $self->{TRACE}->slice(",$self->{TRACECOUNT}");
 	$tmp .= $self->{STATE}->copy();
+	$self->{TRACECOUNT}++;
     };
     
     $self->{trace_compiled} = 1;
@@ -246,53 +220,37 @@ sub init_trace {
 # init_run_time ( time ) - set initial run time
 
 sub init_run_time {
-
+    
     my ($self, $start_time) = @_;
+    my ($tmp);
     
-    eval ("my \$tmp = \$$self->{runspace}::STATE->slice(0); \$tmp = $start_time;");
+    $start_time += 0;
     
-    my $t_ref;
-    eval("\$t_ref = \\\$$self->{runspace}::T");
-    $$t_ref = $self->{run_start} = $start_time;
+    $self->{T} = $self->{run_start} = $start_time;
+    ($tmp = $self->{STATE}->slice(0)) .= $start_time;
     
-    return $t_ref;
+    if ( $self->{debug_level} > 0 ) {
+	print "========== state vector ============\n";
+	print $self->{STATE}, "\n";
+	print "========== state vector ============\n";
+	
+	print "========== lin tran matrix ============\n";
+	print $self->{LINTRAN}, "\n";
+	print "========== lin tran matrix ============\n";
+    }
+    
+    return $start_time;
 }
 
+
+# Increment the time by one step, and return the new time as the value of this
+# function.
 
 sub increment_run_time {
     
-    my ($self, $t_ref, $start_time) = @_;
+    my ($self) = @_;
     
-    $$t_ref = $;
-}
-
-
-# dump_trace ( ) - dump the trace data to the given file handle
-
-sub dump_trace {
-
-    my ($self, %args) = @_;
-    
-    my $vars = $args{"vars"} || "";
-    my (@vars) = split(/\s*,\s*/, $vars);
-    
-    unless (@vars) {
-	@vars = @{$self->{tracelist}};
-    }
-    
-    my $fh = $args{file};
-    
-    my $dataref;
-    eval "\$dataref = \\\%$self->{runspace}::_TRACE";
-    my $datacount = scalar @{$dataref->{T}};
-    
-    foreach my $i (0..$datacount-1) {
-	print $fh $dataref->{T}[$i], "\t";
-	foreach my $var (@vars) {
-	    print $fh $dataref->{$var}[2*$i+1], "\t";
-	}
-	print $fh "\n";
-    }
+    $self->{T} = $self->{STATE}->at(0,0);
 }
 
 
@@ -335,17 +293,30 @@ sub dump_trace {
     my ($self, %args) = @_;
     
     my $fh = $args{file};
-    my @vars = $self->variables();
+    print $fh $self->{TRACE};
+}
+
+
+sub get_values {
+
+    my ($self, $var) = @_;
     
-    my $dataref;
-    eval "\$dataref = \\\@$self->{runspace}::_TRACE";
-    my $datacount = scalar @$dataref;
+    if ( $var eq 'T' ) {
+	return $self->{TRACE}->slice(0,)->list();
+    }
     
-    foreach my $i (0..$datacount-1) {
-	print $fh $dataref->[$i];
-	print $fh "\n";
+    else {
+	my $idx = $self->{stable}{$var}{index};
+	return $self->{TRACE}->slice($idx,)->list();
     }
 }
 
+
+#sub plot {
+#
+#    my ($self, @vars) = @_;
+#    
+#    
+#}
 
 1;

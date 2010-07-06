@@ -53,6 +53,7 @@ package NBGC::Simulator;
 use strict;
 use warnings;
 use Carp;
+use Graphics::PLplot;
 
 our ($SIM_ID, $INTEGRATION_METHOD); 
 
@@ -69,12 +70,14 @@ $INTEGRATION_METHOD = 'SIMPLE';	# Which method of numerical
 
 sub new {
 
-    my $class = shift;
-
+    my ($class, $model, $time_unit, $debug_level) = @_;
+    
     # Create a new instance and bless into the proper class.
     
     my $self = {};    
     bless $self, $class;
+    
+    # Initialize the instance
     
     my $id = $NBGC::SIM_ID++;
     $self->{id} = $id;
@@ -85,6 +88,7 @@ sub new {
 				#   INIT - the vars are being initialized
 				#   SPINUP - running in spinup mode
     				#   RUN - running in regular mode
+    $self->{debug_level} = $debug_level;   # how much debugging output to print
     
     $self->{model} = undef;     # The model.  Next few are model components
     $self->{stable} = undef;	#   symbol table
@@ -95,8 +99,13 @@ sub new {
     $self->{initprog} = undef;	# code ref for initialization
     $self->{runprog} = undef;	# code ref for one run step
     $self->{traceprog} = undef;	# code ref for one data trace step
+    $self->{trace} = {};	# object to record variable values for tracing
     $self->{run_start} = undef; # at what value of t did the last run start?
     $self->{run_end} = undef;	# at what value of t did the last run end?
+    
+    if ( defined $model ) {
+	$self->load($model, $time_unit);
+    }
     
     return $self;
 }
@@ -118,8 +127,10 @@ sub load {
 
     my ($self, $model, $time_unit) = @_;
     
+    $time_unit = 1 unless defined $time_unit;
+    
     croak "Valid model required" unless ref $model eq 'NBGC::Model';
-    croak "Interval must be >= 1" if defined $interval and !($interval > 1);
+    croak "Time increment must be positive" if defined $time_unit and !($time_unit > 0);
     
     $self->{model} = $model;
     $self->{t_unit} = $time_unit || 1;
@@ -135,10 +146,20 @@ sub load {
 }
 
 
-# Compile the model that is currently loaded into the given Simulator object
-# using the PERL method -- the initialization and each step of the model
-# become pure Perl functions.  Variable values are all kept in the package
-# NBGC_Run_$id where $id is a unique identifier assigned to this Simulator object.
+# reset ( ) - reset the simulator for another model run
+
+sub reset {
+    
+    my $self = shift;
+    
+    $self->init_runspace();
+    $self->{state} = 'READY';
+}
+
+
+# Compile the model into pure Perl statements. Variable values are all kept
+# in the package NBGC_Run_$id where $id is a unique identifier assigned to
+# this Simulator object.
 
 sub compile_runprog {
 
@@ -155,6 +176,12 @@ sub compile_runprog {
 	$CODE .= "\$$name = (defined \$self->{itable}{'$name'} ? \$self->{itable}{'$name'} : $expr);\n";
     }
     
+    if ( $self->{debug_level} > 0 ) {
+	print "=========== initprog ===========\n";
+	print $CODE;
+	print "=========== initprog ===========\n";
+    }
+    
     eval("\$self->{initprog} = sub {\n$CODE\n}");
     
     if ( $@ ) {
@@ -165,32 +192,29 @@ sub compile_runprog {
     
     $CODE = "package $self->{runspace};\nno strict 'vars';\n\n";
     
+    foreach my $var ($self->variables()) {
+	$CODE .= "\$tmp_$var = \$$var;\n";
+    }
+    
     foreach my $flow (@{$self->{flowlist}}) {
 	my $source = $flow->{source};
 	my $sink = $flow->{sink};
-	if ( defined $flow->{rate_expr} ) {
-	    if ( !defined($source) ) {
-		$CODE .= "\$$sink->{name} += $flow->{rate_expr};\n";
-	    }
-	    elsif ( !defined($sink) ) {
-		$CODE .= "\$$source->{name} -= $flow->{rate_expr};\n";
-	    }
-	    else {
-		$CODE .= "{\nmy \$val = $flow->{rate_expr};\n";
-		$CODE .= "\$$source->{name} -= \$val; \$$sink->{name} += \$val;\n}\n";
-	    }
+	$CODE .= "{\n  my \$tmp = " . $self->compile_node($flow->{rate});
+	$CODE .= " * $self->{t_unit}" if $self->{t_unit} != 1;
+	$CODE .= ";\n";
+	if ( $source->{type} ne 'flowlit' ) {
+	    $CODE .= "  \$$source->{name} -= \$tmp;\n";
 	}
-	
-	elsif ( $flow->{rate2} eq '1' ) {
-	    $CODE .= "\$$source -= \$$flow->{rate1};\n" if $source ne '_';
-	    $CODE .= "\$$sink += \$$flow->{rate1};\n" if $sink ne '_';
+	if ( $sink->{type} ne 'flowlit' ) {
+	    $CODE .= "  \$$sink->{name} += \$tmp;\n";
 	}
-	
-	else {
-	    $CODE .= "\$$source->{name} -= \$$flow->{rate1}{name} * \$$flow->{rate2}{name}; " if defined($source);
-	    $CODE .= "\$$sink->{name} += \$$flow->{rate1}{name} * \$$flow->{rate2}{name}; " if defined($sink);
-	    $CODE .= "\n";
-	}
+	$CODE .= "}\n";
+    }
+    
+    if ( $self->{debug_level} > 0 ) {
+	print "=========== runprog ===========\n";
+	print $CODE;
+	print "=========== runprog ===========\n";
     }
     
     eval("\$self->{runprog} = sub {\n$CODE\n}");
@@ -200,6 +224,41 @@ sub compile_runprog {
     }
     
     return 1;
+}
+
+
+sub compile_node {
+    
+    my ($self, $node) = @_;
+    my $result;
+    
+    if ( $node->{type} eq 'expr' ) {
+	$result = join ', ', @{$node->{child}};
+    }
+    
+    elsif ( $node->{type} eq 'prod' ) {
+	$result = join ' * ', map { $self->compile_node($node->{child}[$_] ) }
+	    (0..$#{$node->{child}});
+    }
+    
+    elsif ( $node->{type} eq 'sum' ) {
+	$result =  join ' + ', map { $self->compile_node($node->{child}[$_] ) }
+	    (0..$#{$node->{child}});
+    }
+    
+    elsif ( $node->{type} eq 'literal' ) {
+	$result = $node->{value};
+    }
+    
+    elsif ( $node->{type} eq 'const' ) {
+	$result = "\$$node->{name}";
+    }
+    
+    elsif ( $node->{type} eq 'var' ) {
+	$result = "\$tmp_$node->{name}";
+    }
+    
+    return "($result)";
 }
 
 
@@ -214,7 +273,8 @@ sub variables {
 }
 
 
-# Create a trace function for the current model.
+# Create a trace program for the current model.  This will be run once at the
+# beginning and once after each run step to record variable values.
 
 sub compile_traceprog {
 
@@ -224,15 +284,25 @@ sub compile_traceprog {
     
     my @vars = $self->variables();
     
-    # Then generate code to trace them
+    # Then generate code to trace them.  At the same time, create entries in
+    # %{$self->{trace}} to hold an array of values for each variable.
+    
+    $self->{trace}{T} = [];
     
     my $CODE = "package $self->{runspace};\nno strict 'vars';\n\n";
-    $CODE .= "push \@{\$_TRACE{'T'}}, \$T;\n";
+    $CODE .= "push \@{\$self->{trace}{'T'}}, \$_[0]->{T};\n";
     
     foreach my $var (@vars) {
-	$CODE .= "push \@{\$_TRACE{'$var'}}, \$$var;\n";
+	$self->{trace}{"$var"} = [];
+	$CODE .= "push \@{\$self->{trace}{$var}}, \$$var;\n";
     }
     
+    if ( $self->{debug_level} > 0 ) {
+	print "=========== traceprog ===========\n";
+	print $CODE;
+	print "=========== traceprog ===========\n";
+    }
+
     eval("\$self->{traceprog} = sub {\n$CODE\n}");
     
     if ( $@ ) {
@@ -259,8 +329,8 @@ sub init_runspace {
 	undef $$pkgname{$var};
     }
     
-    my $CODE << ENDCODE;
-package $pkgname;
+    my $CODE = <<ENDCODE;
+package $self->{runspace};
 no strict 'vars';
 our (\$T, \$t);
 
@@ -277,20 +347,6 @@ ENDCODE
     return 1;
 }
 
-
-# reset ( ) - reset the simulator for another model run
-
-sub reset {
-    
-    my $self = shift;
-    
-    $self->init_runspace();
-    $self->{state} = 'READY';
-}
-
-
-# Methods for phase 1 -- init
-# ===========================
 
 # initial_value ( name, value )
 #
@@ -377,13 +433,13 @@ sub init {
     # Now, we are ready to initialize the variables.
     
     $self->{state} = 'INIT';
-    &{$self->{initprog}};
+    &{$self->{initprog}}($self);
     
     return 1;
 }
 
 
-# trace ( interval, exprlist )
+# trace ( interval, exprlist ) - OBSOLETE
 # 
 # Add the given expressions to the trace list.
 
@@ -410,7 +466,7 @@ sub trace {
 }
 
 
-# clear_trace ( )
+# clear_trace ( ) - OBSOLETE
 # 
 # Clear the trace list
 
@@ -424,28 +480,32 @@ sub clear_trace {
 }
 
 
-# Methods for phase 3 -- spinup
-# ============================
-
-# Methods for phase 4 -- run
-# ==========================
-
 # run ( start, limit, increment, continue )
 # 
 # Run the model.  The start parameter, if given, specifies the initial time.
 # It defaults to 0, unless we are continuing a previous run in which case it
 # defaults to the time at the end of the previous run. The limit, if given,
-# specifies the ending time.  The increment, if given, specifies the time
-# increment and defaults to 1.  If continue is given a true value, we will
+# specifies the ending time.  If `continue' is given a true value, we will
 # continue the run from where we previously left off.
 
 sub run {
 
     my ($self, %args) = @_;
     
-    my $start = ($args{start} && $args{start} > 0) ? $args{start} : 0;
+    my ($start, $limit);
     
-    if ( $args{continue} ) {
+    if ( defined $args{start} and defined $args{continue} ) {
+	croak "Cannot specify both 'start' and 'continue' parameters";
+    }
+    
+    if ( defined $args{start} ) {
+	if ( $self->{state} ne 'INIT' ) {
+	    $self->init();
+	}
+	$start = $args{start} + 0;
+    }
+    
+    elsif ( defined $args{continue} ) {
 	if ( defined $self->{run_end} ) {
 	    $start = $self->{run_end};
 	}
@@ -455,7 +515,16 @@ sub run {
 	}
     }
     
-    my $limit = $args{limit};
+    if ( defined $args{limit} ) {
+	$self->{oldlimit} = $self->{run_limit};
+	$limit = $self->{run_limit} = $args{limit} + 0;
+    }
+    
+    else {
+	croak "A run limit must always be given.";
+    }
+    
+    # Now set the state of the simulator to 'RUN'.
     
     $self->{state} = 'RUN';
     
@@ -463,85 +532,90 @@ sub run {
     
     $self->compile_traceprog() unless $self->{trace_compiled};
     
-    # Find the time variable, and initialize it.
+    # Initialize the time variable.
     
-    my $t_ref = $self->init_run_time($start);
+    my $t = $self->init_run_time($start);
     
-    # If we are just starting up, set up the trace do an initial trace.
+    # If we are just starting up, set up the trace & take the first snapshot
     
-    unless ( defined $self->{run_end} && $self->{run_end} == $start ) {
-	$self->init_trace(($limit - $start + 1) * $self->{t_unit});
-	&{$self->{traceprog}};
+    unless ( defined $args{continue} ) {
+	$self->init_trace(($self->{run_limit} - $self->{run_start} + 1) * 
+			   $self->{t_unit});
+	&{$self->{traceprog}}($self);
     }
     
-    # Now, loop through run steps
+    # Otherwise, increase the size of the trace buffer if necessary.
     
-    until ( $$t_ref >= $limit ) {
+    else {
+	my $adjustment = $self->{run_limit} - $self->{old_limit};
+	if ( $adjustment > 0 ) {
+	    $self->adjust_trace($adjustment * $self->{t_unit});
+	}
+    }
+    
+    # Loop through run steps until the limit is reached.
+    
+    until ( $self->{T} >= $limit ) {
 	
-	&{$self->{runprog}} if defined $self->{runprog};
-	$self->increment_run_time($t_ref);
-	&{$self->{traceprog}} if defined $self->{traceprog};
+	&{$self->{runprog}}($self);
+	$self->increment_run_time();
+	&{$self->{traceprog}}($self);
     }
     
     # Finish up
     
-    $self->{run_end} = $$t_ref;
+    $self->{run_end} = $self->{T};
     return 1;
 }
 
 
-# Set the initial time, and return a reference to the time variable.
+# Set the initial time, and return it as the value of this function.
 
 sub init_run_time {
     
     my ($self, $start_time) = @_;
+    $start_time += 0;
     
-    my $t_ref;
-    eval("\$t_ref = \\\$$self->{runspace}::T");
-    $$t_ref = $self->{run_start} = $start_time;
+    $self->{T} = $self->{run_start} = $start_time;
+    eval("\\\$$self->{runspace}::T = $start_time;");
     
-    return $t_ref;
+    return $start_time;
 }
 
+
+# Increment the time by one step, and return the new time as the value of this
+# function.
 
 sub increment_run_time {
     
-    my ($self, $t_ref) = @_;
+    my ($self) = @_;
     
-    $$t_ref += $self->{t_unit};
+    $self->{T} += $self->{t_unit};
+    eval("\\\$$self->{runspace}::T = $self->{T};");
 }
 
 
-# set up for the trace program
+# set up for the trace program.  This routine is not required to do anything
+# for the Perl simulator.
 
 sub init_trace {
     
     my ($self, $tracesize) = @_;
-    my $traceref;
-    
-    eval("package $self->{runspace}; \%_TRACE = (); \$traceref = \\\%_TRACE;");
-    
-    $traceref->{'T'} = [];
-    
-    foreach my $expr (@{$self->{tracelist}}) {
-	if ( $expr =~ /^\w/ ) { $expr = '$' . $expr; }
-	$traceref->{'$expr'} = [];
-    }
     
     return 1;
 }
 
-# Methods for phase 5 -- output
-# =============================
 
-# trace_vars ( ) - return a list of variables being traced
+# trace_vars ( ) - return a list of variables being traced.  For now, that
+# means all of them.
 
 sub trace_vars { 
 
     my $self = shift;
     
-    return @{$self->{tracelist}};
+    return $self->variables();
 }
+
 
 # dump_trace ( ) - dump the trace data to the given file handle
 
@@ -552,14 +626,12 @@ sub dump_trace {
     my $fh = $args{file};
     my @vars = $self->variables();
     
-    my $dataref;
-    eval "\$dataref = \\\%$self->{runspace}::_TRACE";
-    my $datacount = scalar @{$dataref->{T}};
+    my $datacount = scalar @{$self->{trace}{T}};
     
     foreach my $i (0..$datacount-1) {
-	print $fh $dataref->{T}[$i], "\t";
+	print $fh $self->{trace}{T}[$i], "\t";
 	foreach my $var (@vars) {
-	    print $fh $dataref->{$var}[$i], "\t";
+	    print $fh $self->{trace}{$var}[$i], "\t";
 	}
 	print $fh "\n";
     }
@@ -573,18 +645,16 @@ sub get_values {
     
     my ($self, $expr) = @_;
     
-    my $dataref;
-    eval "\$dataref = \\\%$self->{runspace}::_TRACE";
-    my $datacount = scalar @{$dataref->{T}};
+    my $datacount = scalar @{$self->{trace}{T}};
     
     if ( $expr eq 'T' ) {
-	return @{$dataref->{$expr}};
+	return @{$self->{trace}{T}};
     }
     
     else {
 	my @vals;
 	foreach my $i (0..$datacount-1) {
-	    push @vals, $dataref->{$expr}[$i];
+	    push @vals, $self->{trace}{$expr}[$i];
 	}
 	return @vals;
    }
@@ -608,5 +678,35 @@ sub minmax_values {
 }
 
 # We have to end the module with a true value.
+
+
+# plot ( @vars ) - plot the specified variables
+
+sub plot {
+    
+    my ($self, @vars) = @_;
+
+    my (@t) = $self->get_values('T');
+    my ($tmin, $tmax) = $self->minmax_values(@t);
+    my (@values);
+    my (@colors) = (1, 3, 9, 13, 8);
+    my $textcoord = 9;
+
+    plsdev ("aqt");
+    plinit ();
+    plscolbg (255, 255, 255);
+    plenv ($tmin, $tmax, 0, 100, 0, 2);
+    
+    foreach my $var (@vars) {
+	print "PLOTTING VARIABLE: $var\n" if $self->{debug_level} > 0;
+	@values = $self->get_values($var);
+	plcol0 (shift @colors);
+	plline(\@t, \@values);
+	my ($varname) = $var;
+	plptex(5, ($textcoord-- * 10) + 5, 1, 0, 0, $varname);
+    }
+
+    plend ();
+}
 
 1;
