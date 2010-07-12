@@ -1,15 +1,28 @@
+# initialize the starting pool.  The other two (pool_b and pool_c)
+# default to zero.
+
 init $pool_a = 100
+
+# default rates of flow from a to b and b to c.
+
 init const $rate_ab = 0.1
 init const $rate_bc = 0.05
-init $population = 30;
-init const $growth_rate = 0.05;
-init const $b_sink = 0.002
+
+# the flows are specified here
 
 $pool_a * $rate_ab => $pool_b
 $pool_b * $rate_bc => $pool_c
 
+
+# a different curve shows exponential population growth with a starting population and 
+# growth rate.
+
+=ifdef (POP)
+
+init $population = 30;
+init const $growth_rate = 0.05;
+
 growth => $population * $growth_rate
 
-#$pool_b => $pool_d : $population * $b_sink
-
+=endif
 

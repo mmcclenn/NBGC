@@ -1,0 +1,43 @@
+# 
+# Biome-BGC-RefImp
+# 
+# Hydrological cycle
+# ------------------
+# 
+# This file declares the variables and fluxes that define the hydrological
+# (water) cycle in the model.
+# 
+# This is a reference implementation of the Biome-BGC
+# model, intended to be validated against the existing code base of version 4.
+# Once that validation is complete, we can proceed to add new variables and
+# processes and create a new version.
+# 
+# Authors (in rough historical sequence) of this model and associated
+# computer code:
+# 
+# S. W. Running
+# Stith T. Gower
+# Douglas Ahl
+# Peter Thornton
+# Ben Bond-Lamberty
+# Scott Peckham
+# Michael McClennen
+# 
+# Copyright (c) 2010, University of Wisconsin-Madison
+#
+
+
+# The hydrological cycle is represented by N+2 water pools, where N is the
+# number of vegetation types:
+
+pool $soil_water <kgH2O/m2>;		# water stored in soil
+
+pool $snow_water <kgH2O/m2>;		# water stored in snowpack
+
+pool $canopy_water[@veg_types] <kgH20/m2>;	# water stored in vegetation canopies
+
+
+# These are affected by a number of fluxes:
+
+
+

@@ -47,6 +47,8 @@ sub new {
     $self->{sseq} = [];		# List of symbols in the order they were seen
     $self->{initlist} = [];	# List of initialization steps (hashes)
     $self->{flowlist} = [];     # List of flows (hashes)
+    $self->{itable} = {};	# Table of initial values and symbol definitions
+    $self->{stack} = [];	# Stack for parsing =ifdef and such
     
     return $self;
 } 
@@ -117,15 +119,65 @@ sub process_line {
     $line =~ s/;+$//;			# take out final semicolons
     return unless $line =~ /\S/;	# ignore blank lines
     
-    if ( $line =~ / ^ init \s+ (.*) /xoi )
+    if ( $line =~ / ^ =ifdef \s+ \(? \s* (\w+) \s* \)? $ /xoi )
     {
-	$self->parse_init_stmt($1);
+	if ( exists $self->{itable}{$1} ) {
+	    $self->push_cond(1);
+	}
+	else {
+	    $self->push_cond(0);
+	}
+    }
+    
+    elsif ( $line =~ / ^ =endif $ /xoi )
+    {
+	$self->pop_cond();
+    }
+    
+    elsif ( $line =~ / ^ = /xo ) {
+	croak "Invalid control statement '$line'";
+    }
+    
+    elsif ( $line =~ / ^ init \s+ (.*) /xoi )
+    {
+	$self->parse_init_stmt($1) unless $self->cond_ignore();
     }
     
     else
     {
-	$self->parse_run_stmt($line);
+	$self->parse_run_stmt($line) unless $self->cond_ignore();
     }
+}
+
+
+# Push a conditional statement record (i.e. when we find =ifdef or =if)
+
+sub push_cond {
+
+    my ($self, $boolean) = @_;
+    
+    push @{$self->{stack}}, $boolean;
+}
+
+
+# Pop a conditional statement record (i.e. when we find =endif)
+
+sub pop_cond {
+    
+    my $self = shift;
+    
+    pop @{$self->{stack}};
+}
+
+
+# Return true if we should be ignoring the current line of code
+
+sub cond_ignore {
+    
+    my $self = shift;
+    
+    return 1 if @{$self->{stack}} > 0 && $self->{stack}[-1] == 0;
+    return 0;
 }
 
 
@@ -358,6 +410,39 @@ at $INPUT_NAME, line $INPUT_LINE.\n";
 	}
 	
 	return $sym;
+    }
+}
+
+
+# initial_value ( name, value )
+#
+# Specifies an initial value for the given identifier (variable or constant),
+# overriding any value specified in the model. An undefined value means to
+# revert to the value specified in the model. The results of this call are
+# persistent across model runs.
+
+sub initial_value {
+
+    my ($self, $name, $value) = @_;
+    
+    # First look up the identifier, and make sure that it is defined.
+    
+    my $sym = $self->{stable}{$name};
+    
+    unless ($sym) {
+	carp "Unknown variable '$name'";
+    }
+    
+    # If the value is defined, add it to the initial value table.  Otherwise,
+    # remove any definition that may already be there.
+    
+    if ( defined $value ) {
+	$self->{itable}{$name} = $value;
+	return 1;
+    }
+    else {
+	delete $self->{itable}{$name} if exists $self->{itable}{$name};
+	return 1;
     }
 }
 

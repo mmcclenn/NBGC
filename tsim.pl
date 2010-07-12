@@ -47,9 +47,32 @@ if ( defined $opt_i && ($opt_i+0) > 0 ) {
 
 
 # Now, we actually start the work of this program.  Create a new model and
-# initialize it using the remaining arguments.
+# initialize it using code and initial values read from the remaining arguments.
 
 my $model = new NBGC::Model;
+
+
+# First check for a -V option on the command line.  If -V was specified, it
+# should be followed by a series of expressions of the form 'var' or
+# 'var=value', separated by commas.  We split this string up and use each one
+# to set the initial value of one variable.
+
+if ( defined $opt_V ) {
+    my @ivs = split(/,/, $opt_V);
+    foreach my $iv (@ivs) {
+	if ( $iv =~ /^(\w+)=(.*)$/ ) {
+	    $model->initial_value($1, $2);
+	}
+	elsif ( $iv =~ /^(\w+)$/ ) {
+	    $model->initial_value($1, 1);
+	}
+    }
+}
+
+
+# The rest of the arguments should be filenames specifying the model's code.
+# If no filenames are given, STDIN is read.  This is all handled by Perl's
+# magic <> operator.
 
 while (<>)
 {
@@ -57,8 +80,9 @@ while (<>)
 }
 
 
-# Create a new simulator and initialize it using the model.  If -p was
-# specified, use the PDL version.  
+# Now that we have a model, the next step is to create a simulator object and
+# use it to run the model.  If -p was specified, we use the PDL version of the
+# simulator.  Otherwise, we use the pure Perl version.
 
 my $sim;
 
@@ -69,21 +93,6 @@ if ( defined $opt_p && $opt_p ) {
 
 else {
     $sim = new NBGC::Simulator($model, $increment, $DEBUG_LEVEL);
-}
-
-
-# Next, check for initial values of model variables.  If -V was specified, it
-# should be followed by a series of 'var=value' expressions separated by
-# commas.  Split this string up and use each one to set the initial value of
-# one variable.
-
-if ( defined $opt_V ) {
-    my @ivs = split(/,/, $opt_V);
-    foreach my $iv (@ivs) {
-	if ( $iv =~ /^(\w+)=(.*)$/ ) {
-	    $sim->initial_value($1, $2);
-	}
-    }
 }
 
 

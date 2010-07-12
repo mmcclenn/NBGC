@@ -138,6 +138,7 @@ sub load {
     $self->{sseq} = $model->{sseq};
     $self->{initlist} = $model->{initlist};
     $self->{flowlist} = $model->{flowlist};
+    $self->{itable} = $model->{itable};
     
     $self->compile_runprog();
     $self->compile_traceprog();
@@ -344,34 +345,6 @@ ENDCODE
 	croak "Error in runspace init: $@";
     }
     
-    return 1;
-}
-
-
-# initial_value ( name, value )
-#
-# Specifies an initial value for the given identifier (variable or constant),
-# overriding any value specified in the model. This routine is only
-# immediately effective if called before init(), or just after a reset(). An
-# undefined value means to revert to the value specified in the model. The
-# results of this call are persistent across model runs.
-
-sub initial_value {
-
-    my ($self, $name, $value) = @_;
-    
-    # First look up the identifier, and make sure that it is defined.
-    
-    my $sym = $self->{stable}{$name};
-    
-    unless ($sym) {
-	carp "Unknown variable '$name'";
-	return undef;
-    }
-    
-    # Set the value and return true.
-    
-    $self->{itable}{$name} = $value;
     return 1;
 }
 

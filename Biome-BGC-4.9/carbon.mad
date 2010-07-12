@@ -1,0 +1,98 @@
+# 
+# Biome-BGC-RefImp
+# 
+# Carbon cycle
+# ------------
+# 
+# This file declares the variables and fluxes that define the carbon cycle in
+# the model.
+# 
+# This is a reference implementation of the Biome-BGC model, intended to be
+# validated against the existing code base of version 4.  Once that validation is
+# complete, we can proceed to add new variables and processes and create a new
+# version.
+# 
+# Authors (in rough historical sequence) of this model and associated
+# computer code:
+# 
+# S. W. Running
+# Stith T. Gower
+# Douglas Ahl
+# Peter Thornton
+# Ben Bond-Lamberty
+# Scott Peckham
+# Michael McClennen
+# 
+# Copyright (c) 2010, University of Wisconsin-Madison
+#
+
+
+# The carbon cycle is defined by 26N+4 pools, where N is the number of
+# distinct vegetation types being modelled.
+
+pool $soil_carbon_1 <kgC/m2>;		# fast microbial carbon recycling
+
+pool $soil_carbon_2 <kgC/m2>;		# medium microbial carbon recycling
+
+pool $soil_carbon_3 <kgC/m2>;		# slow microbial carbon recycling
+
+pool $soil_carbon_4 <kgC/m2>;		# recalcitrant SOM carbon (humus, slowest)
+
+pool $leaf_C[@veg_types] <kgC/m2>;	    # carbon in leaves
+
+pool $leaf_storage_C[@veg_types] <kgC/m2>;
+
+pool $leaf_trans_C[@veg_types] <kgC/m2>;
+
+pool $fine_root_C[@veg_types] <kgC/m2>;	    # carbon in fine roots
+
+pool $fine_root_storage_C[@veg_types] <kgC/m2>;
+
+pool $fine_root_trans_C[@veg_types] <kgC/m2>;
+
+pool $live_stem_C[@veg_types] <kgC/m2>;	    # carbon in live stems
+
+pool $live_stem_storage_C[@veg_types] <kgC/m2>;
+
+pool $live_stem_trans_C[@veg_types] <kgC/m2>;
+
+pool $dead_stem_C[@veg_types] <kgC/m2>;	    # carbon in dead stems
+
+pool $dead_stem_storage_C[@veg_types] <kgC/m2>;
+
+pool $dead_stem_trans_C[@veg_types] <kgC/m2>;
+
+pool $live_coarse_root_C[@veg_types] <kgC/m2>;	# carbon in live coarse roots
+
+pool $live_coarse_root_storage_C[@veg_types] <kgC/m2>;
+
+pool $live_coarse_root_trans_C[@veg_types] <kgC/m2>;
+
+pool $dead_coarse_root_C[@veg_types] <kgC/m2>;	# carbon in dead coarse roots
+
+pool $dead_coarse_root_storage_C[@veg_types] <kgC/m2>;
+
+pool $dead_coarse_root_trans_C[@veg_types] <kgC/m2>;
+
+pool $growth_resp_storage_C[@veg_types] <kgC/m2>;   # growth/respiration
+                                                    # storage carbon 
+
+pool $growth_resp_trans_C[@veg_types] <kgC/m2>;	    # growth/respiration
+                                                    # transfer carbon
+
+pool $coarse_woody_debris_C[@veg_types] <kgC/m2>;   # coarse woody debris
+                                                    # carbon
+
+pool $litter_carbon_1[@veg_types] <kgC/m2>;	# litter labile carbon
+
+pool $litter_carbon_2[@veg_types] <kgC/m2>;	# litter unshielded cellulose
+                                                # carbon
+
+pool $litter_carbon_3[@veg_types] <kgC/m2>;	# litter shielded cellulose
+                                                # carbon 
+
+pool $litter_carbon_4[@veg_types] <kgC/m2>;	# litter lignin C
+
+pool $temp_photosynthate_C[@veg_types] <kgC/m2>;    # temporary photosynthate
+                                                    # pool 
+

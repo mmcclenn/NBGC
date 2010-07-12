@@ -1,0 +1,72 @@
+#
+# Biome-BGC-RefImp
+# 
+# Main model file
+# ---------------
+# 
+# This file is the main file for the entire model; various parts can be found
+# in the files included below.
+# 
+# This is a reference implementation of the Biome-BGC model, intended to be
+# validated against the existing code of version 4.  Once that validation is
+# complete, we can proceed to add new variables and processes and create a new
+# version.
+# 
+# Authors (in rough historical sequence) of this model and associated
+# computer code:
+# 
+# S. W. Running
+# Stith T. Gower
+# Douglas Ahl
+# Peter Thornton
+# Ben Bond-Lamberty
+# Scott Peckham
+# Michael McClennen
+# 
+# Copyright (c) 2010, University of Wisconsin-Madison
+
+# Basic simulation parameters
+
+var $year <yr> { init => $START_YEAR };
+var $yday <day> { init => $START_DAY };
+var $location <> { init => $LOCATION };
+
+event post_increment {
+    $yday++;
+    if ( $yday >= year_days($year) ) {
+	$year++;
+	$yday = 0;
+    }
+}
+
+# Vegetation types
+
+const @known_veg_types = ('DBF', 'ENF');
+const @veg_types;
+
+init {
+    foreach $type (@known_veg_types) {
+	if ( defined $USE_VEG{$type} ) {
+	    push @veg_types, $type;
+	    include "$veg/$type.mad";
+	}
+    }
+}
+
+# Meteorological variables
+
+include "meteorol.mad";
+
+# Hydrological cycle
+
+include "hydro.mad";
+
+# Carbon cycle
+
+include "carbon.mad";
+
+# Nitrogen cycle
+
+include "nitrogen.mad";
+
+
