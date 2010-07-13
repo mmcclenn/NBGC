@@ -27,15 +27,23 @@
 
 # Basic simulation parameters
 
-var $year <yr> { init => $START_YEAR };
-var $yday <day> { init => $START_DAY };
-var $location <> { init => $LOCATION };
+init var $year <yr> = $START_YEAR;
+init var $yday <day> = $START_DAY;
+init var $location = $LOCATION;
 
-event post_increment {
+increment {
     $yday++;
     if ( $yday >= year_days($year) ) {
 	$year++;
 	$yday = 0;
+    }
+}
+
+function year_days ($yr) {
+    if ( $yr % 4 == 0 && ($yr % 100 != 0 || $yr % 400 == 0) ) {
+	return 366;
+    } else {
+	return 365;
     }
 }
 
@@ -55,7 +63,7 @@ init {
 
 # Meteorological variables
 
-include "meteorol.mad";
+include "meteor.mad";
 
 # Hydrological cycle
 

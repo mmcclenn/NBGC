@@ -1,0 +1,98 @@
+# 
+# Biome-BGC-RefImp
+# 
+# Meterological data
+# ------------------
+# 
+# This file declares the meterological parameters that affect all parts of the
+# model. 
+# 
+# This is a reference implementation of the Biome-BGC model, intended to be
+# validated against the existing code of version 4.  Once that validation is
+# complete, we can proceed to add new variables and processes and create a new
+# version. 
+# 
+# Authors (in rough historical sequence) of this model and associated
+# computer code:
+# 
+# S. W. Running
+# Stith T. Gower
+# Douglas Ahl
+# Peter Thornton
+# Ben Bond-Lamberty
+# Scott Peckham
+# Michael McClennen
+# 
+# Copyright (c) 2010, University of Wisconsin-Madison
+
+
+# We start with the basic data, six parameters from the Daymet dataset.
+
+external daymet ($year, $yday, $location) {
+    source => "dbi:postgres:have_to_fill_this_in_later",
+    where => ('year=$year', 'yday=$yday', 'location=$location'),
+    select => (prcp, vpd, srad, dayl, tmin, tmax)
+};
+
+var $tmax_daily <deg_C> = daymet.tmax($year, $yday, $location);
+var $tmin_daily <deg_C> = daymet.tmin($year, $yday, $location);
+var $precip_total_daily <cm> = daymet.prcp($year, $yday, $location);
+var $swavgfd <W/m2> = daymet.srad($year, $yday, $location);
+var $vpd_daily <Pa> = daymet.vpd($year, $yday, $location);
+var $day_length <sec> = daymet.dayl($year, $yday, $location);
+
+
+# Other quantities are derived from these:
+
+var $tavg_daily <deg_C>;		# average daily air temperature
+
+var $tavg_11day <deg_C>;		# average daily air temperature -- 11-day
+					# running avg
+
+var $tavg_daytime_daily <deg_C>;	# average daytime air temperature
+
+var $tavg_nighttime_daily <deg_C>;	# average nighttime air temperature
+
+var $tsoil_daily <deg_C>;		# average soil temperature
+
+var $flux_transmitted <W/m2>;		# transmitted shortwave flux (sunlight)
+
+var $par_daily <W/m2>;			# photosynthetically active radiation
+
+
+# The following variables are specific to the different types of vegetation
+# being modelled:
+
+var $sw_abs_canopy[@veg_types] <W/m2>;	        # flux absorbed by the canopy
+
+var $sw_abs_sunlit_plai[@veg_types] <W/m2>;	# flux absorbed per unit sunlit PLAI
+
+var $sw_abs_shaded_plai[@veg_types] <W/m2>;     # flux absorbed per unit shaded PLAI
+
+var $par_abs_canopy[@veg_types] <W/m2>;		# PAR absorbed by canopy
+
+var $ppfd_sunlit_plai[@veg_types] <umol/m2/sec>;  # ppfd per unit sunlit PLAI
+
+var $ppfd_shaded_plai[@veg_types] <umol/m2/sec>;  # ppfd per unit shaded PLAI
+
+
+# Finally, we have atmospheric pressure and ppm of CO2.
+
+var $pressure_atm <Pa>;			# atmospheric pressure
+
+# For atmospheric CO2 concentration we use an external file with historical
+# data through 2009, and estimate future data based on the current trend.
+
+external co2_historical ($year) <ppmco2> {
+    source => 'file:co2_1832_2009',
+    where => '1=$year',
+    select => 2
+};
+
+const proj_yearly_co2_increase <ppmco2/year> = 1.8;
+
+function co2_atm <ppmco2> ( $year ) {
+    if ( $year <= 2009 ) return co2_historical($year);
+    return co2_historical(2009) + (year-2009) * proj_yearly_co2_increase );
+};
+
