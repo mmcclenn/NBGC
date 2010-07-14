@@ -1,0 +1,50 @@
+
+common abbreviations in variable names:
+
+leaflit = leaf litter
+froot = fine root
+croot = coarse root
+int = interception
+ext = extinction
+proj = projected
+sla = specific leaf area
+lai = leaf area index
+avg = average
+tot = total
+
+
+c3_photosynth = c3_flag
+
+transfer_growth_period = transfer_pdays
+litfall_period = litfall_pdays
+
+annual_mortality = daily_mortality_turnover * 365
+fire_mortality = daily_fire_turnover * 365
+
+alloc_c_froot_leaf = alloc_frootc_leafc
+alloc_c_stem_leaf = alloc_newstemc_newleafc
+alloc_c_livewood_totalwood = alloc_newlivewoodc_newwoodc
+alloc_c_croot_stem = alloc_crootc_stemc
+alloc_c_growth_fraction = alloc_prop_curgrowth
+
+cn_leaf = leaf_cn
+cn_leaflitter = leaflitr_cn
+cn_froot = froot_cn
+cn_livewood = livewood_cn
+cn_deadwood = deadwood_cn
+
+prop_leaflit_lignin = leaflitr_flig;
+prop_frootlit_lignin = frootlitr_flig;
+prop_deadwood_lignin = deadwood_flig;
+
+canopy_water_int = int_coef
+canopy_light_ext = ext_coef
+avg_proj_sla_per_kgC = avg_proj_sla
+rubisco_N_fraction = flnr
+g_stom_max = gl_smax
+g_cuticlar = gl_c
+g_bl = gl_bl
+psi_stom_open = psi_open
+psi_stom_close = psi_close
+vpd_stom_open = vpd_open
+vpd_stom_close = vpd_close

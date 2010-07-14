@@ -1,0 +1,95 @@
+#
+# Ecophysiological constants for Evergeen Needleleaf Forest
+#
+# This is primarily a template, and will have to be checked and refined before
+# use in an actual model run.
+# 
+# Based on enf_wisc.epc and jackpine.epc
+
+
+
+# The following are boolean flags
+
+const woody = 1;
+const evergeen = 1;
+const vascular = 1;
+const c3_photosynth = 1;
+
+# The following are specified as a fraction of the growing season
+
+const trans_growth_period <.> = 0.3;
+const litfall_period <.> = 0.3;
+
+# Annual turnover and mortality fractions.  Fire mortality should only be
+# nonzero if fire disturbances are not specified
+
+const leaf_turnover </yr> = 0.25;
+const livewood_turnover </yr> = 0.70;
+const annual_mortality </yr> = 0.005;
+const fire_mortality </yr> = 0.005;
+
+# Allocation ratios for new growth
+
+const alloc_C_froot_leaf </> = 1.0;
+const alloc_C_stem_leaf </> = 2.2;
+const alloc_C_livewood_totwood </> = 0.1;
+const alloc_C_croot_stem </> = 0.3;
+const alloc_C_growth_fraction <.> = 0.5;
+
+# C:N ratios for plant tissues
+
+const CN_leaf <kgC/kgN> = 42.0;
+const CN_leaflit <kgC/kgN> = 93.0;
+const CN_froot <kgC/kgN> = 42.0;
+const CN_livewood <kgC/kgN> = 50.0;
+const CN_deadwood <kgC/kgN> = 729.0;
+
+# Composition of dead tissues and litter (calculations from epc_init.c lines 
+# 270-288, 322-341, 367-386 must go in epc.mad)
+
+const prop_leaflit_labile <.> = 0.32;
+const prop_leaflit_cellulose <.> = 0.44;
+const prop_leaflit_lignin <.> = 0.30;
+
+const prop_frootlit_labile <.> = 0.30;
+const prop_frootlit_cellulose <.> = 0.45;
+const prop_frootlit_lignin <.> = 0.25;
+
+const prop_deadwood_cellulose <.> = 0.76;
+const prop_deadwood_lignin <.> = 0.24;
+
+# Physical and chemical properties of canopy
+
+const canopy_water_int </LAI/d> = 0.041;
+const canopy_light_ext <.> = 0.5;
+
+const lai_ratio </> = 2.6;			# all-sided to projected LAI
+const avg_proj_sla_per_kgC <m2/kgC> = 12.0;
+const sla_shaded_sun </> = 2.0;			# ratio of shaded to sunlit
+
+const max_veg_height <m> = 15.8;		#>#
+const mass_at_max_height <kgC/m2> = 12.0;
+
+const rubisco_N_fraction <.> = 0.04;
+
+const g_stom_max <m/s> = 0.003;			#/# max stomatal conductance
+const g_cuticular <m/s> = 0.00001;		#/# cuticular conductance
+const g_bl <m/s> = 0.08;			#/# boundary layer conductance
+
+const psi_stom_open <MPa> = -0.6;
+const psi_stom_close <MPa> = -2.3;
+
+const vpd_stom_open <Pa> = 930.0;
+const vpd_stom_close <Pa> = 4100.0;
+
+# Parameters for flooded soil areas (needs work!  variables need to be renamed!)
+
+const gs_flood_reduction = 1.0;
+const gs_flood_days <day> = 10.0;
+
+const wcontent_rwc1 <?> = 0;
+const water_fext <.> = 0;
+const psi_rwc1 <.> = 0;
+const psi_turgorloss <.> = 0;
+const gc_flood_reduction <.> = 0;
+const gc_flood_rwc <.> = 0;
