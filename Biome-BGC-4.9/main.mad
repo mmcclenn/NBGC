@@ -27,15 +27,16 @@
 
 # Basic simulation parameters
 
-init var $year <yr> = $START_YEAR;
+init var $year <year> = $START_YEAR;
 init var $yday <day> = $START_DAY;
+init var $year_length <day> = year_days($year);
 init var $location = $LOCATION;
 
 increment {
     $yday++;
-    if ( $yday >= year_days($year) ) {
-	$year++;
+    if ( $yday >= $ydays ) {
 	$yday = 0;
+	$ydays = year_day(++$year);
     }
 }
 
@@ -49,14 +50,16 @@ function year_days ($yr) {
 
 # Vegetation types
 
-const @known_veg_types = ('DBF', 'ENF');
 const @veg_types;
 
 init {
-    foreach $type (@known_veg_types) {
-	if ( defined $USE_VEG{$type} ) {
+    foreach $type (keys %USE_VEG) {
+	if ( include "epc/$type.mad", param => $type ) {
 	    push @veg_types, $type;
-	    include "$veg/$type.mad";
+	}
+	else {
+	    die "Error with vegetation type '$type': \
+Could not find file 'epc/$type.mad'.";
 	}
     }
 }

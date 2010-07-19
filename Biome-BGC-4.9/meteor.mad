@@ -28,18 +28,20 @@
 
 # We start with the basic data, six parameters from the Daymet dataset.
 
-external daymet ($year, $yday, $location) {
+external daymet {
+    type => 'postgresql',
     source => "dbi:postgres:have_to_fill_this_in_later",
     where => ('year=$year', 'yday=$yday', 'location=$location'),
-    select => (prcp, vpd, srad, dayl, tmin, tmax)
+    select => (prcp, vpd, srad, dayl, tmin, tmax),
+    cache => 'ALL';
 };
 
-var $tmax_daily <deg_C> = daymet.tmax($year, $yday, $location);
-var $tmin_daily <deg_C> = daymet.tmin($year, $yday, $location);
-var $precip_total_daily <cm> = daymet.prcp($year, $yday, $location);
-var $swavgfd <W/m2> = daymet.srad($year, $yday, $location);
-var $vpd_daily <Pa> = daymet.vpd($year, $yday, $location);
-var $day_length <sec> = daymet.dayl($year, $yday, $location);
+var $tmax_daily <deg_C> = daymet.tmax;
+var $tmin_daily <deg_C> = daymet.tmin;
+var $precip_total_daily <cm> = daymet.prcp;
+var $swavgfd <W/m2> = daymet.srad;
+var $vpd_daily <Pa> = daymet.vpd;
+var $day_length <sec> = daymet.dayl;
 
 
 # Other quantities are derived from these:
@@ -89,10 +91,12 @@ external co2_historical ($year) <ppmco2> {
     select => 2
 };
 
-const proj_yearly_co2_increase <ppmco2/year> = 1.8;
+const $proj_co2_increase <ppmco2/year> = 1.8;	# Projected yearly rate of
+                                                # increase in co2
+                                                # concentration.
 
 function co2_atm <ppmco2> ( $year ) {
     if ( $year <= 2009 ) return co2_historical($year);
-    return co2_historical(2009) + (year-2009) * proj_yearly_co2_increase );
+    return co2_historical(2009) + (year-2009) * proj_co2_increase );
 };
 
