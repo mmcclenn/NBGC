@@ -27,10 +27,13 @@
 
 # Basic simulation parameters
 
-init var $year <year> = $START_YEAR;
-init var $yday <day> = $START_DAY;
-init var $year_length <day> = year_days($year);
-init var $location = $LOCATION;
+module BBGC;
+units 'ha';
+
+init global $year <year> = $START_YEAR;
+init global $yday <day> = $START_DAY;
+init global $year_length <day> = year_days($year);
+init global $location = $LOCATION;
 
 increment {
     $yday++;
@@ -52,32 +55,25 @@ function year_days ($yr) {
 
 const @veg_types;
 
-init {
+begin {
     foreach $type (keys %USE_VEG) {
-	if ( include "epc/$type.mad", param => $type ) {
-	    push @veg_types, $type;
-	}
-	else {
-	    die "Error with vegetation type '$type': \
-Could not find file 'epc/$type.mad'.";
-	}
+	include "EPC::$type.mad";
+	push @veg_types, $type;
     }
 }
 
 # Meteorological variables
 
-include "meteor.mad";
+include meteor;
 
 # Hydrological cycle
 
-include "hydro.mad";
+include hydro;
 
 # Carbon cycle
 
-include "carbon.mad";
+include carbon;
 
 # Nitrogen cycle
 
-include "nitrogen.mad";
-
-
+include nitrogen;
