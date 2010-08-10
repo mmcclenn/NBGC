@@ -1,0 +1,8 @@
+$a = $b + 3;
+$f = $g + ($c * 5);
+
+external daymet {
+    type => 'postgresql',
+    select => ('prcp', 'vpd', 'srad', 'dayl', 'tmin', 'tmax'),
+    cache => 'ALL'
+};

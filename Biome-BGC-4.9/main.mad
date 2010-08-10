@@ -28,14 +28,14 @@
 # Basic simulation parameters
 
 module BBGC;
-units 'ha';
+units ha;
 
-init global $year <year> = $START_YEAR;
-init global $yday <day> = $START_DAY;
-init global $year_length <day> = year_days($year);
-init global $location = $LOCATION;
+var $year <year> init = $START_YEAR;
+var $yday <day> init = $START_DAY;
+var $year_length <day> init = year_days($year);
+var $location init = $LOCATION;
 
-increment {
+timestep {
     $yday++;
     if ( $yday >= $ydays ) {
 	$yday = 0;
@@ -55,12 +55,12 @@ function year_days ($yr) {
 
 const @veg_types;
 
-begin {
-    foreach $type (keys %USE_VEG) {
+init %{
+    foreach my $type (keys %USE_VEG) {
 	include "EPC::$type.mad";
 	push @veg_types, $type;
     }
-}
+%}
 
 # Meteorological variables
 

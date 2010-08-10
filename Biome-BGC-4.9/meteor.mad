@@ -27,9 +27,9 @@
 
 
 module Meteor;
-units qw(umol ppmCO2);
-export qw($tmax_daily, $tmin_daily, $precip_total_daily, $swavgfd, $vpd_daily,
-	  $day_length);
+units umol, ppmCO2;
+#export qw($tmax_daily, $tmin_daily, $precip_total_daily, $swavgfd, $vpd_daily,
+#	  $day_length);
 
 # We start with the basic data, six parameters from the Daymet dataset.
 
@@ -37,16 +37,16 @@ external daymet {
     type => 'postgresql',
     source => "dbi:postgres:have_to_fill_this_in_later",
     where => ('year=$year', 'yday=$yday', 'location=$location'),
-    select => (prcp, vpd, srad, dayl, tmin, tmax),
-    cache => 'ALL';
+    select => ('prcp', 'vpd', 'srad', 'dayl', 'tmin', 'tmax'),
+    cache => 'ALL'
 };
 
-var $tmax_daily <deg_C> = daymet.tmax;
-var $tmin_daily <deg_C> = daymet.tmin;
-var $precip_total_daily <cm> = daymet.prcp;
-var $swavgfd <W/m_2> = daymet.srad;
-var $vpd_daily <Pa> = daymet.vpd;
-var $day_length <sec> = daymet.dayl;
+var $tmax_daily <deg_C> = daymet().tmax;
+var $tmin_daily <deg_C> = daymet().tmin;
+var $precip_total_daily <cm> = daymet().prcp;
+var $swavgfd <W/m_2> = daymet().srad;
+var $vpd_daily <Pa> = daymet().vpd;
+var $day_length <sec> = daymet().dayl;
 
 
 # Other quantities are derived from these:
@@ -70,17 +70,17 @@ var $par_daily <W/m_2>;			# photosynthetically active radiation
 # The following variables are specific to the different types of vegetation
 # being modelled:
 
-var $sw_abs_canopy[@veg_types] <W/m_2>;	        # flux absorbed by the canopy
+var $sw_abs_canopy[@veg_types] <W/m_2>;	        # shortwave flux absorbed by the canopy
 
-var $sw_abs_sunlit_plai[@veg_types] <W/m_2>;	# flux absorbed per unit sunlit PLAI
+var $sw_abs_sunlit_plai[@veg_types] <W/m_2>;	# sw flux absorbed per unit sunlit PLAI
 
-var $sw_abs_shaded_plai[@veg_types] <W/m_2>;     # flux absorbed per unit shaded PLAI
+var $sw_abs_shaded_plai[@veg_types] <W/m_2>;	# sw flux absorbed per unit shaded PLAI
 
-var $par_abs_canopy[@veg_types] <W/m_2>;		# PAR absorbed by canopy
+var $par_abs_canopy[@veg_types] <W/m_2>;	# PAR absorbed by canopy
 
-var $ppfd_sunlit_plai[@veg_types] <umol/m_2/sec>;  # ppfd per unit sunlit PLAI
+var $ppfd_sunlit_plai[@veg_types] <umol/m_2/sec>;	# ppfd per unit sunlit PLAI
 
-var $ppfd_shaded_plai[@veg_types] <umol/m_2/sec>;  # ppfd per unit shaded PLAI
+var $ppfd_shaded_plai[@veg_types] <umol/m_2/sec>;	# ppfd per unit shaded PLAI
 
 
 # Finally, we have atmospheric pressure and ppm of CO2.
@@ -92,16 +92,19 @@ var $pressure_atm <Pa>;			# atmospheric pressure
 
 external co2_historical ($year) <ppmCO2> {
     source => 'file:co2_1832_2009',
+    select => 2,
     where => '1=$year',
-    select => 2
+    which => 'first'
 };
 
 const $proj_co2_increase <ppmCO2/year> = 1.8;	# Projected yearly rate of
                                                 # increase in co2
                                                 # concentration.
 
-function co2_atm <ppmCO2> ( $year ) {
-    if ( $year <= 2009 ) return co2_historical($year);
-    return co2_historical(2009) + (year-2009) * proj_co2_increase );
-};
-
+function co2_atm ( $year ) <ppmCO2> {
+    if ( $year <= 2009 ) { 
+        return co2_historical($year);
+    } else {
+        return co2_historical(2009) + ($year-2009) * $proj_co2_increase;
+    }
+}

@@ -1,0 +1,153 @@
+
+%tree
+
+%%
+
+program	:	stmt <%name stmts *>
+	;
+
+stmt	:	';'
+	|	INCLUDE VAR ';'
+		    { $_[0]->use_input($_[2]->{attr}); return undef; }
+	|	%name assign var '=' num ';'
+	;
+
+var	:	VAR { $_[1] }
+	;
+
+num	:	NUM { $_[1] }
+	;
+
+%%
+
+sub use_input {
+    my ($parser, $filename, $file) = @_;
+    
+    unless ( ref $parser->{my_stack} eq 'ARRAY' ) {
+	$parser->{my_stack} = [];
+    }
+    
+    my @lines;
+    
+    if ( ref $file ) {
+	$filename = 'UNKNOWN' if $filename eq '';
+	@lines = <$file>;
+	if ( @lines > 0 ) {
+	    unshift @{$parser->{my_stack}}, {file => $filename, 
+					     line => 1, 
+					     input => \@lines};
+	    $parser->{my_input} = \@lines;
+	}
+    }
+    elsif ( $filename ne '' ) {
+ 	open(MY_YYINPUT, $filename) || die "Could not find file \"$filename\"";
+	@lines = <MY_YYINPUT>;
+	close(MY_YYINPUT);
+	if ( @lines > 0 ) {
+	    unshift @{$parser->{my_stack}}, {file => $filename, 
+					     line => 1, 
+					     input => \@lines};
+	    $parser->{my_input} = \@lines;
+	}
+    }
+    else {
+	my $first_line = <STDIN>;
+	my $input = [$first_line];
+	unshift @{$parser->{my_stack}}, {file => '<>',
+					 line => 1,
+					 input => $input};
+	$parser->{my_input} = $input;
+    }
+    
+}
+
+sub my_lexer {
+    my $parser = shift;
+    
+    # Keep going as long as there are input lines remaining
+    
+    while ( ref $parser->{my_input} eq 'ARRAY' and @{$parser->{my_input}} > 0 )
+    {
+	# Look for tokens in the first of the remaining lines.  The 'for' is
+	# used here to set $_ rather than as a loop.  A 'last' statement
+	# within the block causes execution to skip to the end of the block,
+	# which discards the rest of the line.
+	
+	for ($parser->{my_input}[0]) {
+	    
+	    # Start by eliminating whitespace.  We can save time by skipping
+	    # to the end of the block if there's nothing left on the line.
+	    
+	    s/^[ \t\n]+//;
+	    last if $_ eq '';
+	    
+	    # If we find a comment, discard the rest of the line.
+	    
+	    last if /^#/;
+	    
+	    # Now look for actual tokens.
+	    
+	    s/^include//		 and return('INCLUDE', 'INCLUDE');
+	    s/^([0-9]+(?:\.[0-9]+)?)//   and return(NUM => bless { attr => $1}, 'NUM');
+	    s/^([A-Za-z][A-Za-z0-9_]*)// and return(VAR => bless {attr => $1}, 'VAR');
+	    s/^(.)//s                    and return($1,$1);
+	    
+	    # If we get here and the current line is not empty, then there's a
+	    # case we aren't checking for.  Oops.
+	    
+	    die "Lexer error: no match" if $_ ne '';
+	}
+	
+	# If we get here, then the rest of the line is either empty or should
+	# be discarded (i.e. is a comment).
+	
+	# If we are reading from standard input, we need to read another
+	# line. If it is empty, we return ('', undef) to signal end-of-input.
+	
+	if ( $parser->{my_stack}[0]{file} eq '<>' ) {
+	    my $nextline = <STDIN>;
+	    my $input = [$nextline];
+	    if ( defined $nextline ) {
+		$parser->{my_input} = $input;
+		$parser->{my_stack}[0]{line}++;
+		next;
+	    }
+	    else {
+		$parser->{my_input} = undef;
+		return ('', undef);
+	    }
+	}
+	
+	# Otherwise, we discard the line and increment the line counter.
+	
+	shift @{$parser->{my_input}};
+	$parser->{my_stack}[0]{line}++;
+	
+	# If we are at the end of the input and we are reading from an
+	# included file (i.e. there is more than one record on the stack, then
+	# pop the stack and return to parsing the previous file.
+	
+	if ( @{$parser->{my_input}} == 0 and @{$parser->{my_stack}} > 1 ) {
+	    shift @{$parser->{my_stack}};
+	    $parser->{my_input} = $parser->{my_stack}[0]{input};
+	}
+    }
+    
+    return ('', undef);
+}
+
+__PACKAGE__->lexer( sub {
+    my $parser = shift;
+    my ($token, $value);
+    ($token, $value) = &my_lexer($parser);
+    if (ref $value)
+    {
+	print "LINE $parser->{my_stack}[0]{line}: $token '$value->{attr}'\n";
+    }
+    else
+    {
+	print "LINE $parser->{my_stack}[0]{line}: $token '$value'\n";
+    }
+    return ($token, $value);
+  }
+);
