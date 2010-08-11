@@ -17,7 +17,6 @@ $Data::Dumper::indent = 0;
 %left ANDAND
 #%left BITOROP
 #%left BITANDOP
-%nonassoc EQOP
 %nonassoc RELOP
 %nonassoc UNIOP # UNIOPSUB
 # %nonassoc REQUIRE
@@ -39,7 +38,8 @@ $Data::Dumper::indent = 0;
 
 %%
 
-program	:	progstart stmtseq 
+program	:	progstart stmtseq
+			{ new_dnode('PROGRAM', $_[2]) }
 	;
 
 progstart:	/* null */
@@ -47,16 +47,13 @@ progstart:	/* null */
 	;
 
 block	:	'{' stmtseq '}'
+			{ new_dnode('BLOCK', $_[2]) }
 	|	PERL '{' { $_[0]->lex_mode('perl') } PERLPART * '}'
 	|	'%{' { $_[0]->lex_mode('pperl') } PERLPART * '%}'
 	;
 
-pairblock:	'{' pairseq '}'
-			{ $_[2] }
-	;
-
-pairseq	:	pair <* ','>
-			{ $_[1] }
+pairblock:	'{' pair <* ','> '}'
+			{ new_dnode('PAIRBLOCK', $_[2]) }
 	;
 
 pair	:	WORD.left '=>' expr.right
@@ -66,11 +63,11 @@ pair	:	WORD.left '=>' expr.right
 unitspec:	/* null */
 			{}
 	|	'<' unitlist '>'
-			{ add_units(new_node('UNITSPEC'), $_[2], 1) }
+			{ merge_units(new_node('UNITSPEC'), $_[2], 1) }
 	;
 
 unitlist:	/* null */
-			{ add_units(new_node('UNITLIST'), '') }
+			{ new_node('UNITLIST') }
 
 	|	unitlist UNIT
 			{
@@ -79,7 +76,7 @@ unitlist:	/* null */
 				$_[0]->YYError();
 			    }
 			    else {
-				append_units($_[1], @u);
+				add_units($_[1], @u);
 			    }
 			}
 	;
@@ -87,10 +84,10 @@ unitlist:	/* null */
 stmtseq :	/* null */
 
 	|	stmtseq decl
-			{ push @{$_[1]->{children}}, @_[2]; $_[1]; }
+			{ add_child($_[1], $_[2]) }
 
 	|	stmtseq line
-			{ push @{$_[1]->{children}}, @_[2]; $_[1]; }
+			{ add_child($_[1], $_[2]) }
 	;
 
 decl	:	const
@@ -127,51 +124,55 @@ const	:	CONST vardecl.v '=' expr.e ';'
 
 	|	CONST vardecl.v ';'
 			{
-			    $_[0]->module_var($v);
+			    $_[0]->module_var($v); undef;
 			}
 	;
 
 var	:	VAR vardecl.v phase.p '=' expr.e ';'
 			{ 
 			    $_[0]->module_var($v);
-			    new_node(ref $p, new_anode('ASSIGN', '=', $v, $e));
+			    new_node(ref $p || 'STEPSTMT', 
+				     new_anode('ASSIGN', '=', $v, $e));
 			}
 
 	|	VAR vardecl.v ';'
 			{
-			    $_[0]->module_var($v);
+			    $_[0]->module_var($v); undef;
 			}
 	;
 
 pool	:	POOL vardecl.v phase.p '=' expr.e ';'
 			{
 			    $_[0]->module_var($v);
-			    new_node(ref $p, new_anode('ASSIGN', '=', $v, $e));
+			    new_node(ref $p || 'INITSTMT', 
+				     new_anode('ASSIGN', '=', $v, $e));
 			}
 
 	|	POOL vardecl.v ';'
 			{
-			    $_[0]->module_var($v);
+			    $_[0]->module_var($v); undef;
 			}
 	;
 
 vardecl	:	scalar.v unitspec.u
 			{
-			    add_units(new_anode('VARDECL', $v->{attr}, $v), $u);
+			    merge_units($v, $u);
 			}
 
-	|	scalar.v '[' set.l ']' unitspec.v
+	|	scalar.v '[' set.l ']' unitspec.u
 			{
-			    add_units(new_anode('VARDECL', $v->{attr}, $v, $l), $u);
+			    merge_units(add_child($v, $l), $u);
 			}
 
 	|	set.v unitspec.u
 			{
-			    add_units(new_anode('VARDECL', $v->{attr}, $v), $u);
+			    merge_units($v, $u);
 			}
 	;
 
-phase	:	INIT
+phase	:	/* null */
+			{}
+	|	INIT
 			{ new_node('INITSTMT') }
 	|	STEP
 			{ new_node('STEPSTMT') }
@@ -186,23 +187,29 @@ include	:	INCLUDE WORD ';'
 	;
 
 module	:	MODULE WORD ';'
+			{ new_anode('MODULE', $_[2]) }
 	;
 
 units	:	UNITS wordlist ';'
+			{ new_dnode('UNITS', $_[2]) }
 	;
 
-wordlist:	WORD <* ','>
+wordlist:	WORD
+			{ new_node('LIST', new_anode('STRING', $_[1])) }
+
+	|	wordlist.l ',' WORD.w
+			{ add_child($l, new_anode('STRING', $w)) }
 	;
 
 external:	EXTERNAL WORD.name funargs.f unitspec.u pairblock.b ';'
 			{
-			    add_units(new_anode('EXTERNAL', $name, $f, $b), $u);
+			    merge_units(new_anode('EXTERNAL', $name, $f, $b), $u);
 			}
 	;
 
 function:	FUNCTION WORD.name funargs.f unitspec.u funbody.b
 			{
-			    add_units(new_anode('FUNCTION', $name, $f, $b), $u);
+			    merge_units(new_anode('FUNCTION', $name, $f, $b), $u);
 			}
 	;
 
@@ -256,8 +263,11 @@ cond	:	IF '(' expr.test ')' block.if else.else
 	;
 
 else	:	/* null */
+			{}
+
 	|	ELSE block.b
 			{ $b }
+
 	|	ELSIF '(' expr.test ')' block.if else.else
 			{ new_node('IF', $test, $if, $else) }
 	;
@@ -296,8 +306,11 @@ expr	:	expr.l ANDOP expr.r
 	|	expr.l XOROP expr.r
 			{ new_node('XOR', $l, $r) }
 
-	|	term %prec PREC_LOW unitspec.u
-			{ add_unit($_[1], $u) }
+	|	NOTOP expr.e
+			{ new_node('NOT', $e) }
+
+	|	term unitspec.u %prec PREC_LOW
+			{ merge_units($_[1], $u) }
 	;
 
 funcall	:	FUNC.fun '(' listexpr.args ')'
@@ -317,7 +330,7 @@ term:		termbinop
 	|	term.a '?' term.b ':' term.c
 			{ new_node('TRI', $a, $b, $c) }
 
-	|	'(' expr ')' 
+	|	'(' argexpr ')' 
 			{ $_[2] }
 
 	|	scalar %prec '('
@@ -357,11 +370,14 @@ termbinop:	term.l ASSIGNOP.op term.r
 	|	term.l POWOP.op term.r
 			{ new_anode('POWOP', $op, $l, $r) }
 
+	|	term.l '<=' term.r
+			{ new_anode('RELOP', '<=', $l, $r) }
+    
 	|	term.l RELOP.op term.r
 			{ new_anode('RELOP', $op, $l, $r) }
 
 	|	term.l DOTDOT term.r
-			{ new_anode('DOTDOT', $op, $l, $r) }
+			{ new_node('DOTDOT', $l, $r) }
 
 	|	term.l ANDAND term.r
 			{ new_node('AND', $l, $r) }
@@ -392,11 +408,11 @@ termunop:	'-' term.t %prec UMINUS
 	;
 
 scalar	:	'$' WORD
-			{ new_node('SCALAR', $_[2]) }
+			{ new_anode('SCALAR', $_[2]) }
 	;
 
 set	:	'@' WORD
-			{ new_node('SET', $_[2]) }
+			{ new_anode('SET', $_[2]) }
 	;
 
 flow	:      	scalar.so MULOP.op expr.coeff '=>' scalar.sn
@@ -503,7 +519,7 @@ sub pop_input {
 
 sub module_var {
     my ($self, $vnode) = @_;
-    
+    $DB::single = 1;
     my $name = $vnode->{attr};
 }
 
@@ -519,42 +535,49 @@ sub new_anode {
     my ($type, $attr, @children) = @_;
     
     my $node = Parse::Eyapp::Node->new($type);
-    $node->{attr} = attr if defined $attr;
+    $node->{attr} = $attr if defined $attr;
     push @{$node->{children}}, @children if @children > 0;
     return $node;
 }
 
-sub add_units {
-    my ($node, $units, $sort_flag) = @_;
+sub add_child {
+    my ($node, $child) = @_;
     
-    if ( ref $units ) {
+    push @{$node->{children}}, $child if ref $child;
+    return $node;
+}
+
+sub merge_units {
+    my ($node, $unitnode, $sort_flag) = @_;
+    
+    if ( ref $unitnode ) {
 	if ( $sort_flag ) {
-	    $node->{units} = [ sort @{$units->{units}} ];
+	    $node->{units} = [ sort @{$unitnode->{units}} ];
 	}
 	else {
-	    $node->{units} = $units->{units};
+	    $node->{units} = $unitnode->{units};
 	}
-    }
-    else {
-	$node->{units} = [];
     }
     return $node;
 }
 
-sub append_unit {
+sub add_units {
     my ($node, @units) = @_;
     
-    push @{$node->{units}}, @u;
+    unless ( ref $node->{units} eq 'ARRAY' ) {
+	$node->{units} = [];
+    }
+    push @{$node->{units}}, @units;
     return $node;
 }
 
 sub new_dnode {
-    my ($self, $type, $attr, $unode, $cnode) = @_;
+    my ($type, $old_node) = @_;
     
     my $node = Parse::Eyapp::Node->new($type);
-    $node->{attr} = attr if defined $attr;
-    $node->{units} = $unode->{units} if ref $unode;
-    $node->{children} = $cnode->{children} if ref $cnode;
+    $node->{attr} = $old_node->{attr} if exists $old_node->{attr};
+    $node->{units} = $old_node->{units} if exists $old_node->{units};
+    $node->{children} = $old_node->{children} if exists $old_node->{children};
     return $node;
 }
 
@@ -580,12 +603,12 @@ sub validate_unit {
     my ($self, $raw) = @_;
     my ($invert, $unit, $count);
     
-    if ( $raw =~ m{^([/*]?)\s*([a-zA-Z]+)\s*([0-9]*)$} ) {
+    if ( $raw =~ m{^([/*]?)\s*([a-zA-Z]+)\^?([0-9]*)$} ) {
 	$unit = $1 eq '/' ? "~$2" : $2;
 	$count = $3 ne '' ? $3+0 : 1;
 	return ($unit) x $count;
     }
-    elsif ( $raw =~ m{^\*?\s*([a-zA-Z]+)\s*-([0-9]+)$} ) {
+    elsif ( $raw =~ m{^\*?\s*([a-zA-Z]+)\^?-([0-9]+)$} ) {
 	$unit = "~$1";
 	$count = $2 ne '' ? $2+0 : 1;
 	return ($unit) x $count;

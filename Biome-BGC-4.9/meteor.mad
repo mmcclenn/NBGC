@@ -36,51 +36,51 @@ units umol, ppmCO2;
 external daymet {
     type => 'postgresql',
     source => "dbi:postgres:have_to_fill_this_in_later",
-    where => ('year=$year', 'yday=$yday', 'location=$location'),
-    select => ('prcp', 'vpd', 'srad', 'dayl', 'tmin', 'tmax'),
-    cache => 'ALL'
+    select => "SELECT prcp, vpd, srad, dayl, tmin, tmax FROM MetData WHERE year=$year 
+               AND day=$yday AND loc=$location",
+    cache => 'PREFETCH'
 };
 
-var $tmax_daily <deg_C> = daymet().tmax;
-var $tmin_daily <deg_C> = daymet().tmin;
+var $tmax_daily <degC> = daymet().tmax;
+var $tmin_daily <degC> = daymet().tmin;
 var $precip_total_daily <cm> = daymet().prcp;
-var $swavgfd <W/m_2> = daymet().srad;
+var $swavgfd <W/m^2> = daymet().srad;
 var $vpd_daily <Pa> = daymet().vpd;
 var $day_length <sec> = daymet().dayl;
 
 
 # Other quantities are derived from these:
 
-var $tavg_daily <deg_C>;		# average daily air temperature
+var $tavg_daily <degC>;		# average daily air temperature
 
-var $tavg_11day <deg_C>;		# average daily air temperature -- 11-day
+var $tavg_11day <degC>;		# average daily air temperature -- 11-day
 					# running avg
 
-var $tavg_daytime_daily <deg_C>;	# average daytime air temperature
+var $tavg_daytime_daily <degC>;	# average daytime air temperature
 
-var $tavg_nighttime_daily <deg_C>;	# average nighttime air temperature
+var $tavg_nighttime_daily <degC>;	# average nighttime air temperature
 
-var $tsoil_daily <deg_C>;		# average soil temperature
+var $tsoil_daily <degC>;		# average soil temperature
 
-var $flux_transmitted <W/m_2>;		# transmitted shortwave flux (sunlight)
+var $flux_transmitted <W/m^2>;		# transmitted shortwave flux (sunlight)
 
-var $par_daily <W/m_2>;			# photosynthetically active radiation
+var $par_daily <W/m^2>;			# photosynthetically active radiation
 
 
 # The following variables are specific to the different types of vegetation
 # being modelled:
 
-var $sw_abs_canopy[@veg_types] <W/m_2>;	        # shortwave flux absorbed by the canopy
+var $sw_abs_canopy[@veg_types] <W/m^2>;	        # shortwave flux absorbed by the canopy
 
-var $sw_abs_sunlit_plai[@veg_types] <W/m_2>;	# sw flux absorbed per unit sunlit PLAI
+var $sw_abs_sunlit_plai[@veg_types] <W/m^2>;	# sw flux absorbed per unit sunlit PLAI
 
-var $sw_abs_shaded_plai[@veg_types] <W/m_2>;	# sw flux absorbed per unit shaded PLAI
+var $sw_abs_shaded_plai[@veg_types] <W/m^2>;	# sw flux absorbed per unit shaded PLAI
 
-var $par_abs_canopy[@veg_types] <W/m_2>;	# PAR absorbed by canopy
+var $par_abs_canopy[@veg_types] <W/m^2>;	# PAR absorbed by canopy
 
-var $ppfd_sunlit_plai[@veg_types] <umol/m_2/sec>;	# ppfd per unit sunlit PLAI
+var $ppfd_sunlit_plai[@veg_types] <umol/m^2/sec>;	# ppfd per unit sunlit PLAI
 
-var $ppfd_shaded_plai[@veg_types] <umol/m_2/sec>;	# ppfd per unit shaded PLAI
+var $ppfd_shaded_plai[@veg_types] <umol/m^2/sec>;	# ppfd per unit shaded PLAI
 
 
 # Finally, we have atmospheric pressure and ppm of CO2.
