@@ -1,0 +1,805 @@
+
+%{
+use Data::Dumper;
+$Data::Dumper::indent = 0;
+%}
+
+%nonassoc PREC_LOW
+%left OROP XOROP
+%left ANDOP
+%right NOTOP
+#nonassoc LSTOP, LSTOPSUB
+%left ','
+%right ASSIGNOP
+%right '?' ':'
+%nonassoc DOTDOT # YADAYADA
+%left OROR DORDOR
+%left ANDAND
+#%left BITOROP
+#%left BITANDOP
+%nonassoc EQOP
+%nonassoc RELOP
+%nonassoc UNIOP # UNIOPSUB
+# %nonassoc REQUIRE
+# %left SHIFTOP
+%left ADDOP
+%left MULOP
+%left MATCHOP
+%right '!' UMINUS # REFGEN '~'
+%right POWOP
+%nonassoc INCOP # Perl grammar uses PREINC PREDEC POSTINC POSTDEC
+# %left ARROW
+%nonassoc ')'
+%left '('
+%left '[' '{'
+
+%syntactic WORD ADDOP MULOP POWOP ANDOP OROP XOROP
+
+%tree
+
+%%
+
+program	:	progstart stmtseq 
+	;
+
+progstart:	/* null */
+			{}
+	;
+
+block	:	'{' stmtseq '}'
+	|	PERL '{' { $_[0]->lex_mode('perl') } PERLPART * '}'
+	|	'%{' { $_[0]->lex_mode('pperl') } PERLPART * '%}'
+	;
+
+pairblock:	'{' pairseq '}'
+			{ $_[2] }
+	;
+
+pairseq	:	pair <* ','>
+			{ $_[1] }
+	;
+
+pair	:	WORD.left '=>' expr.right
+			{ new_node('PAIR', $left, $right) }
+	;
+
+unitspec:	/* null */
+			{}
+	|	'<' unitlist '>'
+			{ add_units(new_node('UNITSPEC'), $_[2], 1) }
+	;
+
+unitlist:	/* null */
+			{ add_units(new_node('UNITLIST'), '') }
+
+	|	unitlist UNIT
+			{
+			    my (@u) = $_[0]->validate_unit($_[2]);
+			    if ( $u[0] eq 'ERROR' ) {
+				$_[0]->YYError();
+			    }
+			    else {
+				append_units($_[1], @u);
+			    }
+			}
+	;
+
+stmtseq :	/* null */
+
+	|	stmtseq decl
+			{ push @{$_[1]->{children}}, @_[2]; $_[1]; }
+
+	|	stmtseq line
+			{ push @{$_[1]->{children}}, @_[2]; $_[1]; }
+	;
+
+decl	:	const
+			{ $_[1] }
+
+	|	var
+			{ $_[1] }
+
+	|	pool
+			{ $_[1] }
+
+	|	include
+			{ $_[1] }
+
+	|	module
+			{ $_[1] }
+
+	|	units
+			{ $_[1] }
+
+	|	external
+			{ $_[1] }
+
+	|	function
+			{ $_[1] }
+
+	;
+
+const	:	CONST vardecl.v '=' expr.e ';'
+			{
+			    $_[0]->module_var($v);
+			    new_node('INITSTMT', new_anode('ASSIGN', '=', $v, $e));
+			}
+
+	|	CONST vardecl.v ';'
+			{
+			    $_[0]->module_var($v);
+			}
+	;
+
+var	:	VAR vardecl.v phase.p '=' expr.e ';'
+			{ 
+			    $_[0]->module_var($v);
+			    new_node(ref $p, new_anode('ASSIGN', '=', $v, $e));
+			}
+
+	|	VAR vardecl.v ';'
+			{
+			    $_[0]->module_var($v);
+			}
+	;
+
+pool	:	POOL vardecl.v phase.p '=' expr.e ';'
+			{
+			    $_[0]->module_var($v);
+			    new_node(ref $p, new_anode('ASSIGN', '=', $v, $e));
+			}
+
+	|	POOL vardecl.v ';'
+			{
+			    $_[0]->module_var($v);
+			}
+	;
+
+vardecl	:	scalar.v unitspec.u
+			{
+			    add_units(new_anode('VARDECL', $v->{attr}, $v), $u);
+			}
+
+	|	scalar.v '[' set.l ']' unitspec.v
+			{
+			    add_units(new_anode('VARDECL', $v->{attr}, $v, $l), $u);
+			}
+
+	|	set.v unitspec.u
+			{
+			    add_units(new_anode('VARDECL', $v->{attr}, $v), $u);
+			}
+	;
+
+phase	:	INIT
+			{ new_node('INITSTMT') }
+	|	STEP
+			{ new_node('STEPSTMT') }
+	|	TIMESTEP
+			{ new_node('TIMESTMT') }
+	;
+
+include	:	INCLUDE WORD ';'
+			{
+			    $_[0]->use_input($_[2] . ".mad");
+			}
+	;
+
+module	:	MODULE WORD ';'
+	;
+
+units	:	UNITS wordlist ';'
+	;
+
+wordlist:	WORD <* ','>
+	;
+
+external:	EXTERNAL WORD.name funargs.f unitspec.u pairblock.b ';'
+			{
+			    add_units(new_anode('EXTERNAL', $name, $f, $b), $u);
+			}
+	;
+
+function:	FUNCTION WORD.name funargs.f unitspec.u funbody.b
+			{
+			    add_units(new_anode('FUNCTION', $name, $f, $b), $u);
+			}
+	;
+
+funargs	:	/* null */
+	|	'(' scalar <* ','> ')'
+			{
+			    new_node('LIST', undef, @{$_[2]->{children}});
+			}
+	;
+
+funbody	:	block
+			{ $_[1] }
+	|	';'
+			{}
+	;
+
+line	:	phase.p block.b
+			{ new_node(ref $p, $b) }
+
+	|	phase.p sideff.e ';'
+			{ new_node(ref $p, $b) }
+
+	|	block
+			{ $_[1] }
+
+	|	cond
+			{ $_[1] }
+
+	|	flow ';'
+			{ $_[1] }
+
+	|	sideff ';'
+			{ $_[1] }
+	;
+
+sideff	:	expr
+			{ $_[1] }
+
+	|	expr.l IF expr.r
+			{ new_node('AND', $r, $l) }
+
+	|	expr.l UNLESS expr.r
+			{ new_node('OR', $r, $l) }
+	;
+
+cond	:	IF '(' expr.test ')' block.if else.else
+			{ new_node('IF', $test, $if, $else) }
+
+	|	UNLESS '(' expr.test ')' block.if else.else
+			{ new_node('IF', new_node('NOT', $test), $if, $else) }
+	;
+
+else	:	/* null */
+	|	ELSE block.b
+			{ $b }
+	|	ELSIF '(' expr.test ')' block.if else.else
+			{ new_node('IF', $test, $if, $else) }
+	;
+
+listexpr:	/* null */ %prec PREC_LOW
+			{}
+
+	|	argexpr %prec PREC_LOW
+			{ $_[1] }
+	;
+
+argexpr	:	argexpr ','
+			{ $_[1] }
+
+	|	argexpr ',' term.t
+			{
+			    if ( ref $_[1] eq 'LIST' ) {
+				push @{$_[1]->{children}}, $t;
+				$_[1];
+			    }
+			    else {
+				new_node('LIST', $_[1], $t);
+			    }
+			}
+
+	|	term %prec PREC_LOW
+			{ $_[1] }
+	;
+
+expr	:	expr.l ANDOP expr.r
+			{ new_node('AND', $l, $r) }
+
+	|	expr.l OROP expr.r
+			{ new_node('OR', $l, $r) }
+
+	|	expr.l XOROP expr.r
+			{ new_node('XOR', $l, $r) }
+
+	|	term %prec PREC_LOW unitspec.u
+			{ add_unit($_[1], $u) }
+	;
+
+funcall	:	FUNC.fun '(' listexpr.args ')'
+			{ new_node('FUNCALL', $fun, @{$args->{children}}) }
+
+        |	FUNC.fun '(' listexpr.args ')' DOT WORD.fld
+			{ new_node('DOTFLD', $fld,
+				   new_node('FUNCALL', $fun, @{$args->{children}}) ) }
+	;
+
+term:		termbinop 
+			{ $_[1] }
+
+	|	termunop 
+			{ $_[1] }
+
+	|	term.a '?' term.b ':' term.c
+			{ new_node('TRI', $a, $b, $c) }
+
+	|	'(' expr ')' 
+			{ $_[2] }
+
+	|	scalar %prec '('
+			{ $_[1] }
+
+	|	set %prec '('
+			{ $_[1] }
+
+	|	NUM unitspec
+			{ new_anode('NUM', $_[1]) }
+
+	|	STR
+			{ new_anode('STR', $_[1]) }
+
+	|	funcall
+			{ $_[1] }
+
+        |	RETURN expr.e
+			{ new_node('RETURN', $e) }
+	;
+
+termbinop:	term.l ASSIGNOP.op term.r
+			{ new_anode('ASSIGN', $op, $l, $r) }
+
+	|	term.l '=' term.r
+			{ new_anode('ASSIGN', '=', $l, $r) }
+
+	|	term.l ADDOP.op term.r
+			{ new_anode('ADDOP', $op, $l, $r) }
+
+	|	term.l MULOP.op term.r
+			{ new_anode('MULOP', $op, $l, $r) }
+
+	|	term.l '%' term.r
+			{ new_anode('MULOP', '%', $l, $r) }
+
+	|	term.l POWOP.op term.r
+			{ new_anode('POWOP', $op, $l, $r) }
+
+	|	term.l RELOP.op term.r
+			{ new_anode('RELOP', $op, $l, $r) }
+
+	|	term.l DOTDOT term.r
+			{ new_anode('DOTDOT', $op, $l, $r) }
+
+	|	term.l ANDAND term.r
+			{ new_node('AND', $l, $r) }
+
+	|	term.l OROR term.r
+			{ new_node('OR', $l, $r) }
+
+	|	term.l DORDOR term.r
+			{ new_node('DOR', $l, $r) }
+
+#	|	term MATCHOP term
+	;
+
+termunop:	'-' term.t %prec UMINUS
+			{ new_node('UMINUS', $t) }
+    
+	|	'+' term %prec UMINUS
+			{ $_[2] }
+
+	|	'!' term.t
+			{ new_node('NOT', $t) }
+
+	|	term INCOP
+			{ $_[1]->{incr} = 'POST'; $_[1]; }
+
+	|	INCOP term
+			{ $_[2]->{incr} = 'PRE'; $_[2]; }
+	;
+
+scalar	:	'$' WORD
+			{ new_node('SCALAR', $_[2]) }
+	;
+
+set	:	'@' WORD
+			{ new_node('SET', $_[2]) }
+	;
+
+flow	:      	scalar.so MULOP.op expr.coeff '=>' scalar.sn
+			{
+			    new_node('FLOW', $so, $sn, 
+				     new_anode('MULOP', $op, $so, $coeff));
+			}
+
+	|	scalar.sn MULOP.op expr.coeff '<=' scalar.so
+			{
+			    new_node('FLOW', $so, $sn, 
+				     new_anode('MULOP', $op, $sn, $coeff));
+			}
+
+	|	scalar.so '=>' scalar.sn MULOP.op expr.coeff
+			{
+			    new_node('FLOW', $so, $sn,
+				     new_anode('MULOP', $op, $sn, $coeff));
+			}
+
+	|	scalar.sn '<=' scalar.so MULOP.op expr.coeff
+			{
+			    new_node('FLOW', $so, $sn, 
+				     new_anode('MULOP', $op, $so, $coeff));
+			}
+
+	|	scalar.so '(' expr.rate ')' '=>' scalar.sn
+			{
+			    new_node('FLOW', $so, $sn, $rate);
+			}
+
+	|	scalar.sn '(' expr.rate ')' '<=' scalar.so
+			{
+			    new_node('FLOW', $so, $sn, $rate);
+			}
+
+	|	scalar.so '=>' scalar.sn '(' expr.rate ')'
+			{
+			    new_node('FLOW', $so, $sn, $rate);
+			}
+
+	|	scalar.sn '<=' scalar.so '(' expr.rate ')'
+			{
+			    new_node('FLOW', $so, $sn, $rate);
+			}
+	;
+
+%%
+
+use Carp;
+#use Text::Balanced qw/:ALL/;
+
+sub init_parser {
+    my $self = shift;
+    
+    $self->{my_stack} = [];
+    $self->{lex_mode} = 'mad';
+}
+
+
+sub use_input {
+    my ($self, $filename) = @_;
+    
+    my $input;
+    
+    if ( $filename ne '' ) {
+	my ($base) = ($self->{my_filename} =~ m{(.*/)});
+	$filename = "$base/$filename" if $base ne '';
+	local $/;
+ 	open my $ifh, "<", $filename or die "Error reading file \"$filename\": $!";
+	$input = <$ifh>;
+    }
+    else {
+	$filename = "<>";
+	local $/;
+	$input = <STDIN>;
+    }
+    
+    if ( defined $input ) {
+	$self->{my_filename} = $filename;
+	$self->{my_line} = 1;
+	$self->{my_input} = \$input;
+	unshift @{$self->{my_input_stack}}, {file => $self->{my_filename}, 
+					    line => $self->{my_line}, 
+					    input => $self->{my_input}};
+    }
+}
+
+sub pop_input {
+    my $self = shift;
+    
+    shift @{$self->{my_input_stack}};
+    
+    if ( @{$self->{my_input_stack}} == 0 ) {
+	return 0;
+    }
+    else {
+	$self->{my_filename} = $self->{my_input_stack}[0]{file};
+	$self->{my_line} = $self->{my_input_stack}[0]{line};
+	$self->{my_input} = $self->{my_input_stack}[0]{input};
+	return 1;
+    }
+}
+
+sub module_var {
+    my ($self, $vnode) = @_;
+    
+    my $name = $vnode->{attr};
+}
+
+sub new_node {
+    my ($type, @children) = @_;
+    
+    my $node = Parse::Eyapp::Node->new($type);
+    push @{$node->{children}}, @children if @children > 0;
+    return $node;
+}
+
+sub new_anode {
+    my ($type, $attr, @children) = @_;
+    
+    my $node = Parse::Eyapp::Node->new($type);
+    $node->{attr} = attr if defined $attr;
+    push @{$node->{children}}, @children if @children > 0;
+    return $node;
+}
+
+sub add_units {
+    my ($node, $units, $sort_flag) = @_;
+    
+    if ( ref $units ) {
+	if ( $sort_flag ) {
+	    $node->{units} = [ sort @{$units->{units}} ];
+	}
+	else {
+	    $node->{units} = $units->{units};
+	}
+    }
+    else {
+	$node->{units} = [];
+    }
+    return $node;
+}
+
+sub append_unit {
+    my ($node, @units) = @_;
+    
+    push @{$node->{units}}, @u;
+    return $node;
+}
+
+sub new_dnode {
+    my ($self, $type, $attr, $unode, $cnode) = @_;
+    
+    my $node = Parse::Eyapp::Node->new($type);
+    $node->{attr} = attr if defined $attr;
+    $node->{units} = $unode->{units} if ref $unode;
+    $node->{children} = $cnode->{children} if ref $cnode;
+    return $node;
+}
+
+sub lex_mode {
+    my ($self, $mode) = @_;
+    $self->{lex_mode} = $mode;
+    $self->{brcount} = 1;
+}
+
+sub expect_unit {
+    my $self = shift;
+    print "EXPECT UNIT\n";
+    $self->{expect_unit} = 1;
+}
+
+sub no_unit {
+    my $self = shift;
+    print "NO UNIT\n";
+    $self->{expect_unit} = 0;
+}
+
+sub validate_unit {
+    my ($self, $raw) = @_;
+    my ($invert, $unit, $count);
+    
+    if ( $raw =~ m{^([/*]?)\s*([a-zA-Z]+)\s*([0-9]*)$} ) {
+	$unit = $1 eq '/' ? "~$2" : $2;
+	$count = $3 ne '' ? $3+0 : 1;
+	return ($unit) x $count;
+    }
+    elsif ( $raw =~ m{^\*?\s*([a-zA-Z]+)\s*-([0-9]+)$} ) {
+	$unit = "~$1";
+	$count = $2 ne '' ? $2+0 : 1;
+	return ($unit) x $count;
+    }
+    else {
+	return 'ERROR';
+    }
+}    
+
+sub count_brace {
+    my ($self, $adjustment) = @_;
+    $self->{brcount} += $adjustment;
+    if ( $self->{brcount} == 0 && $adjustment < 0 ) {
+	$self->{lex_mode} = 'mad';
+	return '}';
+    }
+    else {
+	return 'PERLPART';
+    }
+}
+
+sub my_syntax_error {
+    my ($self, $msg) = @_;
+    die "Syntax error at $self->{my_filename} line $self->{my_line}: $msg\n";
+}
+
+sub my_lexer {
+    my $self = shift;
+    my $m;
+    
+    # Allow retries when we process comments, or when we get to the end of a
+    # file and need to pop the input file stack (i.e. because we were
+    # processing an included file).
+    
+    while ( 1 )
+    {
+	# The 'for' is used here to set $_ rather than as a loop.  We need to
+	# make sure to count the lines as we parse them.
+	
+	for (${$self->{my_input}}) {
+	    
+	    # Start by skipping whitespace.  Note that we have to keep count
+	    # of the number of newlines we pass, so that error messages will
+	    # indicate the proper line number.
+	    
+	    m{\G(\s+)}gc and $self->{my_line} += ($1 =~ tr{\n}{});
+	    
+	    # If we find a comment, skip the rest of the line.  There might
+	    # not be a following newline if the comment is the last thing in
+	    # the file.
+	    
+	    m{\G#.*\n?}gc and $self->{my_line}++, next;
+	    
+	    # Now, if we are done with the current input, see if there's
+	    # anything waiting on the input file stack (i.e. because we were
+	    # processing an included file).  If not, return the signal for
+	    # "end of input".
+	    
+	    if ( defined(pos($_)) and pos($_) >= length($_) ) {
+		next if $self->pop_input();
+		return ('', undef); # otherwise
+	    }
+	    	    
+	    # Check for %{, which always signals the start of a Perl block
+	    
+	    if ( m[\G%{]gc ) {
+		$self->lex_mode('pperl');
+		return ('%{', '');
+	    }
+
+	    # If we are expecting Perl code, then we use a very simplified
+	    # lexer that counts brackets to figure out when the enclosing
+	    # block is done.  There are two modes: 'perl' which expects
+	    # regular brackets, and 'pperl' which expects '%}'.  NEEDED:
+	    # PROPER HANDLING OF COMMENTS AND QUOTES, ALSO SOURCE FILTER.
+	    
+	    if ( $self->{lex_mode} eq 'pperl' ) {
+		print "PPERL\n";
+		m<\G\%\}>gc		and $self->{lex_mode} = 'mad', return ('%}','');
+		m<\G(.*?)(?=%})>gcs	and $self->{my_line} += ($1 =~ tr{\n}{}),
+		    return ('PERLPART', $1);
+		croak "Syntax error in $self->{my_filename} line $self->{my_line}: %{ block not closed.\n";
+	    }
+
+	    elsif ( $self->{lex_mode} eq 'perl' ) {
+		m<\G{>gc		and return ($self->count_brace(1), '{');
+		m<\G}>gc		and return ($self->count_brace(-1), '}');
+		m<([^{}]+)>gc and $self->{my_line} += ($1 =~ tr{\n}{}), 
+		    return ('PERLPART', $1);
+		croak "Syntax error in $self->{my_filename} line $self->{my_line}: Perl block not closed.\n";
+	    }
+	    
+	    # If we find something that could be the start of a unit
+	    # specification, then we switch to 'units' mode.
+	    
+	    if ( m{\G<(?=[\sa-zA-Z0-9/*^-]*>)}gc ) {
+		print "FOUND UNITS\n";
+		$self->{lex_mode} = 'units';
+		return ('<', '');
+	    }
+	    
+	    if ( $self->{lex_mode} eq 'units' ) {
+		my $t;
+		m{\G>}gc		and $self->{lex_mode} = 'mad', return ('>', '');
+		m{\G\s*([/*]?\s*[a-zA-Z]+\^?-?[0-9]*)}gc	and return ('UNIT', $1);
+		return ('ERROR', '');
+	    }
+	    
+	    # Otherwise, we're parsing our modeling language.  Start by looking for
+	    # keywords.
+	    
+	    m{\Gand(?!\w)}gc		and return ('ANDOP', '');
+	    m{\Gconst(?!\w)}gc		and return ('CONST', '');
+	    m{\Gdo(?!\w)}gc		and return ('DO', '');
+	    m{\Gelse(?!\w)}gc		and return ('ELSE', '');
+	    m{\Gelsif(?!\w)}gc		and return ('ELSIF', '');
+	    m{\Gexternal(?!\w)}gc	and return ('EXTERNAL', '');
+	    m{\Gfor(?!\w)}gc		and return ('FOR', '');
+	    m{\Gfunction(?!\w)}gc	and return ('FUNCTION', '');
+	    m{\Gglobal(?!\w)}gc		and return ('GLOBAL', '');
+	    m{\Ginclude(?!\w)}gc	and return ('INCLUDE', '');
+	    m{\Gif(?!\w)}gc		and return ('IF', '');
+	    m{\Ginit(?!\w)}gc		and return ('INIT', '');
+	    m{\Glast(?!\w)}gc		and return ('LAST', '');
+	    m{\Gmodule(?!\w)}gc		and return ('MODULE', '');
+	    m{\Gnext(?!\w)}gc		and return ('NEXT', '');
+	    m{\Gnot(?!\w)}gc		and return ('NOTOP', '');
+	    m{\Gor(?!\w)}gc		and return ('OROP', '');
+	    m{\Gperl(?!\w)}gc		and return ('PERL', '');
+	    m{\Gpool(?!\w)}gc		and return ('POOL', '');
+	    m{\Greturn(?!\w)}gc		and return ('RETURN', '');
+	    m{\Grun(?!\w)}gc		and return ('RUN', '');
+	    m{\Gstep(?!\w)}gc		and return ('STEP', '');
+	    m{\Gtimestep(?!\w)}gc	and return ('TIMESTEP', '');
+	    m{\Gunits(?!\w)}gc		and return ('UNITS', '');
+	    m{\Gunless(?!\w)}gc		and return ('UNLESS', '');
+	    m{\Guntil(?!\w)}gc		and return ('UNTIL', '');
+	    m{\Guse(?!\w)}gc		and return ('USE', '');
+	    m{\Gvar(?!\w)}gc		and return ('VAR', '');
+	    m{\Gwhile(?!\w)}gc		and return ('WHILE', '');
+	    m{\Gxor(?!\w)}gc		and return ('XOROP', '');
+	    
+	    # Otherwise, any alphanumeric sequence is a function
+	    # (i.e. sin, push, etc.) if followed by a parenthesis, and a
+	    # bareword otherwise.
+	    
+	    m{\G(\w(?<!\d)\w*(?=\())}gc		and return ('FUNC', $1);
+	    m{\G(\w(?<!\d)\w*)}gc		and return ('WORD', $1);
+	    
+	    # Now check for numeric and string literals
+	    # NEEDED: INTERPOLATION, MULTILINE
+	    
+	    m{\G((?:\d+\.\d*|\d*\.\d+|\d+)(?:[eE]-?\d+)?)}gc and return ('NUM', $1);
+	    
+	    m{\G'((?:[^\\']|\\.)*)'}gc		and return ('STR', $1);
+	    m{\G"((?:[^\\"]|\\.)*)"}gc		and return ('STR', $1);
+	    	    
+	    # Now, all of the punctuation
+	    
+	    m{\G=>}gc				and return ('=>', '');
+	    m{\G<=}gc				and return ('<=', '');
+	    #m{\G\.\.\.}gc			and return ('YADAYADA', '');
+	    m{\G\.\.}gc				and return ('DOTDOT', '');
+	    m{\G\.}gc				and return ('DOT', '');
+	    m{\G,}gc				and return (',', ',');
+	    m{\G\|\|}gc				and return ('OROR', '');
+	    m{\G\/\/}gc				and return ('DORDOR', '');
+	    m{\G&&}gc				and return ('ANDAND', '');
+	    #m{\G\|}gc				and return ('BITOROP', '');
+	    #m{\G\&}gc				and return ('BITANDOP', '');
+	    #m{\G(<<|>>)}gc			and return ('SHIFTOP', $1);
+	    m{\G(=~|!~)}gc			and return ('MATCHOP', $1);
+	    m{\G(==|!=|<=>|eq|ne|cmp)}gc	and return ('RELOP', $1);
+	    m{\G(>=|lt|gt|le|ge)}gc		and return ('RELOP', $1);
+	    m{\G(<|>)}gc			and return ('RELOP', $1);
+	    m{\G([-+\*\/\^|%]=|\*\*=|&&=|\|\|=)}gc and return ('ASSIGNOP', $1);
+	    m{\G(\+\+|--)}gc			and return ('INCOP', $1);
+	    m{\G->}gc				and return ('ARROW', '');
+	    m{\G\*\*}gc				and return ('POWOP', '');
+	    m{\G([\*\/\%x])}gc			and return ('MULOP', $1);
+	    m{\G([+-])}gc			and return ('ADDOP', $1);
+	    m{\G\\}gc				and return ('REFGEN', $1);
+	    
+	    # Miscellaneous characters
+	    
+	    m{\G([;=!~()\[\]\{\}\$\@])}gc		and return ($1, $1);
+	    
+	    # If we get here and the current line is not empty, then we've got
+	    # an unrecognized character.
+	    
+	    if ( m{\G(\S)}gc ) {
+		$self->my_syntax_error("unrecognized character '$1'");
+	    }
+	    else {
+		die "Strange lexer error at $self->{my_filename} line $self->{my_line}.\n";
+	    }
+	}
+    }
+    
+    return ('', undef);
+}
+
+__PACKAGE__->lexer( sub {
+    my $parser = shift;
+    my ($token, $value);
+    ($token, $value) = &my_lexer($parser);
+    if (ref $value)
+    {
+	print "FOUND ($parser->{my_line}) $token '$value->{attr}'\n";
+    }
+    else
+    {
+	print "FOUND ($parser->{my_line}) $token '$value'\n";
+    }
+    return ($token, $value);
+  }
+);
