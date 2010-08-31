@@ -31,13 +31,10 @@ $Data::Dumper::indent = 0;
 
 %%
 
-program	:	progseq
+program	:	progstart progseq
 	;
 
-progseq :	progstart
-			{
-			    $_[0]->push_frame(tag => 'program', phase => STEP_PHASE);
-			}
+progseq :	/* null */
 
 	|	progseq global
 
@@ -45,6 +42,9 @@ progseq :	progstart
 	;
 
 progstart:	/* null */
+			{
+			    $_[0]->push_frame(tag => 'program', phase => STEP_PHASE);
+			}
 	;
 
 global	:	const
@@ -64,6 +64,10 @@ global	:	const
 	|	external
 
 	|	function
+
+	|	gl_over
+
+	|	flow
 	;
 
 const	:	CONST vardecl.v '=' 
@@ -257,8 +261,20 @@ unitlist:	/* null */
 			}
 	;
 
+gl_over :	OVER dimlist.dl	'{'
+			{
+			    $_[0]->push_frame(tag => 'over', dimlist => $dl);
+			}
+		     progseq.q '}'
+			{
+			    $_[0]->pop_frame('over');
+			}
+	;
+
 stmtseq :	/* null */
 	
+	|	stmtseq over
+
 	|	stmtseq line
 	;
 
@@ -303,17 +319,20 @@ line	:	block
 			}
 		    sideff.e ';'
 			{
+			    $_[0]->add_expr($e);
 			    $_[0]->pop_frame('line');
 			}
 	
 	|	cond
 	
-	|	flow ';'
+	|	loop
 	
-	|	sideff ';'
-	
+	|	sideff.e ';'
+			{
+			    $_[0]->add_expr($e);
+			}
 	;
-/* $$$$ */
+
 over	:	OVER dimlist.dl	'{'
 			{
 			    $_[0]->push_frame(tag => 'over', dimlist => $dl);
@@ -353,25 +372,36 @@ sideff	:	expr
 			{ new_node('OR', $r, $l) }
 	;
 
-cond	:	IF '(' expr.test ')' block.if else.else
-			{ new_node('IF', $test, $if, $else) }
+cond	:	IF '(' expr.e ')' { $_[0]->add_cond($e, COND_IF) } block else
 
-	|	UNLESS '(' expr.test ')' block.if else.else
-			{ new_node('IF', new_node('NOT', $test), $if, $else) }
+	|	UNLESS '(' expr.e ')' { $_[0]->add_cond($e, COND_UNLESS) } block else
 	;
 
 else	:	/* null */
-			{}
 
-	|	ELSE block.b
-			{ $b }
+	|	ELSE block
 
-	|	ELSIF '(' expr.test ')' block.if else.else
-			{ new_node('IF', $test, $if, $else) }
+	|	ELSIF '(' expr.e ')' { $_[0]->add_cond($e, COND_ELSIF) } block else
+	;
+
+loop	:	WHILE '(' expr.e ')'
+			{ $_[0]->add_loop(LOOP_WHILE, $e) } 
+		    block
+	
+	|	UNTIL '(' expr.e ')'
+			{ $_[0]->add_loop(LOOP_UNTIL, $e) }
+		    block
+	
+	|	FOREACH scalar.i '(' expr.e ')'
+			{ $_[0]->add_loop(LOOP_FOREACH, $e, $i) }
+		    block
+	
+	|	FOR '(' expr.e1 ';' expr.e2 ';' expr.e3 ')'
+			{ $_[0]->add_loop(LOOP_FOR, $e1, $e2, $e3) }
+		    block
 	;
 
 listexpr:	/* null */ %prec PREC_LOW
-			{}
 
 	|	argexpr %prec PREC_LOW
 			{ $_[1] }
@@ -518,46 +548,46 @@ set	:	'%' WORD
 
 flow	:      	scalar.so MULOP.op expr.coeff FLOWRIGHT scalar.sn
 			{
-			    new_node('FLOW', $so, $sn, 
-				     new_anode('MULOP', $op, $so, $coeff));
+			    $_[0]->add_flow($so, $sn, 
+			                    new_anode('MULOP', $op, $so, $coeff));
 			}
 
 	|	scalar.sn MULOP.op expr.coeff FLOWLEFT scalar.so
 			{
-			    new_node('FLOW', $so, $sn, 
-				     new_anode('MULOP', $op, $sn, $coeff));
+			    $_[0]->add_flow($so, $sn, 
+					    new_anode('MULOP', $op, $sn, $coeff));
 			}
 
 	|	scalar.so FLOWRIGHT scalar.sn MULOP.op expr.coeff
 			{
-			    new_node('FLOW', $so, $sn,
-				     new_anode('MULOP', $op, $sn, $coeff));
+			    $_[0]->add_flow($so, $sn,
+					    new_anode('MULOP', $op, $sn, $coeff));
 			}
 
 	|	scalar.sn FLOWLEFT scalar.so MULOP.op expr.coeff
 			{
-			    new_node('FLOW', $so, $sn, 
-				     new_anode('MULOP', $op, $so, $coeff));
+			    $_[0]->add_flow($so, $sn, 
+					    new_anode('MULOP', $op, $so, $coeff));
 			}
 
 	|	scalar.so '(' expr.rate ')' FLOWRIGHT scalar.sn
 			{
-			    new_node('FLOW', $so, $sn, $rate);
+			    $_[0]->add_flow($so, $sn, $rate);
 			}
 
 	|	scalar.sn '(' expr.rate ')' FLOWLEFT scalar.so
 			{
-			    new_node('FLOW', $so, $sn, $rate);
+			    $_[0]->add_flow($so, $sn, $rate);
 			}
 
 	|	scalar.so FLOWRIGHT scalar.sn '(' expr.rate ')'
 			{
-			    new_node('FLOW', $so, $sn, $rate);
+			    $_[0]->add_flow($so, $sn, $rate);
 			}
 
 	|	scalar.sn FLOWLEFT scalar.so '(' expr.rate ')'
 			{
-			    new_node('FLOW', $so, $sn, $rate);
+			    $_[0]->add_flow($so, $sn, $rate);
 			}
 	;
 
@@ -660,19 +690,24 @@ sub parse_input {
     
     if ( defined $input ) {
 	
-	# Record the name of the file we are reading from, the starting line
-	# number (1) and the contents that were read in.
+	# If we are in the middle of handling another file, record that
+	# information on the input stack.
+	
+	if ( $self->{my_filename} ne '' ) {
+	    unshift @{$self->{my_input_stack}}, {file => $self->{my_filename}, 
+						 line => $self->{my_line}, 
+						 input => $self->{my_input}
+						 module => $self->{my_module}};
+	}
+	
+	# Now remember the name of the file we are reading from, the starting
+	# line number (1) and the contents that were read in.  Also start out
+	# in the default module.
 	
 	$self->{my_filename} = $filename;
 	$self->{my_line} = 1;
 	$self->{my_input} = \$input;
-	
-	# Push this information on the input stack, so that we can come back
-	# to it if we need to pause and parse an included file.
-	
-	unshift @{$self->{my_input_stack}}, {file => $self->{my_filename}, 
-					    line => $self->{my_line}, 
-					    input => $self->{my_input}};
+	$self->{my_module} = '';
 	
 	# Now parse the input, and return the resulting tree (if any).
 	
@@ -692,23 +727,22 @@ sub pop_input {
 
     my $self = shift;
     
-    # Remove the top record from the input stack
-    
-    shift @{$self->{my_input_stack}};
-    
-    # If the stack is now empty, return false.
+    # If the input stack is empty, return false.  We have finished processing
+    # the file we started with, and there is nothing left to do.
     
     if ( @{$self->{my_input_stack}} == 0 ) {
 	return 0;
     }
 
-    # Otherwise, copy the relevant information from the new top record to the
-    # fields my_filename, my_line and my_input, and return true.
+    # Otherwise, we have finished processing a file that was included from
+    # another one, and should resume the other file where we left off.
     
     else {
 	$self->{my_filename} = $self->{my_input_stack}[0]{file};
 	$self->{my_line} = $self->{my_input_stack}[0]{line};
 	$self->{my_input} = $self->{my_input_stack}[0]{input};
+	$self->{my_module} = $self->{my_input_stack}[0]{module};
+	shift @{$self->{my_input_stack}};
 	return 1;
     }
 }
@@ -721,8 +755,7 @@ sub pop_input {
 sub set_module {
 
     my ($self, $name) = @_;
-    my $model = $self->{model};
-    $model->set_module($name);
+    $self->{my_module} = $name;
 }
 
 # declare_var ( $node, $disp )
