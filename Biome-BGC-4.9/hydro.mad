@@ -34,7 +34,7 @@ pool $soil_water <kgH2O/m2>;		# water stored in soil
 
 pool $snow_water <kgH2O/m2>;		# water stored in snowpack
 
-pool $canopy_water[@veg_types] <kgH20/m2>;	# water stored in vegetation canopies
+pool $canopy_water[%veg_types] <kgH20/m2>;	# water stored in vegetation canopies
 
 
 # These are affected by a number of fluxes:

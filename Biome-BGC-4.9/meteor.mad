@@ -70,17 +70,17 @@ var $par_daily <W/m^2>;			# photosynthetically active radiation
 # The following variables are specific to the different types of vegetation
 # being modelled:
 
-var $sw_abs_canopy[@veg_types] <W/m^2>;	        # shortwave flux absorbed by the canopy
+var $sw_abs_canopy[%veg_types] <W/m^2>;	        # shortwave flux absorbed by the canopy
 
-var $sw_abs_sunlit_plai[@veg_types] <W/m^2>;	# sw flux absorbed per unit sunlit PLAI
+var $sw_abs_sunlit_plai[%veg_types] <W/m^2>;	# sw flux absorbed per unit sunlit PLAI
 
-var $sw_abs_shaded_plai[@veg_types] <W/m^2>;	# sw flux absorbed per unit shaded PLAI
+var $sw_abs_shaded_plai[%veg_types] <W/m^2>;	# sw flux absorbed per unit shaded PLAI
 
-var $par_abs_canopy[@veg_types] <W/m^2>;	# PAR absorbed by canopy
+var $par_abs_canopy[%veg_types] <W/m^2>;	# PAR absorbed by canopy
 
-var $ppfd_sunlit_plai[@veg_types] <umol/m^2/sec>;	# ppfd per unit sunlit PLAI
+var $ppfd_sunlit_plai[%veg_types] <umol/m^2/sec>;	# ppfd per unit sunlit PLAI
 
-var $ppfd_shaded_plai[@veg_types] <umol/m^2/sec>;	# ppfd per unit shaded PLAI
+var $ppfd_shaded_plai[%veg_types] <umol/m^2/sec>;	# ppfd per unit shaded PLAI
 
 
 # Finally, we have atmospheric pressure and ppm of CO2.

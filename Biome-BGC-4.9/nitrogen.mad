@@ -40,58 +40,58 @@ pool $soil_nitrogen_4 <kgN/m2>;		# recalcitrant SOM nitrogen (humus, slowest)
 
 pool $soil_mineral_nitrogen <kgN/m2>;	# soil mineral N
 
-pool $leaf_N[@veg_types] <kgN/m2>;	    # nitrogen in leaves
+pool $leaf_N[%veg_types] <kgN/m2>;	    # nitrogen in leaves
 
-pool $leaf_storage_N[@veg_types] <kgN/m2>;
+pool $leaf_storage_N[%veg_types] <kgN/m2>;
 
-pool $leaf_trans_N[@veg_types] <kgN/m2>;
+pool $leaf_trans_N[%veg_types] <kgN/m2>;
 
-pool $fine_root_N[@veg_types] <kgN/m2>;	    # nitrogen in fine roots
+pool $fine_root_N[%veg_types] <kgN/m2>;	    # nitrogen in fine roots
 
-pool $fine_root_storage_N[@veg_types] <kgN/m2>;
+pool $fine_root_storage_N[%veg_types] <kgN/m2>;
 
-pool $fine_root_trans_N[@veg_types] <kgN/m2>;
+pool $fine_root_trans_N[%veg_types] <kgN/m2>;
 
-pool $live_stem_N[@veg_types] <kgN/m2>;	    # nitrogen in live stems
+pool $live_stem_N[%veg_types] <kgN/m2>;	    # nitrogen in live stems
 
-pool $live_stem_storage_N[@veg_types] <kgN/m2>;
+pool $live_stem_storage_N[%veg_types] <kgN/m2>;
 
-pool $live_stem_trans_N[@veg_types] <kgN/m2>;
+pool $live_stem_trans_N[%veg_types] <kgN/m2>;
 
-pool $dead_stem_N[@veg_types] <kgN/m2>;	    # nitrogen in dead stems
+pool $dead_stem_N[%veg_types] <kgN/m2>;	    # nitrogen in dead stems
 
-pool $dead_stem_storage_N[@veg_types] <kgN/m2>;
+pool $dead_stem_storage_N[%veg_types] <kgN/m2>;
 
-pool $dead_stem_trans_N[@veg_types] <kgN/m2>;
+pool $dead_stem_trans_N[%veg_types] <kgN/m2>;
 
-pool $live_coarse_root_N[@veg_types] <kgN/m2>;	# nitrogen in live coarse roots
+pool $live_coarse_root_N[%veg_types] <kgN/m2>;	# nitrogen in live coarse roots
 
-pool $live_coarse_root_storage_N[@veg_types] <kgN/m2>;
+pool $live_coarse_root_storage_N[%veg_types] <kgN/m2>;
 
-pool $live_coarse_root_trans_N[@veg_types] <kgN/m2>;
+pool $live_coarse_root_trans_N[%veg_types] <kgN/m2>;
 
-pool $dead_coarse_root_N[@veg_types] <kgN/m2>;	# nitrogen in dead coarse roots
+pool $dead_coarse_root_N[%veg_types] <kgN/m2>;	# nitrogen in dead coarse roots
 
-pool $dead_coarse_root_storage_N[@veg_types] <kgN/m2>;
+pool $dead_coarse_root_storage_N[%veg_types] <kgN/m2>;
 
-pool $dead_coarse_root_trans_N[@veg_types] <kgN/m2>;
+pool $dead_coarse_root_trans_N[%veg_types] <kgN/m2>;
 
-pool $coarse_woody_debris_N[@veg_types] <kgN/m2>;   # coarse woody debris
+pool $coarse_woody_debris_N[%veg_types] <kgN/m2>;   # coarse woody debris
                                                     # nitrogen
 
-pool $litter_nitrogen_1[@veg_types] <kgN/m2>;	# litter labile nitrogen
+pool $litter_nitrogen_1[%veg_types] <kgN/m2>;	# litter labile nitrogen
 
-pool $litter_nitrogen_2[@veg_types] <kgN/m2>;	# litter unshielded cellulose
+pool $litter_nitrogen_2[%veg_types] <kgN/m2>;	# litter unshielded cellulose
                                                 # nitrogen
 
-pool $litter_nitrogen_3[@veg_types] <kgN/m2>;	# litter shielded cellulose
+pool $litter_nitrogen_3[%veg_types] <kgN/m2>;	# litter shielded cellulose
                                                 # nitrogen 
 
-pool $litter_nitrogen_4[@veg_types] <kgN/m2>;	# litter lignin N
+pool $litter_nitrogen_4[%veg_types] <kgN/m2>;	# litter lignin N
 
-pool $temp_plant_N[@veg_types] <kgN/m2>;	# temporary plant nitrogen
+pool $temp_plant_N[%veg_types] <kgN/m2>;	# temporary plant nitrogen
                                                 # pool 
 
-pool $retrans_N[@veg_types] <kgN/m2>;		# plant retranslocated
+pool $retrans_N[%veg_types] <kgN/m2>;		# plant retranslocated
                                                 # nitrogen pool
 

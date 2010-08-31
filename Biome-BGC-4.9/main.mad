@@ -53,14 +53,11 @@ function year_days ($yr) {
 
 # Vegetation types
 
-const @veg_types;
+const %veg_types = %USE_VEG;
 
-init %{
-    foreach my $type (keys %USE_VEG) {
-	include "EPC::$type.mad";
-	push @veg_types, $type;
-    }
-%}
+over [%veg_types] {
+    include "EPC::$^.mad";
+}
 
 # Meteorological variables
 
