@@ -27,8 +27,11 @@
 
 # Basic simulation parameters
 
-module BBGC;
+module NBGC;
 units ha;
+
+include epc_hardwood.mad;
+include epc_evergreen.mad;
 
 var $year <year> init = $START_YEAR;
 var $yday <day> init = $START_DAY;
@@ -54,10 +57,6 @@ function year_days ($yr) {
 # Vegetation types
 
 const %veg_types = %USE_VEG;
-
-over [%veg_types] {
-    include "EPC::$^.mad";
-}
 
 # Meteorological variables
 

@@ -92,9 +92,9 @@ var $pressure_atm <Pa>;			# atmospheric pressure
 
 external co2_historical ($year) <ppmCO2> {
     source => 'file:co2_1832_2009',
+    format => 'text',
     select => 2,
     where => '1=$year',
-    which => 'first'
 };
 
 const $proj_co2_increase <ppmCO2/year> = 1.8;	# Projected yearly rate of

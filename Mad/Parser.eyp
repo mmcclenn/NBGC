@@ -31,18 +31,201 @@ $Data::Dumper::indent = 0;
 
 %%
 
-program	:	progstart stmtseq
-			{ new_dnode('PROGRAM', $_[2]) }
+program	:	progseq
+	;
+
+progseq :	progstart
+			{
+			    $_[0]->push_frame(tag => 'program', phase => STEP_PHASE);
+			}
+
+	|	progseq global
+
+	|	progseq line
 	;
 
 progstart:	/* null */
-			{}
 	;
 
-block	:	'{' stmtseq '}'
-			{ new_dnode('BLOCK', $_[2]) }
-	|	PERL '{' { $_[0]->lex_mode('perl') } PERLPART * '}'
-	|	'%{' { $_[0]->lex_mode('pperl') } PERLPART * '%}'
+global	:	const
+
+	|	var
+
+	|	pool
+
+	|	include
+
+	|	use
+
+	|	module
+
+	|	unit
+
+	|	external
+
+	|	function
+	;
+
+const	:	CONST vardecl.v '=' 
+			{ 
+			    $_[0]->declare_var($v, CONST_VAR);
+			    $_[0]->push_frame(tag => 'const', phase => INIT_PHASE);
+			}
+		      expr.e ';'
+			{
+			    $_[0]->add_assignment($v, $e);
+			    $_[0]->pop_frame('const');
+			}
+
+	|	CONST vardecl.v ';'
+			{
+			    $_[0]->declare_var($v, CONST_VAR);
+			}
+	;
+
+var	:	VAR vardecl.v '='
+			{
+			    $_[0]->declare_var($v, PLAIN_VAR);
+			    $_[0]->push_frame(tag => 'var');
+			}
+		    expr.e ';'
+			{
+			    $_[0]->add_assignment($v, $e);
+			    $_[0]->pop_frame('var');
+			}
+
+	|	VAR vardecl.v ';'
+			{
+			    $_[0]->declare_var($v, PLAIN_VAR);
+			}
+	;
+
+pool	:	POOL vardecl.v '='
+			{
+			    $_[0]->declare_var($v, POOL_VAR);
+			    $_[0]->push_frame(tag => 'pool', phase => INIT_PHASE);
+			}
+		     expr.e ';'
+			{
+			    $_[0]->add_assignment($v, $e));
+			    $_[0]->pop_frame('pool');
+			}
+	
+	|	POOL vardecl.v ';'
+			{
+			    $_[0]->declare_var($v, POOL_VAR);
+			}
+	;
+
+vardecl	:	simplevar.v unitspec.u
+			{ merge_units($v, $u); }
+	
+	|	simplevar.v dimspec.d unitspec.u
+			{ merge_units(add_child($v, $d), $u); }
+	;
+
+simplevar :	scalar
+			{ $_[1] }
+
+	|	array
+			{ $_[1] }
+	
+	|	set
+			{ $_[1] }
+	;
+
+phase	:	INIT
+			{ INIT_PHASE }
+	|	STEP
+			{ STEP_PHASE }
+	|	TIMESTEP
+			{ TIME_PHASE }
+	|	FINISH
+			{ FINISH_PHASE }
+	;
+
+include	:	INCLUDE WORD.w ';'
+			{
+			    $_[0]->parse_input($w . ".mad");
+			}
+	;
+
+module	:	MODULE WORD.w ';'
+			{
+			    $_[0]->set_module($w);
+			}
+	;
+
+use	:	USE WORD.w ';'
+			{
+			    $_[0]->push_frame(tag => 'use', phase => 'step_phase');
+			    $_[0]->parse_input($w . ".mad");
+			    $_[0]->pop_frame('use');
+			}
+
+unit	:	UNIT wordlist.w ';'
+			{
+			    declare_units($_[0], $w);
+			}
+	;
+
+wordlist:	WORD.w
+			{ new_node('LIST', new_anode('STRING', $w)) }
+
+	|	wordlist.l ',' WORD.w
+			{ add_child($l, new_anode('STRING', $w)) }
+	;
+
+external:	EXTERNAL WORD.name funargs.f unitspec.u 
+			{
+			    $_[0]->declare_function($name, $f, $u, FUNC_EXTERN);
+			    $_[0]->push_frame(tag => 'external', name => $name,
+					      args => $f, units => $u);
+			}
+		         pairblock.b ';'
+			{
+			    $_[0]->pop_frame('external');
+			}
+	;
+
+function:	FUNCTION WORD.name funargs.f unitspec.u ';'
+			{
+			    $_[0]->declare_function($name, $f, $u, FUNC_MAD);
+			}
+	
+	|	FUNCTION WORD.name funargs.f unitspec.u '{'
+			{
+			    $_[0]->declare_function($name, $f, $u, FUNC_MAD);
+			    $_[0]->push_frame(tag => 'function', name => $name,
+					      args => $f, units => $u);
+			}
+			 stmtseq '}'
+ 			{
+			    $_[0]->pop_frame('function');
+			}
+
+	|	PERL FUNCTION WORD.name funargs.f unitspec.u ';'
+			{
+			    $_[0]->declare_function($name, $f, $u, FUNC_PERL);
+			}
+	
+	|	PERL FUNCTION WORD.name funargs.f unitspec.u '{'
+			{
+			    $_[0]->declare_function($name, $f, $u, FUNC_PERL);
+			    $_[0]->push_frame(tag => 'perlfunc', name => $name,
+					      args => $f, units => $u);
+			}
+			 perlseq '}'
+			{
+			    $_[0]->pop_frame('perlfunc');
+			}
+	;
+
+funargs	:	/* null */
+	|	'(' scalar <* ','> ')'
+			{
+			    new_node('LIST', undef, @{$_[2]->{children}});
+			}
 	;
 
 pairblock:	'{' pair <* ','> '}'
@@ -75,114 +258,74 @@ unitlist:	/* null */
 	;
 
 stmtseq :	/* null */
-
-	|	stmtseq decl
-			{ add_child($_[1], $_[2]) }
-
+	
 	|	stmtseq line
-			{ add_child($_[1], $_[2]) }
 	;
 
-decl	:	const
-			{ $_[1] }
-
-	|	var
-			{ $_[1] }
-
-	|	pool
-			{ $_[1] }
-
-	|	dimension
-			{ $_[1] }
-	
-	|	include
-			{ $_[1] }
-
-	|	module
-			{ $_[0]->set_module($_[1]); $_[1] }
-
-	|	units
-			{ $_[1] }
-
-	|	external
-			{ $_[1] }
-
-	|	function
-			{ $_[1] }
-
-	;
-
-const	:	CONST vardecl.v '=' expr.e ';'
-			{
-			    $_[0]->var_decl($v, CONST_VAR);
-			    new_node('INITSTMT', new_anode('ASSIGN', '=', $v, $e));
-			}
-
-	|	CONST vardecl.v ';'
-			{
-			    $_[0]->var_decl($v, CONST_VAR); undef;
-			}
-	;
-
-var	:	VAR vardecl.v phase.p '=' expr.e ';'
+block	:	'{' 
 			{ 
-			    $_[0]->var_decl($v, PLAIN_VAR);
-			    new_node(ref $p || 'STEPSTMT', 
-				     new_anode('ASSIGN', '=', $v, $e));
+			    $_[0]->push_frame(tag => 'block'); 
 			}
-
-	|	VAR vardecl.v ';'
+		    stmtseq '}'
 			{
-			    $_[0]->var_decl($v, PLAIN_VAR); undef;
+			    $_[0]->pop_frame('block');
 			}
 	;
 
-pool	:	POOL vardecl.v phase.p '=' expr.e ';'
+perlblock :	PERL '{'
 			{
-			    $_[0]->var_decl($v, POOL_VAR);
-			    new_node(ref $p || 'INITSTMT', 
-				     new_anode('ASSIGN', '=', $v, $e));
+			    $_[0]->lex_mode('perl');
+			    $_[0]->push_frame(tag => 'perlblock');
 			}
-
-	|	POOL vardecl.v ';'
+		    perlseq '}'
+		        {
+			    $_[0]->pop_frame('perlblock');
+			}
+			
+	|	'%{' 
 			{
-			    $_[0]->var_decl($v, POOL_VAR); undef;
+			    $_[0]->lex_mode('pperl');
+			    $_[0]->push_frame(tag => 'perlblock');
+			} 
+		    perlseq '%}'
+			{
+			    $_[0]->pop_frame('perlblock');
 			}
 	;
 
-vardecl	:	simplevar.v unitspec.u
-			{ merge_units($v, $u); }
+line	:	block
 	
-	|	simplevar.v dimspec.d unitspec.u
-			{ merge_units(add_child($v, $d), $u); }
-	;
-
-simplevar :	scalar
-			{ $_[1] }
-
-	|	array
-			{ $_[1] }
+	|	perlblock
 	
-	|	set
-			{ $_[1] }
+	|	phase.p 
+			{
+			    $_[0]->push_frame(tag => 'line', phase => $p);
+			}
+		    sideff.e ';'
+			{
+			    $_[0]->pop_frame('line');
+			}
+	
+	|	cond
+	
+	|	flow ';'
+	
+	|	sideff ';'
+	
 	;
-
-phase	:	/* null */
-			{}
-	|	INIT
-			{ new_node('INITSTMT') }
-	|	STEP
-			{ new_node('STEPSTMT') }
-	|	TIMESTEP
-			{ new_node('TIMESTMT') }
-	;
-
-over	:	OVER dimlist.dl	'{' stmtseq.q '}'
-			{ add_child_front($q, $dl); }
+/* $$$$ */
+over	:	OVER dimlist.dl	'{'
+			{
+			    $_[0]->push_frame(tag => 'over', dimlist => $dl);
+			}
+		     stmtseq.q '}'
+			{
+			    $_[0]->pop_frame('over');
+			}
 	;
 
 dimlist :	dimspec.d
-			{ new_node('OVER', $d); }
+			{ new_node('DIMLIST', $d); }
 	 
 	|	dimlist.l dimspec.d
 			{ add_child($l, $d); }
@@ -198,75 +341,6 @@ dimspec	:	'[' label.l array.d ']'
 label	:	/* null */
 	|	WORD.w ':'
 			{ new_anode('LABEL', $w); }
-	;
-
-include	:	INCLUDE WORD.w ';'
-			{
-			    $_[0]->parse_input($w . ".mad");
-			}
-
-	|	INCLUDE STR.str ';'
-			{ new_anode('INCLUDE', $str); } 
-	
-	;
-
-module	:	MODULE WORD ';'
-			{ new_anode('MODULE', $_[2]) }
-	;
-
-units	:	UNITS wordlist ';'
-			{ new_dnode('UNITS', $_[2]) }
-	;
-
-wordlist:	WORD
-			{ new_node('LIST', new_anode('STRING', $_[1])) }
-
-	|	wordlist.l ',' WORD.w
-			{ add_child($l, new_anode('STRING', $w)) }
-	;
-
-external:	EXTERNAL WORD.name funargs.f unitspec.u pairblock.b ';'
-			{
-			    merge_units(new_anode('EXTERNAL', $name, $f, $b), $u);
-			}
-	;
-
-function:	FUNCTION WORD.name funargs.f unitspec.u funbody.b
-			{
-			    merge_units(new_anode('FUNCTION', $name, $f, $b), $u);
-			}
-	;
-
-funargs	:	/* null */
-	|	'(' scalar <* ','> ')'
-			{
-			    new_node('LIST', undef, @{$_[2]->{children}});
-			}
-	;
-
-funbody	:	block
-			{ $_[1] }
-	|	';'
-			{}
-	;
-
-line	:	phase.p block.b
-			{ new_node(ref $p, $b) }
-
-	|	phase.p sideff.e ';'
-			{ new_node(ref $p, $b) }
-
-	|	block
-			{ $_[1] }
-
-	|	cond
-			{ $_[1] }
-
-	|	flow ';'
-			{ $_[1] }
-
-	|	sideff ';'
-			{ $_[1] }
 	;
 
 sideff	:	expr
@@ -646,16 +720,17 @@ sub pop_input {
 
 sub set_module {
 
-    my ($self, $node) = @_;
-    $self->{current_module} = $node->{attr};
+    my ($self, $name) = @_;
+    my $model = $self->{model};
+    $model->set_module($name);
 }
 
-# var_decl ( $node, $disp )
+# declare_var ( $node, $disp )
 # 
 # A variable declaration has been encountered.  Declare the variable specified
 # by $node, with disposition $disp (i.e. constant, variable, pool).
 
-sub var_decl {
+sub declare_var {
 
     my ($self, $node, $disp) = @_;
     my $model = $self->{model};
@@ -663,7 +738,8 @@ sub var_decl {
     my $type = ref $node;
     my $chnum = 0 + @{$node->{children}};
     
-    $model->declare_var($name, $type, $disp);
+    $model->declare_var($name, $type, $disp, $self->{my_filename}, 
+			$self->{my_line});
     
     if ( $numch > 0 ) {
 	$model->dimension_var($name, $numch);
@@ -714,6 +790,19 @@ sub add_child {
     return $node;
 }
 
+
+# add_child_front ( $node, $child )
+# 
+# Add $child to the front of the existing list of children of $node.
+
+sub add_child_front {
+    my ($node, $child) = @_;
+    
+    unshift @{$node->{children}}, $child if ref $child;
+    return $node;
+}
+
+
 # add_units ( $node, @units )
 # 
 # Modify the parse node $node by adding some units to it.  This is triggered
@@ -753,6 +842,28 @@ sub merge_units {
 	}
     }
     return $node;
+}
+
+# decare_units ( $node )
+# 
+# Declare all of the units given by the children of $node.
+
+sub declare_units {
+    my ($self, $node) = @_;
+    my $model = $self->{model};
+    
+    foreach my $child (@{$node->{children}}) {
+	
+	# If the declaration goes correctly, return.
+	
+	$model->declare_unit($child->{attr}) and return;
+	
+	# Otherwise, give the appropriate error message.
+	
+	if ( $model->{err} eq 'UNIT_DECL_REPEATED' ) {
+	    $self->my_warning("Unit '$child->{attr}' was previously defined");
+	}
+    }
 }
 
 # new_dnode ( $type, $old_node )
@@ -956,6 +1067,7 @@ sub my_lexer {
 	    m{\Gelse(?!\w)}gc		and return ('ELSE', '');
 	    m{\Gelsif(?!\w)}gc		and return ('ELSIF', '');
 	    m{\Gexternal(?!\w)}gc	and return ('EXTERNAL', '');
+	    m{\Gfinish(?!\w)}gc		and return ('FINISH', '');
 	    m{\Gfor(?!\w)}gc		and return ('FOR', '');
 	    m{\Gfunction(?!\w)}gc	and return ('FUNCTION', '');
 	    m{\Gglobal(?!\w)}gc		and return ('GLOBAL', '');
@@ -974,7 +1086,7 @@ sub my_lexer {
 	    m{\Grun(?!\w)}gc		and return ('RUN', '');
 	    m{\Gstep(?!\w)}gc		and return ('STEP', '');
 	    m{\Gtimestep(?!\w)}gc	and return ('TIMESTEP', '');
-	    m{\Gunits(?!\w)}gc		and return ('UNITS', '');
+	    m{\Gunit(?!\w)}gc		and return ('UNIT', '');
 	    m{\Gunless(?!\w)}gc		and return ('UNLESS', '');
 	    m{\Guntil(?!\w)}gc		and return ('UNTIL', '');
 	    m{\Guse(?!\w)}gc		and return ('USE', '');
