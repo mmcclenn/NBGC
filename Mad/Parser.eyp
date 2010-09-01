@@ -162,7 +162,8 @@ module	:	MODULE WORD.w ';'
 
 use	:	USE WORD.w ';'
 			{
-			    $_[0]->push_frame(tag => 'use', phase => 'step_phase');
+			    $_[0]->push_frame(tag => 'use', phase => 'step_phase',
+					      module => '');
 			    $_[0]->parse_input($w . ".mad");
 			    $_[0]->pop_frame('use');
 			}
@@ -622,6 +623,7 @@ sub new_model {
     
     $self->{my_stack} = [];
     $self->{lex_mode} = 'mad';
+    $self->{frame} = [];
     
     # Create a new object to hold the model as it is read in.  Return a
     # reference to this object as the function result.
@@ -696,8 +698,7 @@ sub parse_input {
 	if ( $self->{my_filename} ne '' ) {
 	    unshift @{$self->{my_input_stack}}, {file => $self->{my_filename}, 
 						 line => $self->{my_line}, 
-						 input => $self->{my_input}
-						 module => $self->{my_module}};
+						 input => $self->{my_input});
 	}
 	
 	# Now remember the name of the file we are reading from, the starting
@@ -707,7 +708,6 @@ sub parse_input {
 	$self->{my_filename} = $filename;
 	$self->{my_line} = 1;
 	$self->{my_input} = \$input;
-	$self->{my_module} = '';
 	
 	# Now parse the input, and return the resulting tree (if any).
 	
@@ -741,7 +741,6 @@ sub pop_input {
 	$self->{my_filename} = $self->{my_input_stack}[0]{file};
 	$self->{my_line} = $self->{my_input_stack}[0]{line};
 	$self->{my_input} = $self->{my_input_stack}[0]{input};
-	$self->{my_module} = $self->{my_input_stack}[0]{module};
 	shift @{$self->{my_input_stack}};
 	return 1;
     }
@@ -755,7 +754,7 @@ sub pop_input {
 sub set_module {
 
     my ($self, $name) = @_;
-    $self->{my_module} = $name;
+    $self->{cf}{module} = $name;
 }
 
 # declare_var ( $node, $disp )
@@ -769,7 +768,7 @@ sub declare_var {
     my $model = $self->{model};
     my $name = $node->{attr};
     my $type = ref $node;
-    my $chnum = 0 + @{$node->{children}};
+    my $numch = 0 + @{$node->{children}};
     
     $model->declare_var($name, $type, $disp, $self->{my_filename}, 
 			$self->{my_line});
@@ -778,6 +777,28 @@ sub declare_var {
 	$model->dimension_var($name, $numch);
     }
 }
+
+# push_frame ( %attributes )
+# 
+# Add a new context to the frame stack.
+
+sub push_frame {
+
+    my ($self, %attrs) = @_;
+    $self->{cf} = \%attrs;
+    
+    $self->{cf}{phase} ||= $self->{frame}[0]{phase};
+    $self->{cf}{module} ||= $self->{frame}[0]{module};
+    
+    if ( $self->{cf}{dimlist} ) {
+	#$$$$
+    }
+    else {
+	$self->{cf}{dimlist} = $self->{frame}{dimlist};
+    }
+    
+    unshift @{$self->{frame}}, $self->{cf};
+    
 
 # Functions for managing parse tree nodes
 # ---------------------------------------
