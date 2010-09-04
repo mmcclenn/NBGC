@@ -6,4 +6,5 @@ plplot-test.pl
 *~
 # ignore objects and archives
 *.[oa]
-
+# ignore grammar output files
+*.output

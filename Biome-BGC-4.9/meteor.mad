@@ -25,86 +25,99 @@
 # 
 # Copyright (c) 2010, University of Wisconsin-Madison
 
+use DaymetInterface;
+use RunningAverage;
+use ExternalLookup;
 
-module Meteor;
 units umol, ppmCO2;
-#export qw($tmax_daily, $tmin_daily, $precip_total_daily, $swavgfd, $vpd_daily,
-#	  $day_length);
 
 # We start with the basic data, six parameters from the Daymet dataset.
 
-external daymet {
-    type => 'postgresql',
-    source => "dbi:postgres:have_to_fill_this_in_later",
-    select => "SELECT prcp, vpd, srad, dayl, tmin, tmax FROM MetData WHERE year=$year 
-               AND day=$yday AND loc=$location",
-    cache => 'PREFETCH'
+var $daymet = DaymetInterface {
+    type: 'postgresql',
+    source: 'dbi:postgres:have_to_fill_this_in_later',
+    cache: 0,
 };
 
-var $tmax_daily <degC> = daymet().tmax;
-var $tmin_daily <degC> = daymet().tmin;
-var $precip_total_daily <cm> = daymet().prcp;
-var $swavgfd <W/m^2> = daymet().srad;
-var $vpd_daily <Pa> = daymet().vpd;
-var $day_length <sec> = daymet().dayl;
+$daymet.fetch($year, $yday, $location);
+
+calc $tmax_daily <degC> = $daymet.tmax;
+calc $tmin_daily <degC> = $daymet.tmin;
+calc $precip_total_daily <cm> = $daymet.prcp;
+calc $swavgfd <W/m^2> = $daymet.srad;
+calc $vpd_daily <Pa> = $daymet.vpd;
+calc $day_length <s> = $daymet.dayl;
 
 
 # Other quantities are derived from these:
 
-var $tavg_daily <degC>;		# average daily air temperature
+#   Estimated verage daytime and nighttime air temperature, average daily air 
+#   temperature, and 11-day running average of the average daily temperature.
 
-var $tavg_11day <degC>;		# average daily air temperature -- 11-day
-					# running avg
+calc $tavg_daytime_daily <degC> = ...;
 
-var $tavg_daytime_daily <degC>;	# average daytime air temperature
+calc $tavg_nighttime_daily <degC> = ...;
 
-var $tavg_nighttime_daily <degC>;	# average nighttime air temperature
+calc $tavg_daily <degC> = 
+     ($tmax_daily + $tmin_daily) / 2;			# this needs to be refined
 
-var $tsoil_daily <degC>;		# average soil temperature
+var $tavg_11day <degC> = RunningAverage { length: 11 };
+calc $tavg_11day.add($tavg_daily);
 
-var $flux_transmitted <W/m^2>;		# transmitted shortwave flux (sunlight)
+#   Estimated average soil temperature
 
-var $par_daily <W/m^2>;			# photosynthetically active radiation
+calc $tsoil_daily <degC> = ...;
+
+#   Transmitted shortwave flux (sunlight) and photosynthetically active radiation.
+
+calc $flux_transmitted <W/m^2> = ...;
+
+calc $par_daily <W/m^2> = ...;
 
 
 # The following variables are specific to the different types of vegetation
 # being modelled:
 
-var $sw_abs_canopy[%veg_types] <W/m^2>;	        # shortwave flux absorbed by the canopy
+across [ %veg_types ] {
 
-var $sw_abs_sunlit_plai[%veg_types] <W/m^2>;	# sw flux absorbed per unit sunlit PLAI
+    calc $sw_abs_canopy <W/m^2> = ...;		# shortwave flux absorbed by the canopy
 
-var $sw_abs_shaded_plai[%veg_types] <W/m^2>;	# sw flux absorbed per unit shaded PLAI
+    calc $sw_abs_sunlit_plai <W/m^2> = ...;	# sw flux absorbed per unit sunlit PLAI
 
-var $par_abs_canopy[%veg_types] <W/m^2>;	# PAR absorbed by canopy
+    calc $sw_abs_shaded_plai <W/m^2> = ...;	# sw flux absorbed per unit shaded PLAI
 
-var $ppfd_sunlit_plai[%veg_types] <umol/m^2/sec>;	# ppfd per unit sunlit PLAI
+    calc $par_abs_canopy <W/m^2> = ...;		# PAR absorbed by canopy
 
-var $ppfd_shaded_plai[%veg_types] <umol/m^2/sec>;	# ppfd per unit shaded PLAI
+    calc $ppfd_sunlit_plai <umol/m^2/sec> = ...;	# ppfd per unit sunlit PLAI
 
+    calc $ppfd_shaded_plai <umol/m^2/sec> = ...;	# ppfd per unit shaded PLAI
+}
 
 # Finally, we have atmospheric pressure and ppm of CO2.
 
-var $pressure_atm <Pa>;			# atmospheric pressure
+calc $pressure_atm <Pa> = ...;			# atmospheric pressure
 
 # For atmospheric CO2 concentration we use an external file with historical
 # data through 2009, and estimate future data based on the current trend.
 
-external co2_historical ($year) <ppmCO2> {
-    source => 'file:co2_1832_2009',
-    format => 'text',
-    select => 2,
-    where => '1=$year',
+var $co2_historical <ppmCO2> = ExternalLookup {
+    filename: 'co2_1832_2009',
+    format: 'text',
+    delimiter: 'tab',
+    lookup_column: 1,
+    value_column: 2
 };
 
-const $proj_co2_increase <ppmCO2/year> = 1.8;	# Projected yearly rate of
+const $proj_co2_inc <ppmCO2/year> = 1.8;	# Projected yearly rate of
                                                 # increase in co2
                                                 # concentration.
 
-function co2_atm ( $year ) <ppmCO2> {
+var $co2_atm <ppmCO2>;
+
+calc {
     if ( $year <= 2009 ) { 
-        return co2_historical($year);
+        $co2_atm = $co2_historical.lookup($year);
     } else {
-        return co2_historical(2009) + ($year-2009) * $proj_co2_increase;
+        $co2_atm = $co2_historical.lookup(2009) + ($year-2009) * $proj_co2_increase;
     }
 }

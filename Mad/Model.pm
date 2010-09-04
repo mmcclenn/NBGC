@@ -32,15 +32,28 @@ our $LOAD_LINE = 0;		# Current input line number when loading
 use constant {
     PLAIN_VAR => 1,
     CONST_VAR => 2,
-    POOL_VAR => 3,
+    CALC_VAR => 3,
+    STEP_VAR => 4,
+    RESULT_VAR => 5,
     
     SCALAR_VAR => 1,
     LIST_VAR => 2,
     SET_VAR => 3,
     
     INIT_PHASE => 1,
-    STEP_PHASE => 2,
-    TIME_PHASE => 3,
+    CALC_PHASE => 2,
+    STEP_PHASE => 3,
+    FINAL_PHASE => 4,
+    
+    COND_IF => 1,
+    COND_UNLESS => 2,
+    COND_ELSIF => 3,
+    COND_ELSE => 4
+    
+    LOOP_WHILE => 1,
+    LOOP_UNTIL => 2,
+    LOOP_FOREACH => 3,
+    LOOP_FOR => 4
 };
 
 our @INITIAL_UNITS = ( 'km', 'm', 'cm', 'mm', 'µm', 'nm', 

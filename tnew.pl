@@ -12,6 +12,8 @@ use Data::Dumper;
 
 use madgrammar;
 
+my ($outputname);
+
 $Data::Dumper::Terse = 1;
 $Data::Dumper::Indent = 1;
 
@@ -23,6 +25,8 @@ $parser->init_parser();
 
 if ( @ARGV > 0 ) {
     $parser->use_input($ARGV[0]);
+    ($outputname = $ARGV[0]) =~ s/.mad$//;
+    $outputname .= ".output";
 }
 else {
     $parser->use_input();
@@ -31,5 +35,12 @@ else {
 # parse the input and get the AST
 
 my $tree = $parser->YYParse();
-print Dumper $tree if defined $tree;
-print $tree->str(), "\n" if defined $tree;
+
+if ( defined $tree ) {
+
+    open OF, ">$outputname" or warn "Could not write output file: $!\n";
+    print OF Dumper($tree);
+    close OF;
+
+    print $tree->str(), "\n";
+}

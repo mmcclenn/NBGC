@@ -30,71 +30,71 @@
 # The carbon cycle is defined by 26N+4 pools, where N is the number of
 # distinct vegetation types being modelled.
 
-pool $soil_carbon_1 <kgC/m2>;		# fast microbial carbon recycling
+var $soil_carbon_1 <kgC/m2> = pool;	    # fast microbial carbon recycling
 
-pool $soil_carbon_2 <kgC/m2>;		# medium microbial carbon recycling
+var $soil_carbon_2 <kgC/m2> = pool;	    # medium microbial carbon recycling
 
-pool $soil_carbon_3 <kgC/m2>;		# slow microbial carbon recycling
+var $soil_carbon_3 <kgC/m2> = pool;	    # slow microbial carbon recycling
 
-pool $soil_carbon_4 <kgC/m2>;		# recalcitrant SOM carbon (humus, slowest)
+var $soil_carbon_4 <kgC/m2> = pool;	    # recalcitrant SOM carbon (humus, slowest)
 
-over [%veg_types] {
+across [ %veg_types ] {
 
-    pool $leaf_C <kgC/m2>;	    # carbon in leaves
+    var $leaf_C <kgC/m2> = pool;	    # carbon in leaves
      
-    pool $leaf_storage_C <kgC/m2>;
+    var $leaf_storage_C <kgC/m2> = pool;
 
-    pool $leaf_trans_C <kgC/m2>;
+    var $leaf_trans_C <kgC/m2> = pool;
 
-    pool $fine_root_C <kgC/m2>;	    # carbon in fine roots
+    var $fine_root_C <kgC/m2> = pool;	    # carbon in fine roots
 
-    pool $fine_root_storage_C <kgC/m2>;
+    var $fine_root_storage_C <kgC/m2> = pool;
 
-    pool $fine_root_trans_C <kgC/m2>;
+    var $fine_root_trans_C <kgC/m2> = pool;
 
-    pool $live_stem_C <kgC/m2>;	    # carbon in live stems
+    var $live_stem_C <kgC/m2> = pool;	    # carbon in live stems
 
-    pool $live_stem_storage_C <kgC/m2>;
+    var $live_stem_storage_C <kgC/m2> = pool;
 
-    pool $live_stem_trans_C <kgC/m2>;
+    var $live_stem_trans_C <kgC/m2> = pool;
 
-    pool $dead_stem_C <kgC/m2>;	    # carbon in dead stems
+    var $dead_stem_C <kgC/m2> = pool;	    # carbon in dead stems
 
-    pool $dead_stem_storage_C <kgC/m2>;
+    var $dead_stem_storage_C <kgC/m2> = pool;
 
-    pool $dead_stem_trans_C <kgC/m2>;
+    var $dead_stem_trans_C <kgC/m2> = pool;
 
-    pool $live_coarse_root_C <kgC/m2>;	# carbon in live coarse roots
+    var $live_coarse_root_C <kgC/m2> = pool;	# carbon in live coarse roots
 
-    pool $live_coarse_root_storage_C <kgC/m2>;
+    var $live_coarse_root_storage_C <kgC/m2> = pool;
 
-    pool $live_coarse_root_trans_C <kgC/m2>;
+    var $live_coarse_root_trans_C <kgC/m2> = pool;
 
-    pool $dead_coarse_root_C <kgC/m2>;	# carbon in dead coarse roots
+    var $dead_coarse_root_C <kgC/m2> = pool;	# carbon in dead coarse roots
 
-    pool $dead_coarse_root_storage_C <kgC/m2>;
+    var $dead_coarse_root_storage_C <kgC/m2> = pool;
 
-    pool $dead_coarse_root_trans_C <kgC/m2>;
+    var $dead_coarse_root_trans_C <kgC/m2> = pool;
 
-    pool $growth_resp_storage_C <kgC/m2>;   # growth/respiration
-                                                    # storage carbon 
+    var $growth_resp_storage_C <kgC/m2> = pool;	# growth/respiration
+                                                # storage carbon 
 
-    pool $growth_resp_trans_C <kgC/m2>;	    # growth/respiration
-                                                    # transfer carbon
+    var $growth_resp_trans_C <kgC/m2> = pool;	# growth/respiration
+                                                # transfer carbon
 
-    pool $coarse_woody_debris_C <kgC/m2>;   # coarse woody debris
-                                                    # carbon
-
-    pool $litter_carbon_1 <kgC/m2>;	# litter labile carbon
-
-    pool $litter_carbon_2 <kgC/m2>;	# litter unshielded cellulose
+    var $coarse_woody_debris_C <kgC/m2> = pool; # coarse woody debris
                                                 # carbon
 
-    pool $litter_carbon_3 <kgC/m2>;	# litter shielded cellulose
+    var $litter_carbon_1 <kgC/m2> = pool;	# litter labile carbon
+
+    var $litter_carbon_2 <kgC/m2> = pool;	# litter unshielded cellulose
+                                                # carbon
+
+    var $litter_carbon_3 <kgC/m2> = pool;	# litter shielded cellulose
                                                 # carbon 
 
-    pool $litter_carbon_4 <kgC/m2>;	# litter lignin C
+    var $litter_carbon_4 <kgC/m2> = pool;	# litter lignin C
 
-    pool $temp_photosynthate_C <kgC/m2>;    # temporary photosynthate
-                                                    # pool 
+    var $temp_photosynthate_C <kgC/m2> = pool;  # temporary photosynthate
+                                                # pool 
 }

@@ -1,6 +1,8 @@
 
 %tree
 
+%left '-'
+
 %%
 
 program	:	stmt <%name stmts *>
@@ -9,13 +11,17 @@ program	:	stmt <%name stmts *>
 stmt	:	';'
 	|	INCLUDE VAR ';'
 		    { $_[0]->use_input($_[2]->{attr}); return undef; }
-	|	%name assign var '=' num ';'
+	|	%name assign var '=' expr ';'
 	;
 
 var	:	VAR { $_[1] }
 	;
 
 num	:	NUM { $_[1] }
+	;
+
+expr	:	num
+	|	expr '-' expr
 	;
 
 %%

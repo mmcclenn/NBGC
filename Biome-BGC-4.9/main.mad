@@ -27,7 +27,7 @@
 
 # Basic simulation parameters
 
-module NBGC;
+package NBGC;
 units ha;
 
 include epc_hardwood.mad;
@@ -57,6 +57,10 @@ function year_days ($yr) {
 # Vegetation types
 
 const %veg_types = %USE_VEG;
+
+include ENF;
+include BDF;
+include Bryophytes;
 
 # Meteorological variables
 

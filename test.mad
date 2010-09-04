@@ -6,3 +6,43 @@ external daymet <m^2 kg / sec / sec> {
     select => ('prcp', 'vpd', 'srad', 'dayl', 'tmin', 'tmax'),
     cache => 'ALL'
 }
+
+
+
+
+$a * $a_rate ==> $b
+
+
+assert (%veg_types > 0) {
+    die "You must specify at least one vegetation type.";
+}
+
+assert (%veg_types < %ALL_VEG) { 
+    my %bad_types = %ALL_VEG - %veg_types;
+    die "The vegetation type(s) " | join(', ', %bad_types) |
+        " is not valid for this model.";
+}
+
+across [ %veg_types ] {
+
+    default pool { init: 0.1, lower: 0.1 };
+    
+    var $leaf_C <kgC/m^2> = pool;
+    var $leaf_N <kgC/m^2> = pool;
+    
+    var $carbon_alloc = allocator { priority: $canopy_height, take: 0.883 };
+}
+
+across [%locations] {
+
+    var $woody_stem_C;
+    $woody_stem_C = sum($livestem_C + $deadstem_C) over %woody_veg;
+    
+    var $tallest_veg = max_idx($canopy_height);
+}
+
+$geo_avg_woody_stem_C = average($woody_stem_C);
+
+across [ %veg_type ] {
+    var $geo_frac_tallest_type = count($tallest_veg, $^) / %location.size;
+}
