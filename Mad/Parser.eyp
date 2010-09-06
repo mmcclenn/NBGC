@@ -51,7 +51,7 @@ progseq :	/* null */
 
 progstart:	/* null */
 			{
-			    $_[0]->push_frame(tag => 'program', phase => CALC_PHASE);
+			    $_[0]->push_frame(tag => 'PROGRAM', phase => CALC_PHASE);
 			}
 	;
 
@@ -83,61 +83,11 @@ tl_decl	:	var
 			{ $_[1]; }
 	;
 
-var	:	VAR vardecl.v ';'
-			{
-			    $_[0]->declare_var($v, PLAIN_VAR);
-			}
-	
-	|	CONST vardecl.v '=' 
-			{ 
-			    $_[0]->declare_var($v, CONST_VAR);
-			    $_[0]->push_frame(tag => 'const', phase => INIT_PHASE);
-			}
-		      expr.e ';'
-			{
-			    $_[0]->add_expr(new_anode('ASSIGN', '=', $v, $e));
-			    $_[0]->pop_frame('const');
-			}
-	
-	|	CALC vardecl.v '='
-			{
-			    $_[0]->declare_var($v, PLAIN_VAR);
-			    $_[0]->push_frame(tag => 'calc', phase => CALC_PHASE);
-			}
-		     expr.e ';'
-			{
-			    $_[0]->add_expr(new_anode('ASSIGN', '=', $v, $e));
-			    $_[0]->pop_frame('calc');
-			}
-	
-	|	STEP vardecl.v '='
-			{
-			    $_[0]->declare_var($v, STEP_VAR);
-			    $_[0]->push_frame(tag => 'step', phase => STEP_PHASE);
-			}
-		     expr.e ';'
-			{
-			    $_[0]->add_expr(new_anode('ASSIGN', '=', $v, $e));
-			    $_[0]->pop_frame('step');
-			}
-
-	|	FINALz vardecl.v '='
-			{
-			    $_[0]->declare_var($v, RESULT_VAR);
-			    $_[0]->push_frame(tag => 'result', phase => RESULT_PHASE);
-			}
-		     expr.e ';'
-			{
-			    $_[0]->add_expr(new_anode('ASSIGN', '=', $v, $e));
-			    $_[0]->pop_frame('result');
-			}
-	;
-
 vardecl	:	simplevar.v unitspec.u
 			{ merge_units($v, $u); }
 	
 	|	simplevar.v dimspec.d unitspec.u
-			{ merge_units(right_child($v, $d), $u); }
+			{ merge_units(add_child($v, $d), $u); }
 	;
 
 simplevar :	scalar
@@ -158,12 +108,12 @@ package	:	PACKAGE WORD.w ';'
 
 include	:	INCLUDE WORD.w ';'
 			{
-			    $_[0]->include_file($w . ".mad");
+			    $_[0]->parse_input($w . ".mad");
 			}
 	
 	|	INCLUDE STR.w ';'
 			{
-			    $_[0]->include_file($w);
+			    $_[0]->parse_input($w);
 			}
 	;
 
@@ -182,7 +132,7 @@ wordlist:	WORD.w
 			{ $_[0]->new_node('LIST', $_[0]->new_anode('STRING', $w)) }
 
 	|	wordlist.l ',' WORD.w
-			{ right_child($l, $_[0]->new_anode('STRING', $w)) }
+			{ add_child($l, $_[0]->new_anode('STRING', $w)) }
 	;
 
 function:	FUNCTION WORD.name funargs.f unitspec.u ';'
@@ -193,12 +143,12 @@ function:	FUNCTION WORD.name funargs.f unitspec.u ';'
 	|	FUNCTION WORD.name funargs.f unitspec.u '{'
 			{
 			    $_[0]->declare_function($name, $f, $u, FUNC_MAD);
-			    $_[0]->push_frame(tag => 'function', name => $name,
+			    $_[0]->push_frame(tag => 'FUNCTION', name => $name,
 					      args => $f, units => $u);
 			}
 		stmtseq '}'
  			{
-			    $_[0]->pop_frame('function');
+			    $_[0]->pop_frame('FUNCTION');
 			}
 
 	|	PERL FUNCTION WORD.name funargs.f unitspec.u ';'
@@ -209,12 +159,12 @@ function:	FUNCTION WORD.name funargs.f unitspec.u ';'
 	|	PERL FUNCTION WORD.name funargs.f unitspec.u '{'
 			{
 			    $_[0]->declare_function($name, $f, $u, FUNC_PERL);
-			    $_[0]->push_frame(tag => 'perlfunc', name => $name,
+			    $_[0]->push_frame(tag => 'PERLFUNC', name => $name,
 					      args => $f, units => $u);
 			}
 		perlseq '}'
 			{
-			    $_[0]->pop_frame('perlfunc');
+			    $_[0]->pop_frame('PERLFUNC');
 			}
 	;
 
@@ -235,7 +185,7 @@ pairlist:	/* null */
 			{ $_[0]->new_node('LIST', $p); }
 
 	|	pairlist.list pair.p
-			{ $_[0]->right_child($list, $p); }
+			{ $_[0]->add_child($list, $p); }
 
 pair	:	WORD.left ':' expr.right
 			{ $_[0]->new_node('PAIR', $left, $right) }
@@ -264,82 +214,83 @@ unitlist:	/* null */
 
 across_tl :	ACROSS dimlist.dl	'{'
 			{
-			    $_[0]->push_frame(tag => 'over', dimlist => $dl);
+			    $_[0]->push_frame(tag => 'ACROSS', dimlist => $dl);
 			}
 		progseq.q '}'
 			{
-			    $_[0]->pop_frame('over');
+			    $_[0]->pop_frame('ACROSS');
 			}
 	;
 
 stmtseq :	/* null */
+			{ new_node('STMTSEQ'); }
+		
+	|	stmtseq across
+			{ add_child($_[1], $_[2]);
 	
-	|	stmtseq over
-
 	|	stmtseq line
+			{ add_child($_[1], $_[2]);
 	;
 
 block	:	'{' 
 			{ 
-			    $_[0]->push_frame(tag => 'block'); 
+			    $_[0]->push_frame(tag => 'BLOCK'); 
 			}
 		stmtseq '}'
 			{
-			    $_[0]->pop_frame('block');
+			    $_[0]->pop_frame('BLOCK');
+			    new_dnode('BLOCK', $_[2]);
 			}
 	;
 
 perlblock :	PERL '{'
 			{
 			    $_[0]->lex_mode('perl');
-			    $_[0]->push_frame(tag => 'perlblock');
+			    $_[0]->push_frame(tag => 'PERLBLOCK');
 			}
 		perlseq '}'
 		        {
-			    $_[0]->pop_frame('perlblock');
+			    $_[0]->pop_frame('PERLBLOCK');
 			}
 			
 	|	'%{' 
 			{
 			    $_[0]->lex_mode('pperl');
-			    $_[0]->push_frame(tag => 'perlblock');
+			    $_[0]->push_frame(tag => 'PERLBLOCK');
 			} 
 		perlseq '%}'
 			{
-			    $_[0]->pop_frame('perlblock');
+			    $_[0]->pop_frame('PERLBLOCK');
 			}
 	;
 
 phaseblock :	phase.p '{'
 			{
-			    $_[0]->push_frame(tag => 'block', phase => $p);
+			    $_[0]->push_frame(tag => 'BLOCK', phase => $p);
 			}
-		stmtseq '}'
+		stmtseq.q '}'
 			{
-			    $_[0]->pop_frame('block');
+			    new_dnode($p, $q);
+			    $_[0]->pop_frame('BLOCK');
 			}
 
 phase	:	INIT
-			{ INIT_PHASE }
 	
 	|	CALC
-			{ CALC_PHASE }
 	
 	|	STEP
-			{ STEP_PHASE }
 	
 	|	FINAL
-			{ FINAL_PHASE }
 	;
 
 line	:	block
-			{ $_[1] }	
+			{ $_[1]; }
 
 	|	perlblock
-			{ $_[1] }
+			{ $_[1]; }
 	
 	|	phaseblock
-			{ $_[1] }
+			{ $_[1]; }
 	
 	|	phase.p 
 			{
@@ -347,29 +298,43 @@ line	:	block
 			}
 		sideff.e ';'
 			{
-			    $_[0]->add_expr($e);
 			    $_[0]->pop_frame('line');
+			    $e;
 			}
 	
 	|	cond
-			{ $_[1] }
+			{ $_[1]; }
 	
 	|	loop
-			{ $_[1] }
+			{ $_[1]; }
 	
 	|	sideff.e ';'
+			{ $e; }
+	
+	|	VAR vardecl.v ';'
 			{
-			    $_[0]->add_expr($e);
+			    $_[0]->declare_var($v, PLAIN_VAR);
+			}
+	
+	|	CONST vardecl.v '=' 
+			{
+			    $_[0]->declare_var($v, CONST_VAR);
+			    $_[0]->push_frame(tag => 'CONST', phase => INIT_PHASE);
+			}
+		      expr.e ';'
+			{
+			    $_[0]->add_expr(new_anode('ASSIGN', '=', $v, $e));
+			    $_[0]->pop_frame('CONST');
 			}
 	;
 
 across	:	ACROSS dimlist.dl '{'
 			{
-			    $_[0]->push_frame(tag => 'across', dimlist => $dl);
+			    $_[0]->push_frame(tag => 'ACROSS', dimlist => $dl);
 			}
 		stmtseq.q '}'
 			{
-			    $_[0]->pop_frame('across');
+			    $_[0]->pop_frame('ACROSS');
 			}
 	;
 
@@ -377,14 +342,14 @@ dimlist :	dimspec.d
 			{ $_[0]->new_node('DIMLIST', $d); }
 	 
 	|	dimlist.l dimspec.d
-			{ right_child($l, $d); }
+			{ add_child($l, $d); }
 	;
 
 dimspec	:	'[' label.l array.d ']'
-			{ right_child($d, $l); }
+			{ add_child($d, $l); }
 	
 	|	'[' label.l set.d ']'
-			{ right_child($d, $l); }
+			{ add_child($d, $l); }
 	;
 
 label	:	/* null */
@@ -402,35 +367,71 @@ sideff	:	expr
 			{ $_[0]->new_node('OR', $r, $l) }
 	;
 
-cond	:	IF '(' expr.e ')' { $_[0]->add_control($e, COND_IF) } block else
+cond	:	condword.c '(' 
+			{ $_[0]->push_frame(tag => $c); }
+		expr.e ')' '{' stmtseq.q '}'
+			{ 
+			    $_[0]->pop_frame($c);
+			    new_node($c, $e, $q);
+			}
+		else
+	;
 
-	|	UNLESS '(' expr.e ')' { $_[0]->add_control($e, COND_UNLESS) } 
-		block else
+condword :	IF
+			{ 'IF' }
+	|	UNLESS
+			{ 'UNLESS' }
 	;
 
 else	:	/* null */
 
-	|	ELSE { $_[0]->add_control(undef, COND_ELSE) } block
+	|	ELSE '{'
+			{ $_[0]->push_frame('ELSE'); }
+		stmtseq '}'
+			{ 
+			    $_[0]->pop_frame('ELSE');
+			    new_node('ELSE', $q);
+			}
 
-	|	ELSIF '(' expr.e ')' { $_[0]->add_control($e, COND_ELSIF) } 
-		block else
+	|	ELSIF '(' 
+			{ $_[0]->push_frame(tag => 'ELSIF'); }
+		expr.e ')' '{' stmtseq.q '}'
+			{
+			    $_[0]->pop_frame('ELSIF');
+			    new_node($c, $e, $q);
+			}
+		else
 	;
 
-loop	:	WHILE '(' expr.e ')'
-			{ $_[0]->add_control(LOOP_WHILE, $e) } 
-		block
+loop	:	loopword.c '(' 
+			{
+			    $_[0]->push_frame(tag => $c);
+			}
+		expr.e ')' '{' stmtseq.q '}'
+			{
+			    $_[0]->pop_frame($c);
+			    new_node($c, $e, $q);
+			}
 	
-	|	UNTIL '(' expr.e ')'
-			{ $_[0]->add_control(LOOP_UNTIL, $e) }
-		block
+	|	FOREACH
+			{
+			    $_[0]->push_frame(tag => 'FOREACH');
+			}
+		scalar.i '(' expr.e ')' '{' stmtseq.q '}'
+			{
+			    $_[0]->pop_frame('FOREACH');
+			    new_node('FOREACH', $i, $e, $q);
+			}
 	
-	|	FOREACH scalar.i '(' expr.e ')'
-			{ $_[0]->add_control(LOOP_FOREACH, $e, $i) }
-		block
-	
-	|	FOR '(' expr.e1 ';' expr.e2 ';' expr.e3 ')'
-			{ $_[0]->add_control(LOOP_FOR, $e1, $e2, $e3) }
-		block
+	|	FOR '('
+			{
+			    $_[0]->push_frame('FOR');
+			}
+		expr.e1 ';' expr.e2 ';' expr.e3 ')' '{' stmtseq.q '}'
+			{
+			    $_[0]->pop_frame('FOR');
+			    new_node('FOR', $e1, $e2, $e3, $q);
+			}
 	;
 
 listexpr:	/* null */ %prec PREC_LOW
@@ -481,29 +482,23 @@ funcall	:	FUNC.fun '(' listexpr.args ')'
 				   new_node('FUNCALL', $fun, @{$args->{children}}) ) }
 	;
 
-term	:	termbinop 
-			{ $_[1] }
+term	:	termbinop
+			{ $_[1]; }
 	
-	|	termunop 
-			{ $_[1] }
+	|	termunop
+			{ $_[1]; }
 	
 	|	term.a '?' term.b ':' term.c
 			{ new_node('TRI', $a, $b, $c) }
 	
 	|	'(' argexpr ')' 
-			{ $_[2] }
+			{ $_[2]; }
 	
-	|	scalar.v %prec '('
-			{ $_[0]->use_var($_[1]); }
-	
-	|	indexvar %prec '('
+	|	varexpr %prec '('
 			{ $_[1]; }
 	
-	|	array.v %prec '('
-			{ $_[0]->use_var($_[1]); }
-	
-	|	set.v %prec '('
-			{ $_[0]->use_var($_[1]); }
+	|	myvar %prec '('
+			{ $_[1]; }
 	
 	|	NUM unitspec.u
 			{ merge_units(new_anode('NUM', $_[1]), $u); }
@@ -519,35 +514,41 @@ term	:	termbinop
 	;
 
 termbinop:	term.l ASSIGNOP.op term.r
-			{ new_anode('ASSIGN', $op, $l, $r) }
-
+			{
+			    $_[0]->check_lvalue($l);
+			    new_anode('ASSIGN', $op, $l, $r);
+			}
+	
 	|	term.l '=' term.r
-			{ new_anode('ASSIGN', '=', $l, $r) }
-
+			{
+			    $_[0]->check_lvalue($l);
+			    new_anode('ASSIGN', '=', $l, $r);
+			}
+	
 	|	term.l ADDOP.op term.r
-			{ new_anode('ADDOP', $op, $l, $r) }
-
+			{ new_anode('ADDOP', $op, $l, $r); }
+	
 	|	term.l MULOP.op term.r
-			{ new_anode('MULOP', $op, $l, $r) }
-
+			{ new_anode('MULOP', $op, $l, $r); }
+	
         |	term.l POWOP.op term.r
-			{ new_anode('POWOP', $op, $l, $r) }
-
+			{ new_anode('POWOP', $op, $l, $r); }
+	
 	|	term.l RELOP.op term.r
-			{ new_anode('RELOP', $op, $l, $r) }
-
+			{ new_anode('RELOP', $op, $l, $r); }
+	
 	|	term.l DOTDOT term.r
-			{ new_node('DOTDOT', $l, $r) }
-
+			{ new_node('DOTDOT', $l, $r); }
+	
 	|	term.l ANDAND term.r
-			{ new_node('AND', $l, $r) }
-
+			{ new_node('AND', $l, $r); }
+	
 	|	term.l OROR term.r
-			{ new_node('OR', $l, $r) }
-
+			{ new_node('OR', $l, $r); }
+	
 	|	term.l DORDOR term.r
-			{ new_node('DOR', $l, $r) }
-
+			{ new_node('DOR', $l, $r); }
+	
 #	|	term MATCHOP term
 	;
 
@@ -564,62 +565,117 @@ termunop:	ADDOP.op term.t %prec UMINUS
 			{ $_[2]->{incr} = 'PRE'; $_[2]; }
 	;
 
-scalar	:	'$' WORD
-			{ new_anode('SCALAR', $_[2]) }
+varexpr	:	scalar.v
+			{
+			    $_[0]->see_var($v);
+			}
+	
+	|	scalar.v dimlist.d
+			{
+			    $_[0]->see_var($v);
+			    add_child($v, $d);
+			}
+	
+	|	array.v
+			{
+			    $_[0]->see_var($v);
+			}
+	
+	|	array.v dimlist.d
+			{
+			    $_[0]->see_var($v);
+			    add_child($v, $d);
+			}
+	
+	|	set.v
+			{
+			    $_[0]->see_var($v);
+			}
+	
+	|	set.v dimlist.d
+			{
+			    $_[0]->see_var($v);
+			    add_child($v, $d);
+			}
+	
+	|	indexvar
+			{ $_[1]; }
 	;
 
-indexvar :	'$^' WORD
-			{ new_anode('INDEXVAR', $_[2] } 
+myvar	:	MY scalar
+			{ $_[0]->dynamic_var($_[1]); }
+	
+	|	MY array
+			{ $_[0]->dynamic_var($_[1]); }
+	
+	|	MY set
+			{ $_[0]->dynamic_var($_[1]); }
+	;
+
+scalar	:	'$' WORD
+			{ new_anode('SCALAR', $_[2]); }
+	;
 
 array	:	'@' WORD
-			{ new_anode('ARRAY', $_[2]) } 
+			{ new_anode('ARRAY', $_[2]); }
+	;
 
 set	:	'%' WORD
-			{ new_anode('SET', $_[2]) }
+			{ new_anode('SET', $_[2]); }
+	;
+
+indexvar:	'$^'
+			{ new_node('INDEXVAR'); } 
+	
+	|	'$^' NUM.n
+			{ new_anode('INDEXVAR', $n); }
+	
+	|	'$^' WORD.w
+			{ new_anode('INDEXVAR', $w); }
 	;
 
 flow	:      	scalar.so MULOP.op expr.coeff FLOWRIGHT scalar.sn
 			{
-			    $_[0]->add_flow($so, $sn, 
+			    $_[0]->new_node('FLOW', $so, $sn, 
 			                    new_anode('MULOP', $op, $so, $coeff));
 			}
 
 	|	scalar.sn MULOP.op expr.coeff FLOWLEFT scalar.so
 			{
-			    $_[0]->add_flow($so, $sn, 
+			    $_[0]->new_node('FLOW', $so, $sn, 
 					    new_anode('MULOP', $op, $sn, $coeff));
 			}
 
 	|	scalar.so FLOWRIGHT scalar.sn MULOP.op expr.coeff
 			{
-			    $_[0]->add_flow($so, $sn,
+			    $_[0]->new_node('FLOW', $so, $sn,
 					    new_anode('MULOP', $op, $sn, $coeff));
 			}
 
 	|	scalar.sn FLOWLEFT scalar.so MULOP.op expr.coeff
 			{
-			    $_[0]->add_flow($so, $sn, 
+			    $_[0]->new_node('FLOW', $so, $sn, 
 					    new_anode('MULOP', $op, $so, $coeff));
 			}
 
 	|	scalar.so '(' expr.rate ')' FLOWRIGHT scalar.sn
 			{
-			    $_[0]->add_flow($so, $sn, $rate);
+			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
 
 	|	scalar.sn '(' expr.rate ')' FLOWLEFT scalar.so
 			{
-			    $_[0]->add_flow($so, $sn, $rate);
+			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
 
 	|	scalar.so FLOWRIGHT scalar.sn '(' expr.rate ')'
 			{
-			    $_[0]->add_flow($so, $sn, $rate);
+			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
 
 	|	scalar.sn FLOWLEFT scalar.so '(' expr.rate ')'
 			{
-			    $_[0]->add_flow($so, $sn, $rate);
+			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
 	;
 
