@@ -33,15 +33,20 @@ $Data::Dumper::indent = 0;
 %%
 
 program	:	progstart progseq
+			{ new_dnode('PROGRAM', $_[2]); }
 	;
 
 progseq :	/* null */
+			{ new_node('PROGSEQ'); }
 
 	|	progseq tl_decl
-
+			{ add_child($_[1], $_[2]); }
+	
 	|	progseq flow
-
+			{ add_child($_[1], $_[2]); }
+	
 	|	progseq line
+			{ add_child($_[1], $_[2]); }
 	;
 
 progstart:	/* null */
@@ -51,50 +56,39 @@ progstart:	/* null */
 	;
 
 tl_decl	:	var
-	
-	|	const
-	
-	|	calc
-	
-	|	step
-	
-	|	result
+			{ $_[1]; }
 	
 	|	default
+			{ $_[1]; }
 	
 	|	package
+			{ $_[1]; }
 	
 	|	include
+			{ $_[1]; }
 	
 	|	use
+			{ $_[1]; }
 	
 	|	unit
+			{ $_[1]; }
 	
 	|	function
+			{ $_[1]; }
 	
 	|	across_tl
+			{ $_[1]; }
 	
 	|	flow
+			{ $_[1]; }
 	;
 
-var	:	VAR vardecl.v '='
-			{
-			    $_[0]->declare_var($v, PLAIN_VAR);
-			    $_[0]->push_frame(tag => 'var', phase => INIT_PHASE);
-			}
-		    expr.e ';'
-			{
-			    $_[0]->add_expr(new_anode('ASSIGN', '=', $v, $e));
-			    $_[0]->pop_frame('var');
-			}
-
-	|	VAR vardecl.v ';'
+var	:	VAR vardecl.v ';'
 			{
 			    $_[0]->declare_var($v, PLAIN_VAR);
 			}
-	;
-
-const	:	CONST vardecl.v '=' 
+	
+	|	CONST vardecl.v '=' 
 			{ 
 			    $_[0]->declare_var($v, CONST_VAR);
 			    $_[0]->push_frame(tag => 'const', phase => INIT_PHASE);
@@ -104,16 +98,10 @@ const	:	CONST vardecl.v '='
 			    $_[0]->add_expr(new_anode('ASSIGN', '=', $v, $e));
 			    $_[0]->pop_frame('const');
 			}
-
-	|	CONST vardecl.v ';'
+	
+	|	CALC vardecl.v '='
 			{
-			    $_[0]->declare_var($v, CONST_VAR);
-			}
-	;
-
-calc	:	CALC vardecl.v '='
-			{
-			    $_[0]->declare_var($v, CALC_VAR);
+			    $_[0]->declare_var($v, PLAIN_VAR);
 			    $_[0]->push_frame(tag => 'calc', phase => CALC_PHASE);
 			}
 		     expr.e ';'
@@ -122,13 +110,7 @@ calc	:	CALC vardecl.v '='
 			    $_[0]->pop_frame('calc');
 			}
 	
-	|	CALC vardecl.v ';'
-			{
-			    $_[0]->declare_var($v, CALC_VAR);
-			}
-	;
-
-step	:	STEP vardecl.v '='
+	|	STEP vardecl.v '='
 			{
 			    $_[0]->declare_var($v, STEP_VAR);
 			    $_[0]->push_frame(tag => 'step', phase => STEP_PHASE);
@@ -138,14 +120,8 @@ step	:	STEP vardecl.v '='
 			    $_[0]->add_expr(new_anode('ASSIGN', '=', $v, $e));
 			    $_[0]->pop_frame('step');
 			}
-	
-	|	STEP vardecl.v ';'
-			{
-			    $_[0]->declare_var($v, STEP_VAR);
-			}
-	;
 
-result	:	RESULT vardecl.v '='
+	|	FINALz vardecl.v '='
 			{
 			    $_[0]->declare_var($v, RESULT_VAR);
 			    $_[0]->push_frame(tag => 'result', phase => RESULT_PHASE);
@@ -154,11 +130,6 @@ result	:	RESULT vardecl.v '='
 			{
 			    $_[0]->add_expr(new_anode('ASSIGN', '=', $v, $e));
 			    $_[0]->pop_frame('result');
-			}
-	
-	|	RESULT vardecl.v ';'
-			{
-			    $_[0]->declare_var($v, RESULT_VAR);
 			}
 	;
 
@@ -254,9 +225,17 @@ funargs	:	/* null */
 			}
 	;
 
-pairblock:	'{' pair <* ','> '}'
+pairblock:	'{' pairlist '}'
 			{ $_[0]->new_dnode('PAIRBLOCK', $_[2]) }
 	;
+
+pairlist:	/* null */
+	
+	|	pair.p
+			{ $_[0]->new_node('LIST', $p); }
+
+	|	pairlist.list pair.p
+			{ $_[0]->right_child($list, $p); }
 
 pair	:	WORD.left ':' expr.right
 			{ $_[0]->new_node('PAIR', $left, $right) }
@@ -283,7 +262,7 @@ unitlist:	/* null */
 			}
 	;
 
-gl_over :	OVER dimlist.dl	'{'
+across_tl :	ACROSS dimlist.dl	'{'
 			{
 			    $_[0]->push_frame(tag => 'over', dimlist => $dl);
 			}

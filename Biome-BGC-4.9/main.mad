@@ -30,15 +30,16 @@
 package NBGC;
 units ha;
 
-include epc_hardwood.mad;
-include epc_evergreen.mad;
+include epc_hardwood;
+include epc_evergreen;
 
-var $year <year> init = $START_YEAR;
-var $yday <day> init = $START_DAY;
-var $year_length <day> init = year_days($year);
-var $location init = $LOCATION;
+step {
 
-timestep {
+    init $year <year> = $START_YEAR;
+    init $yday <day> = $START_DAY;
+    init $year_length <day> = year_days($year);
+    init $location = $LOCATION;
+    
     $yday++;
     if ( $yday >= $ydays ) {
 	$yday = 0;
@@ -57,10 +58,6 @@ function year_days ($yr) {
 # Vegetation types
 
 const %veg_types = %USE_VEG;
-
-include ENF;
-include BDF;
-include Bryophytes;
 
 # Meteorological variables
 

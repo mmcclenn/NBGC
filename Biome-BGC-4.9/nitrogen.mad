@@ -30,68 +30,70 @@
 # The nitrogen cycle is defined by 25N+5 pools, where N is the number of
 # distinct vegetation types being modelled.
 
-pool $soil_nitrogen_1 <kgN/m2>;		# fast microbial nitrogen recycling
+init $soil_nitrogen_1 <kgN/m2> = Pool;	# fast microbial nitrogen recycling
 
-pool $soil_nitrogen_2 <kgN/m2>;		# medium microbial nitrogen recycling
+init $soil_nitrogen_2 <kgN/m2> = Pool;	# medium microbial nitrogen recycling
 
-pool $soil_nitrogen_3 <kgN/m2>;		# slow microbial nitrogen recycling
+init $soil_nitrogen_3 <kgN/m2> = Pool;	# slow microbial nitrogen recycling
 
-pool $soil_nitrogen_4 <kgN/m2>;		# recalcitrant SOM nitrogen (humus, slowest)
+init $soil_nitrogen_4 <kgN/m2> = Pool;	# recalcitrant organic nitrogen (humus, slowest)
 
-pool $soil_mineral_nitrogen <kgN/m2>;	# soil mineral N
+init $soil_mineral_nitrogen <kgN/m2> = Pool;	# soil mineral N
 
-pool $leaf_N[%veg_types] <kgN/m2>;	    # nitrogen in leaves
+across [ %veg_types ] {
 
-pool $leaf_storage_N[%veg_types] <kgN/m2>;
+    init $leaf_N <kgN/m2> = Pool;	    # nitrogen in leaves
 
-pool $leaf_trans_N[%veg_types] <kgN/m2>;
+    init $leaf_storage_N <kgN/m2> = Pool;
 
-pool $fine_root_N[%veg_types] <kgN/m2>;	    # nitrogen in fine roots
+    init $leaf_trans_N <kgN/m2> = Pool;
 
-pool $fine_root_storage_N[%veg_types] <kgN/m2>;
+    init $fine_root_N <kgN/m2> = Pool;	    # nitrogen in fine roots
 
-pool $fine_root_trans_N[%veg_types] <kgN/m2>;
+    init $fine_root_storage_N <kgN/m2> = Pool;
 
-pool $live_stem_N[%veg_types] <kgN/m2>;	    # nitrogen in live stems
+    init $fine_root_trans_N <kgN/m2> = Pool;
 
-pool $live_stem_storage_N[%veg_types] <kgN/m2>;
+    init $live_stem_N <kgN/m2> = Pool;	    # nitrogen in live stems
 
-pool $live_stem_trans_N[%veg_types] <kgN/m2>;
+    init $live_stem_storage_N <kgN/m2> = Pool;
 
-pool $dead_stem_N[%veg_types] <kgN/m2>;	    # nitrogen in dead stems
+    init $live_stem_trans_N <kgN/m2> = Pool;
 
-pool $dead_stem_storage_N[%veg_types] <kgN/m2>;
+    init $dead_stem_N <kgN/m2> = Pool;	    # nitrogen in dead stems
 
-pool $dead_stem_trans_N[%veg_types] <kgN/m2>;
+    init $dead_stem_storage_N <kgN/m2> = Pool;
 
-pool $live_coarse_root_N[%veg_types] <kgN/m2>;	# nitrogen in live coarse roots
+    init $dead_stem_trans_N <kgN/m2> = Pool;
 
-pool $live_coarse_root_storage_N[%veg_types] <kgN/m2>;
+    init $live_coarse_root_N <kgN/m2> = Pool;	# nitrogen in live coarse roots
 
-pool $live_coarse_root_trans_N[%veg_types] <kgN/m2>;
+    init $live_coarse_root_storage_N <kgN/m2> = Pool;
 
-pool $dead_coarse_root_N[%veg_types] <kgN/m2>;	# nitrogen in dead coarse roots
+    init $live_coarse_root_trans_N <kgN/m2> = Pool;
 
-pool $dead_coarse_root_storage_N[%veg_types] <kgN/m2>;
+    init $dead_coarse_root_N <kgN/m2> = Pool;	# nitrogen in dead coarse roots
 
-pool $dead_coarse_root_trans_N[%veg_types] <kgN/m2>;
+    init $dead_coarse_root_storage_N <kgN/m2> = Pool;
 
-pool $coarse_woody_debris_N[%veg_types] <kgN/m2>;   # coarse woody debris
-                                                    # nitrogen
+    init $dead_coarse_root_trans_N <kgN/m2> = Pool;
 
-pool $litter_nitrogen_1[%veg_types] <kgN/m2>;	# litter labile nitrogen
+    init $coarse_woody_debris_N <kgN/m2> = Pool;   # coarse woody debris
+							# nitrogen
 
-pool $litter_nitrogen_2[%veg_types] <kgN/m2>;	# litter unshielded cellulose
-                                                # nitrogen
+    init $litter_nitrogen_1 <kgN/m2> = Pool;	# litter labile nitrogen
 
-pool $litter_nitrogen_3[%veg_types] <kgN/m2>;	# litter shielded cellulose
-                                                # nitrogen 
+    init $litter_nitrogen_2 <kgN/m2> = Pool;	# litter unshielded cellulose
+						    # nitrogen
 
-pool $litter_nitrogen_4[%veg_types] <kgN/m2>;	# litter lignin N
+    init $litter_nitrogen_3 <kgN/m2> = Pool;	# litter shielded cellulose
+						    # nitrogen 
 
-pool $temp_plant_N[%veg_types] <kgN/m2>;	# temporary plant nitrogen
-                                                # pool 
+    init $litter_nitrogen_4 <kgN/m2> = Pool;	# litter lignin N
 
-pool $retrans_N[%veg_types] <kgN/m2>;		# plant retranslocated
-                                                # nitrogen pool
+    init $temp_plant_N <kgN/m2> = Pool;		# temporary plant nitrogen
+						    # pool 
 
+    init $retrans_N <kgN/m2> = Pool;		# plant retranslocated
+						    # nitrogen pool
+}

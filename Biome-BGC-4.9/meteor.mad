@@ -33,13 +33,13 @@ units umol, ppmCO2;
 
 # We start with the basic data, six parameters from the Daymet dataset.
 
-var $daymet = DaymetInterface {
+init $daymet = DaymetInterface {
     type: 'postgresql',
     source: 'dbi:postgres:have_to_fill_this_in_later',
     cache: 0,
 };
 
-$daymet.fetch($year, $yday, $location);
+calc $daymet.fetch($year, $yday, $location);
 
 calc $tmax_daily <degC> = $daymet.tmax;
 calc $tmin_daily <degC> = $daymet.tmin;
@@ -61,7 +61,7 @@ calc $tavg_nighttime_daily <degC> = ...;
 calc $tavg_daily <degC> = 
      ($tmax_daily + $tmin_daily) / 2;			# this needs to be refined
 
-var $tavg_11day <degC> = RunningAverage { length: 11 };
+init $tavg_11day <degC> = RunningAverage { length: 11 };
 calc $tavg_11day.add($tavg_daily);
 
 #   Estimated average soil temperature
@@ -100,7 +100,7 @@ calc $pressure_atm <Pa> = ...;			# atmospheric pressure
 # For atmospheric CO2 concentration we use an external file with historical
 # data through 2009, and estimate future data based on the current trend.
 
-var $co2_historical <ppmCO2> = ExternalLookup {
+init $co2_historical <ppmCO2> = ExternalLookup {
     filename: 'co2_1832_2009',
     format: 'text',
     delimiter: 'tab',
@@ -115,9 +115,11 @@ const $proj_co2_inc <ppmCO2/year> = 1.8;	# Projected yearly rate of
 var $co2_atm <ppmCO2>;
 
 calc {
+
     if ( $year <= 2009 ) { 
         $co2_atm = $co2_historical.lookup($year);
     } else {
         $co2_atm = $co2_historical.lookup(2009) + ($year-2009) * $proj_co2_increase;
     }
+
 }
