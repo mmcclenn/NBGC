@@ -92,6 +92,15 @@ sub declare_var {
 
     my ($self, $node, $disp) = @_;
     
+}
+
+
+# see_var ( $node )
+
+sub see_var {
+
+    my ($self, $node) = @_;
+    
     my $model = $self->{model};
     my $type = ref $node;
     
@@ -100,8 +109,7 @@ sub declare_var {
 	$name = $self->{cf}{module} . "::" . $name;
     }
     
-    $model->declare_var($name, $type, $disp, $self->{my_filename}, 
-			$self->{my_line});
+    $model->see_var($name, $type, $self->{my_filename}, $self->{my_line});
     
     my $implicit_dimension = $self->{cf}{dimlist};
     
@@ -109,13 +117,6 @@ sub declare_var {
 	$model->dimension_var($name, $implicit_dimension, $node->{children});
     }
 }
-
-
-# see_var ( $node, $$$$$
-
-sub use_var {
-
-
 
 # decare_units ( $node )
 # 

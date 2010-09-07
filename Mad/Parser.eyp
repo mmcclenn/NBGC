@@ -90,16 +90,6 @@ vardecl	:	simplevar.v unitspec.u
 			{ merge_units(add_child($v, $d), $u); }
 	;
 
-simplevar :	scalar
-			{ $_[1] }
-
-	|	array
-			{ $_[1] }
-	
-	|	set
-			{ $_[1] }
-	;
-
 package	:	PACKAGE WORD.w ';'
 			{
 			    $_[0]->set_package($w);
@@ -323,8 +313,8 @@ line	:	block
 			}
 		      expr.e ';'
 			{
-			    $_[0]->add_expr(new_anode('ASSIGN', '=', $v, $e));
 			    $_[0]->pop_frame('CONST');
+			    new_anode('ASSIGN', '=', $v, $e));
 			}
 	;
 
@@ -470,38 +460,27 @@ expr	:	expr.l ANDOP expr.r
 	|	NOTOP expr.e
 			{ new_node('NOT', $e) }
 
-	|	term unitspec.u %prec PREC_LOW
-			{ merge_units($_[1], $u) }
-	;
-
-funcall	:	FUNC.fun '(' listexpr.args ')'
-			{ new_node('FUNCALL', $fun, @{$args->{children}}) }
-
-        |	FUNC.fun '(' listexpr.args ')' DOT WORD.fld
-			{ new_node('DOTFLD', $fld,
-				   new_node('FUNCALL', $fun, @{$args->{children}}) ) }
+	|	term %prec PREC_LOW
+			{ $_[1] }
 	;
 
 term	:	termbinop
-			{ $_[1]; }
+			{ $_[1] }
 	
 	|	termunop
-			{ $_[1]; }
+			{ $_[1] }
 	
 	|	term.a '?' term.b ':' term.c
 			{ new_node('TRI', $a, $b, $c) }
 	
 	|	'(' argexpr ')' 
-			{ $_[2]; }
+			{ $_[2] }
 	
-	|	varexpr %prec '('
-			{ $_[1]; }
+	|	varexpr
+			{ $_[1] }
 	
-	|	myvar %prec '('
-			{ $_[1]; }
-	
-	|	NUM unitspec.u
-			{ merge_units(new_anode('NUM', $_[1]), $u); }
+	|	NUM
+			{ new_anode('NUM', $_[1]) }
 	
 	|	STR
 			{ new_anode('STR', $_[1]) }
@@ -511,6 +490,9 @@ term	:	termbinop
 	
         |	RETURN expr.e
 			{ new_node('RETURN', $e) }
+	
+	|	term.t unitspec.u %PREC '('
+			{ merge_units($t, $u) }
 	;
 
 termbinop:	term.l ASSIGNOP.op term.r
@@ -559,57 +541,44 @@ termunop:	ADDOP.op term.t %prec UMINUS
 			{ new_node('NOT', $t) }
 
 	|	term INCOP
-			{ $_[1]->{incr} = 'POST'; $_[1]; }
+			{ $_[1]->{incr} = 'POST'; $_[1] }
 
 	|	INCOP term
-			{ $_[2]->{incr} = 'PRE'; $_[2]; }
+			{ $_[2]->{incr} = 'PRE'; $_[2] }
 	;
 
-varexpr	:	scalar.v
+varexpr	:	simplevar.v
 			{
 			    $_[0]->see_var($v);
 			}
 	
-	|	scalar.v dimlist.d
-			{
-			    $_[0]->see_var($v);
-			    add_child($v, $d);
-			}
-	
-	|	array.v
-			{
-			    $_[0]->see_var($v);
-			}
-	
-	|	array.v dimlist.d
+	|	simplevar.v subexpr.d
 			{
 			    $_[0]->see_var($v);
 			    add_child($v, $d);
 			}
 	
-	|	set.v
-			{
-			    $_[0]->see_var($v);
-			}
-	
-	|	set.v dimlist.d
-			{
-			    $_[0]->see_var($v);
-			    add_child($v, $d);
-			}
-	
+	|	MY simplevar
+			{ $_[0]->dynamic_var($_[2]) }
+
 	|	indexvar
-			{ $_[1]; }
+			{ $_[1] }
+	
+	|	varexpr.v DOT WORD.f
+			{ new_node('FIELD', $v, $f) }
+	
+	|	varexpr.v DOT WORD.m '(' listexpr.args ')'
+			{ new_node('METHOD', $v, $m, $args) }
 	;
 
-myvar	:	MY scalar
-			{ $_[0]->dynamic_var($_[1]); }
+simplevar :	scalar
+			{ $_[1] }
+
+	|	array
+			{ $_[1] }
 	
-	|	MY array
-			{ $_[0]->dynamic_var($_[1]); }
-	
-	|	MY set
-			{ $_[0]->dynamic_var($_[1]); }
+	|	set
+			{ $_[1] }
 	;
 
 scalar	:	'$' WORD
@@ -632,6 +601,28 @@ indexvar:	'$^'
 	
 	|	'$^' WORD.w
 			{ new_anode('INDEXVAR', $w); }
+	;
+
+subexpr :	subspec.d
+			{ $_[0]->new_node('SUBSCRIPT', $d); }
+	 
+	|	subexpr.l subspec.d
+			{ add_child($l, $d); }
+	;
+
+subspec	:	'[' ']'
+			{ new_node('EMPTYDIM') }
+	
+	|	'[' expr ']'
+			{ $_[2] }
+	;
+
+funcall	:	FUNC.fun '(' listexpr.args ')'
+			{ new_node('FUNCALL', $fun, @{$args->{children}}) }
+
+        |	FUNC.fun '(' listexpr.args ')' DOT WORD.fld
+			{ new_node('DOTFLD', $fld,
+				   new_node('FUNCALL', $fun, @{$args->{children}}) ) }
 	;
 
 flow	:      	scalar.so MULOP.op expr.coeff FLOWRIGHT scalar.sn
