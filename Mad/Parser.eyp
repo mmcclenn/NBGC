@@ -2,8 +2,6 @@
 %{
 use Mad::Model qw(:vartypes :phases);
 use Mad::ParserAux;
-use Data::Dumper;
-$Data::Dumper::indent = 0;
 
 %}
 
@@ -12,7 +10,7 @@ $Data::Dumper::indent = 0;
 %left OROP XOROP
 %left ANDOP
 %right NOTOP
-%left ',' '=>'
+%left ','
 %right ASSIGNOP '='
 %right '?' ':'
 %nonassoc DOTDOT
@@ -20,7 +18,7 @@ $Data::Dumper::indent = 0;
 %left ANDAND
 %nonassoc RELOP
 %left ADDOP
-%left MULOP
+%left MULOP '%'
 # %left MATCHOP
 %right NOT2 UMINUS
 %right POWOP
@@ -33,89 +31,77 @@ $Data::Dumper::indent = 0;
 %%
 
 program	:	progstart progseq
-			{ new_dnode('PROGRAM', $_[2]); }
+			{ $_[0]->new_dnode('PROGRAM', $_[2]) }
 	;
 
 progseq :	/* null */
-			{ new_node('PROGSEQ'); }
+			{ $_[0]->new_node('PROGSEQ') }
 
 	|	progseq tl_decl
-			{ add_child($_[1], $_[2]); }
+			{ add_child($_[1], $_[2]) }
 	
 	|	progseq flow
-			{ add_child($_[1], $_[2]); }
+			{ add_child($_[1], $_[2]) }
 	
 	|	progseq line
-			{ add_child($_[1], $_[2]); }
+			{ add_child($_[1], $_[2]) }
 	;
 
 progstart:	/* null */
-			{
-			    $_[0]->push_frame(tag => 'PROGRAM', phase => CALC_PHASE);
-			}
 	;
 
 tl_decl	:	var
-			{ $_[1]; }
+			{ $_[1] }
 	
 	|	default
-			{ $_[1]; }
+			{ $_[1] }
 	
 	|	package
-			{ $_[1]; }
+			{ $_[1] }
 	
 	|	include
-			{ $_[1]; }
+			{ $_[1] }
 	
 	|	use
-			{ $_[1]; }
+			{ $_[1] }
 	
 	|	unit
-			{ $_[1]; }
+			{ $_[1] }
 	
 	|	function
-			{ $_[1]; }
+			{ $_[1] }
 	
 	|	across_tl
-			{ $_[1]; }
+			{ $_[1] }
 	
 	|	flow
-			{ $_[1]; }
+			{ $_[1] }
 	;
 
-vardecl	:	simplevar.v unitspec.u
-			{ merge_units($v, $u); }
+vardecl	:	simplevar.v unitopt.u
+			{ merge_units($v, $u) }
 	
-	|	simplevar.v dimspec.d unitspec.u
-			{ merge_units(add_child($v, $d), $u); }
+	|	simplevar.v dimspec.d unitopt.u
+			{ merge_units(add_child($v, $d), $u) }
 	;
 
 package	:	PACKAGE WORD.w ';'
-			{
-			    $_[0]->set_package($w);
-			}
+			{ $_[0]->set_package($w) }
 	;
 
 include	:	INCLUDE WORD.w ';'
-			{
-			    $_[0]->parse_input($w . ".mad");
-			}
+			{ $_[0]->parse_input($w . ".mad") }
 	
 	|	INCLUDE STR.w ';'
-			{
-			    $_[0]->parse_input($w);
-			}
+			{ $_[0]->parse_input($w) }
 	;
 
 use	:	USE WORD.w ';'
-			{
-			    $_[0]->use_perl($w . ".pm");
-			}
+			{ $_[0]->use_perl($w . ".pm") }
+	;
 
 unit	:	UNIT wordlist.w ';'
-			{
-			    declare_units($_[0], $w);
-			}
+			{ declare_units($_[0], $w) }
 	;
 
 wordlist:	WORD.w
@@ -125,36 +111,42 @@ wordlist:	WORD.w
 			{ add_child($l, $_[0]->new_anode('STRING', $w)) }
 	;
 
-function:	FUNCTION WORD.name funargs.f unitspec.u ';'
+function:	FUNCTION WORD.name funargs.f unitopt.u ';'
 			{
-			    $_[0]->declare_function($name, $f, $u, FUNC_MAD);
+			    $_[0]->declare_function($name, $f, 'MAD_FUNC');
 			}
 	
-	|	FUNCTION WORD.name funargs.f unitspec.u '{'
+	|	FUNCTION WORD.name funargs.f unitopt.u '{'
 			{
-			    $_[0]->declare_function($name, $f, $u, FUNC_MAD);
+			    $_[0]->declare_function($name, $f, 'MAD_FUNC');
 			    $_[0]->push_frame(tag => 'FUNCTION', name => $name,
 					      args => $f, units => $u);
 			}
-		stmtseq '}'
+		stmtseq.q '}'
  			{
+			    print "AAA\n";
 			    $_[0]->pop_frame('FUNCTION');
+			    print "BBB\n";
+			    merge_units($_[0]->new_anode('FUNCTION', $f, $q),
+					$u);
 			}
 
-	|	PERL FUNCTION WORD.name funargs.f unitspec.u ';'
+	|	PERL FUNCTION WORD.name funargs.f unitopt.u ';'
 			{
-			    $_[0]->declare_function($name, $f, $u, FUNC_PERL);
+			    $_[0]->declare_function($name, $f, 'PERL_FUNC');
 			}
 	
-	|	PERL FUNCTION WORD.name funargs.f unitspec.u '{'
+	|	PERL FUNCTION WORD.name funargs.f unitopt.u '{'
 			{
-			    $_[0]->declare_function($name, $f, $u, FUNC_PERL);
+			    $_[0]->declare_function($name, $f, 'PERL_FUNC');
 			    $_[0]->push_frame(tag => 'PERLFUNC', name => $name,
 					      args => $f, units => $u);
 			}
-		perlseq '}'
+		perlseq.q '}'
 			{
 			    $_[0]->pop_frame('PERLFUNC');
+			    merge_units($_[0]->new_anode('PERLFUNC', $f, $q),
+					$u);
 			}
 	;
 
@@ -165,25 +157,13 @@ funargs	:	/* null */
 			}
 	;
 
-pairblock:	'{' pairlist '}'
-			{ $_[0]->new_dnode('PAIRBLOCK', $_[2]) }
-	;
-
-pairlist:	/* null */
+unitopt	:	/* null */
 	
-	|	pair.p
-			{ $_[0]->new_node('LIST', $p); }
-
-	|	pairlist.list pair.p
-			{ $_[0]->add_child($list, $p); }
-
-pair	:	WORD.left ':' expr.right
-			{ $_[0]->new_node('PAIR', $left, $right) }
+	|	unitspec
+			{ $_[1] }
 	;
 
-unitspec:	/* null */
-			{}
-	|	'<' unitlist.ulist '>'
+unitspec:	'<' unitlist.ulist '>'
 			{ merge_units($_[0]->new_node('UNITSPEC'), $ulist, 1) }
 	;
 
@@ -202,7 +182,7 @@ unitlist:	/* null */
 			}
 	;
 
-across_tl :	ACROSS dimlist.dl	'{'
+across_tl :	ACROSS dimlist.dl '{'
 			{
 			    $_[0]->push_frame(tag => 'ACROSS', dimlist => $dl);
 			}
@@ -213,13 +193,13 @@ across_tl :	ACROSS dimlist.dl	'{'
 	;
 
 stmtseq :	/* null */
-			{ new_node('STMTSEQ'); }
+			{ $_[0]->new_node('STMTSEQ') }
 		
 	|	stmtseq across
-			{ add_child($_[1], $_[2]);
+			{ add_child($_[1], $_[2]) }
 	
 	|	stmtseq line
-			{ add_child($_[1], $_[2]);
+			{ add_child($_[1], $_[2]) }
 	;
 
 block	:	'{' 
@@ -229,7 +209,7 @@ block	:	'{'
 		stmtseq '}'
 			{
 			    $_[0]->pop_frame('BLOCK');
-			    new_dnode('BLOCK', $_[2]);
+			    $_[0]->new_dnode('BLOCK', $_[2]);
 			}
 	;
 
@@ -260,9 +240,10 @@ phaseblock :	phase.p '{'
 			}
 		stmtseq.q '}'
 			{
-			    new_dnode($p, $q);
+			    $_[0]->new_dnode($p, $q);
 			    $_[0]->pop_frame('BLOCK');
 			}
+	;
 
 phase	:	INIT
 	
@@ -303,18 +284,18 @@ line	:	block
 	
 	|	VAR vardecl.v ';'
 			{
-			    $_[0]->declare_var($v, PLAIN_VAR);
+			    $_[0]->see_var($v, PLAIN_VAR);
 			}
 	
 	|	CONST vardecl.v '=' 
 			{
-			    $_[0]->declare_var($v, CONST_VAR);
+			    $_[0]->see_var($v, CONST_VAR);
 			    $_[0]->push_frame(tag => 'CONST', phase => INIT_PHASE);
 			}
 		      expr.e ';'
 			{
 			    $_[0]->pop_frame('CONST');
-			    new_anode('ASSIGN', '=', $v, $e));
+			    $_[0]->new_anode('ASSIGN', '=', $v, $e);
 			}
 	;
 
@@ -362,7 +343,7 @@ cond	:	condword.c '('
 		expr.e ')' '{' stmtseq.q '}'
 			{ 
 			    $_[0]->pop_frame($c);
-			    new_node($c, $e, $q);
+			    $_[0]->new_node($c, $e, $q);
 			}
 		else
 	;
@@ -376,11 +357,13 @@ condword :	IF
 else	:	/* null */
 
 	|	ELSE '{'
-			{ $_[0]->push_frame('ELSE'); }
-		stmtseq '}'
+			{
+			    $_[0]->push_frame(tag => 'ELSE');
+			}
+		stmtseq.q '}'
 			{ 
 			    $_[0]->pop_frame('ELSE');
-			    new_node('ELSE', $q);
+			    $_[0]->new_node('ELSE', $q);
 			}
 
 	|	ELSIF '(' 
@@ -388,7 +371,7 @@ else	:	/* null */
 		expr.e ')' '{' stmtseq.q '}'
 			{
 			    $_[0]->pop_frame('ELSIF');
-			    new_node($c, $e, $q);
+			    $_[0]->new_node('ELSIF', $e, $q);
 			}
 		else
 	;
@@ -400,17 +383,18 @@ loop	:	loopword.c '('
 		expr.e ')' '{' stmtseq.q '}'
 			{
 			    $_[0]->pop_frame($c);
-			    new_node($c, $e, $q);
+			    $_[0]->new_node($c, $e, $q);
 			}
 	
 	|	FOREACH
 			{
 			    $_[0]->push_frame(tag => 'FOREACH');
 			}
-		scalar.i '(' expr.e ')' '{' stmtseq.q '}'
+		scalarvar.i '(' expr.e ')' '{' stmtseq.q '}'
 			{
+			    $_[0]->see_var($i, ASSIGN_VAR);
 			    $_[0]->pop_frame('FOREACH');
-			    new_node('FOREACH', $i, $e, $q);
+			    $_[0]->new_node('FOREACH', $i, $e, $q);
 			}
 	
 	|	FOR '('
@@ -420,7 +404,7 @@ loop	:	loopword.c '('
 		expr.e1 ';' expr.e2 ';' expr.e3 ')' '{' stmtseq.q '}'
 			{
 			    $_[0]->pop_frame('FOR');
-			    new_node('FOR', $e1, $e2, $e3, $q);
+			    $_[0]->new_node('FOR', $e1, $e2, $e3, $q);
 			}
 	;
 
@@ -440,7 +424,7 @@ argexpr	:	argexpr ','
 				$_[1];
 			    }
 			    else {
-				new_node('LIST', $_[1], $t);
+				$_[0]->new_node('LIST', $_[1], $t);
 			    }
 			}
 
@@ -449,16 +433,16 @@ argexpr	:	argexpr ','
 	;
 
 expr	:	expr.l ANDOP expr.r
-			{ new_node('AND', $l, $r) }
+			{ $_[0]->new_node('AND', $l, $r) }
 
 	|	expr.l OROP expr.r
-			{ new_node('OR', $l, $r) }
+			{ $_[0]->new_node('OR', $l, $r) }
 
 	|	expr.l XOROP expr.r
-			{ new_node('XOR', $l, $r) }
+			{ $_[0]->new_node('XOR', $l, $r) }
 
 	|	NOTOP expr.e
-			{ new_node('NOT', $e) }
+			{ $_[0]->new_node('NOT', $e) }
 
 	|	term %prec PREC_LOW
 			{ $_[1] }
@@ -471,7 +455,7 @@ term	:	termbinop
 			{ $_[1] }
 	
 	|	term.a '?' term.b ':' term.c
-			{ new_node('TRI', $a, $b, $c) }
+			{ $_[0]->new_node('TRI', $a, $b, $c) }
 	
 	|	'(' argexpr ')' 
 			{ $_[2] }
@@ -479,66 +463,81 @@ term	:	termbinop
 	|	varexpr
 			{ $_[1] }
 	
+	|	dynvar
+			{ $_[1] }
+	
+	|	indexvar
+			{ $_[1] }
+	
 	|	NUM
-			{ new_anode('NUM', $_[1]) }
+			{ $_[0]->new_anode('NUM', $_[1]) }
 	
 	|	STR
-			{ new_anode('STR', $_[1]) }
+			{ $_[0]->new_anode('STR', $_[1]) }
 	
 	|	funcall
 			{ $_[1] }
 	
-        |	RETURN expr.e
-			{ new_node('RETURN', $e) }
+	|	objblock
+			{ $_[1] }
 	
-	|	term.t unitspec.u %PREC '('
+        |	RETURN expr.e
+			{ $_[0]->new_node('RETURN', $e) }
+	
+	|	term.t unitspec.u %prec '('
 			{ merge_units($t, $u) }
+	
+	|	YADAYADA
+			{ $_[0]->new_node('YADAYADA'); }
 	;
 
 termbinop:	term.l ASSIGNOP.op term.r
 			{
-			    $_[0]->check_lvalue($l);
-			    new_anode('ASSIGN', $op, $l, $r);
+			    $_[0]->see_var($l, ASSIGN_VAR);
+			    $_[0]->new_anode('ASSIGN', $op, $l, $r);
 			}
 	
 	|	term.l '=' term.r
 			{
-			    $_[0]->check_lvalue($l);
-			    new_anode('ASSIGN', '=', $l, $r);
+			    $_[0]->see_var($l, ASSIGN_VAR);
+			    $_[0]->new_anode('ASSIGN', '=', $l, $r);
 			}
 	
 	|	term.l ADDOP.op term.r
-			{ new_anode('ADDOP', $op, $l, $r); }
+			{ $_[0]->new_anode('ADDOP', $op, $l, $r); }
 	
 	|	term.l MULOP.op term.r
-			{ new_anode('MULOP', $op, $l, $r); }
+			{ $_[0]->new_anode('MULOP', $op, $l, $r); }
+	
+	|	term.l '%' term.r
+			{ $_[0]->new_anode('MULOP', '%', $l, $r); }
 	
         |	term.l POWOP.op term.r
-			{ new_anode('POWOP', $op, $l, $r); }
+			{ $_[0]->new_anode('POWOP', $op, $l, $r); }
 	
 	|	term.l RELOP.op term.r
-			{ new_anode('RELOP', $op, $l, $r); }
+			{ $_[0]->new_anode('RELOP', $op, $l, $r); }
 	
 	|	term.l DOTDOT term.r
-			{ new_node('DOTDOT', $l, $r); }
+			{ $_[0]->new_node('DOTDOT', $l, $r); }
 	
 	|	term.l ANDAND term.r
-			{ new_node('AND', $l, $r); }
+			{ $_[0]->new_node('AND', $l, $r); }
 	
 	|	term.l OROR term.r
-			{ new_node('OR', $l, $r); }
+			{ $_[0]->new_node('OR', $l, $r); }
 	
 	|	term.l DORDOR term.r
-			{ new_node('DOR', $l, $r); }
+			{ $_[0]->new_node('DOR', $l, $r); }
 	
 #	|	term MATCHOP term
 	;
 
 termunop:	ADDOP.op term.t %prec UMINUS
-			{ $op eq '-' ? new_node('UMINUS', $t) : $t }
+			{ $op eq '-' ? $_[0]->new_node('UMINUS', $t) : $t }
     
 	|       NOT2 term.t %prec UMINUS
-			{ new_node('NOT', $t) }
+			{ $_[0]->new_node('NOT', $t) }
 
 	|	term INCOP
 			{ $_[1]->{incr} = 'POST'; $_[1] }
@@ -549,26 +548,32 @@ termunop:	ADDOP.op term.t %prec UMINUS
 
 varexpr	:	simplevar.v
 			{
-			    $_[0]->see_var($v);
+			    $_[0]->see_var($v, PLAIN_VAR);
 			}
 	
 	|	simplevar.v subexpr.d
 			{
-			    $_[0]->see_var($v);
 			    add_child($v, $d);
+			    $_[0]->see_var($v, PLAIN_VAR);
 			}
 	
-	|	MY simplevar
-			{ $_[0]->dynamic_var($_[2]) }
-
-	|	indexvar
-			{ $_[1] }
-	
 	|	varexpr.v DOT WORD.f
-			{ new_node('FIELD', $v, $f) }
+			{
+			    $_[0]->see_var($v, PLAIN_VAR);
+			    $_[0]->new_node('FIELD', $v, $f);
+			}
 	
-	|	varexpr.v DOT WORD.m '(' listexpr.args ')'
-			{ new_node('METHOD', $v, $m, $args) }
+	|	varexpr.v DOT FUNC.m '(' listexpr.args ')'
+			{ 
+			    $_[0]->see_var($v, PLAIN_VAR);
+			    $_[0]->new_node('METHOD', $v, $m, $args);
+			}
+	;
+
+dynvar :	MY simplevar.v
+			{
+			    $_[0]->see_var($v, DYN_VAR);
+			}
 	;
 
 simplevar :	scalar
@@ -581,26 +586,33 @@ simplevar :	scalar
 			{ $_[1] }
 	;
 
+scalarvar:	scalar.v
+			{ $_[0]->see_var($v, PLAIN_VAR); }
+	
+	|	MY scalar.v
+			{ $_[0]->see_var($v, DYN_VAR); }
+	;
+
 scalar	:	'$' WORD
-			{ new_anode('SCALAR', $_[2]); }
+			{ $_[0]->new_anode('SCALAR', $_[2]); }
 	;
 
 array	:	'@' WORD
-			{ new_anode('ARRAY', $_[2]); }
+			{ $_[0]->new_anode('ARRAY', $_[2]); }
 	;
 
 set	:	'%' WORD
-			{ new_anode('SET', $_[2]); }
+			{ $_[0]->new_anode('SET', $_[2]); }
 	;
 
 indexvar:	'$^'
-			{ new_node('INDEXVAR'); } 
+			{ $_[0]->new_node('INDEXVAR'); } 
 	
 	|	'$^' NUM.n
-			{ new_anode('INDEXVAR', $n); }
+			{ $_[0]->new_anode('INDEXVAR', $n); }
 	
 	|	'$^' WORD.w
-			{ new_anode('INDEXVAR', $w); }
+			{ $_[0]->new_anode('INDEXVAR', $w); }
 	;
 
 subexpr :	subspec.d
@@ -611,61 +623,101 @@ subexpr :	subspec.d
 	;
 
 subspec	:	'[' ']'
-			{ new_node('EMPTYDIM') }
+			{ $_[0]->new_node('EMPTYDIM') }
 	
 	|	'[' expr ']'
 			{ $_[2] }
 	;
 
 funcall	:	FUNC.fun '(' listexpr.args ')'
-			{ new_node('FUNCALL', $fun, @{$args->{children}}) }
+			{ $_[0]->new_node('FUNCALL', $fun, @{$args->{children}}) }
 
         |	FUNC.fun '(' listexpr.args ')' DOT WORD.fld
-			{ new_node('DOTFLD', $fld,
-				   new_node('FUNCALL', $fun, @{$args->{children}}) ) }
+			{ $_[0]->new_node('DOTFLD', $fld,
+				   $_[0]->new_node('FUNCALL', $fun, @{$args->{children}}) ) }
+	;
+
+objblock:	WORD.n pairblock.p
+			{ $_[0]->new_anode('NEWOBJ', $n, $p) }
+	;
+
+pairblock:	'{' pairlist '}'
+			{ $_[0]->new_dnode('PAIRBLOCK', $_[2]) }
+	
+	|	'{' pairlist ',' '}'
+			{ $_[0]->new_dnode('PAIRBLOCK', $_[2]) }
+	;
+
+pairlist:	/* null */
+	
+	|	pair.p
+			{ $_[0]->new_node('LIST', $p) }
+
+	|	pairlist.l ',' pair.p
+			{ $_[0]->add_child($l, $p) }
+	;
+
+pair	:	WORD.left ':' expr.right
+			{ $_[0]->new_node('PAIR', $left, $right) }
 	;
 
 flow	:      	scalar.so MULOP.op expr.coeff FLOWRIGHT scalar.sn
 			{
+			    $_[0]->see_var($so, ASSIGN_VAR);
+			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, 
-			                    new_anode('MULOP', $op, $so, $coeff));
+			                    $_[0]->new_anode('MULOP', $op, $so, $coeff));
 			}
 
 	|	scalar.sn MULOP.op expr.coeff FLOWLEFT scalar.so
 			{
+			    $_[0]->see_var($so, ASSIGN_VAR);
+			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, 
-					    new_anode('MULOP', $op, $sn, $coeff));
+					    $_[0]->new_anode('MULOP', $op, $sn, $coeff));
 			}
 
 	|	scalar.so FLOWRIGHT scalar.sn MULOP.op expr.coeff
 			{
+			    $_[0]->see_var($so, ASSIGN_VAR);
+			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn,
-					    new_anode('MULOP', $op, $sn, $coeff));
+					    $_[0]->new_anode('MULOP', $op, $sn, $coeff));
 			}
 
 	|	scalar.sn FLOWLEFT scalar.so MULOP.op expr.coeff
 			{
+			    $_[0]->see_var($so, ASSIGN_VAR);
+			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, 
-					    new_anode('MULOP', $op, $so, $coeff));
+					    $_[0]->new_anode('MULOP', $op, $so, $coeff));
 			}
 
 	|	scalar.so '(' expr.rate ')' FLOWRIGHT scalar.sn
 			{
+			    $_[0]->see_var($so, ASSIGN_VAR);
+			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
 
 	|	scalar.sn '(' expr.rate ')' FLOWLEFT scalar.so
 			{
+			    $_[0]->see_var($so, ASSIGN_VAR);
+			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
 
 	|	scalar.so FLOWRIGHT scalar.sn '(' expr.rate ')'
 			{
+			    $_[0]->see_var($so, ASSIGN_VAR);
+			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
 
 	|	scalar.sn FLOWLEFT scalar.so '(' expr.rate ')'
 			{
+			    $_[0]->see_var($so, ASSIGN_VAR);
+			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
 	;
@@ -703,7 +755,8 @@ sub new_model {
     
     $self->{my_stack} = [];
     $self->{lex_mode} = 'mad';
-    $self->{frame} = [];
+    $self->{frame} = [{tag => 'PROGRAM', phase => CALC_PHASE, module => '', dimcount => 0}];
+    $self->{cf} = $self->{frame}[0];
     
     # Create a new object to hold the model as it is read in.  Return a
     # reference to this object as the function result.
@@ -770,7 +823,7 @@ sub parse_input {
     
     # If we actually got some input, process it.
     
-    if ( defined $input ) {
+    if ( $input =~ /\S/ ) {
 	
 	# If we are in the middle of handling another file, record that
 	# information on the input stack.
@@ -778,7 +831,7 @@ sub parse_input {
 	if ( $self->{my_filename} ne '' ) {
 	    unshift @{$self->{my_input_stack}}, {file => $self->{my_filename}, 
 						 line => $self->{my_line}, 
-						 input => $self->{my_input});
+						 input => $self->{my_input}};
 	}
 	
 	# Now remember the name of the file we are reading from, the starting
@@ -791,7 +844,8 @@ sub parse_input {
 	
 	# Now parse the input, and return the resulting tree (if any).
 	
-	my $tree = $self->YYParse( yylex => \&my_lexer, yybuildingtree => 1 );
+	my $tree = $self->YYParse( yylex => \&my_lex_wrapper, yyerror => \&my_syntax, yybuildingtree => 1,
+				   yydebug => 0x05);
 	return $tree;
     }
 }
@@ -881,7 +935,7 @@ sub validate_unit {
 # 
 # Adjust the brace count up or down (depending on whether $adjustment is
 # greater than or less than zero).  If the brace count becomes zero, the
-# lexical mode returns to 'mad' and we return the token '}'.  Otherwise,
+# lexical mode returns to 'mad' and we return the token '{'.  Otherwise,
 # whichever token is currently being parsed is part of perl code and so we
 # return the token 'PERLPART'.
 
@@ -901,18 +955,35 @@ sub count_brace {
 # 
 # Terminate parsing because of an error.
 
-sub my_syntax_error {
-    my ($self, $msg) = @_;
-    die "Syntax error at $self->{my_filename} line $self->{my_line}: $msg\n";
+sub my_syntax {
+    my ($self, $msg, $filename, $line) = @_;
+    
+    $filename = $self->{my_filename} unless defined $filename;
+    $line = $self->{my_line} unless defined $line;
+    
+    if ( $msg ne '' ) {
+        die "Syntax error at $filename line $line: $msg\n";
+    }
+    else {
+        die "Syntax error at $filename line $line.\n";
+    }
 }
 
 sub my_error {
-    my ($self, $msg) = @_;
+    my ($self, $msg, $filename, $line) = @_;
+    
+    $filename = $self->{my_filename} unless defined $filename;
+    $line = $self->{my_line} unless defined $line;
+    
     die "Error at $self->{my_filename} line $self->{my_line}: $msg\n";
 }
 
 sub my_warning {
-    my ($self, $msg) = @_;
+    my ($self, $msg, $filename, $line) = @_;
+    
+    $filename = $self->{my_filename} unless defined $filename;
+    $line = $self->{my_line} unless defined $line;
+    
     warn "Warning at $self->{my_filename} line $self->{my_line}: $msg\n";
 }
 
@@ -1057,7 +1128,7 @@ sub my_lexer {
 	    
 	    m{\G==>}gc				and return ('FLOWRIGHT', '');
 	    m{\G<==}gc				and return ('FLOWLEFT', '');
-	    #m{\G\.\.\.}gc			and return ('YADAYADA', '');
+	    m{\G\.\.\.}gc			and return ('YADAYADA', '');
 	    m{\G\.\.}gc				and return ('DOTDOT', '');
 	    m{\G\.}gc				and return ('DOT', '');
 	    m{\G=>}gc				and return ('=>', '');
@@ -1073,7 +1144,7 @@ sub my_lexer {
 	    m{\G(\+\+|--)}gc			and return ('INCOP', $1);
 	    m{\G->}gc				and return ('ARROW', '');
 	    m{\G\*\*}gc				and return ('POWOP', '');
-	    m{\G([\*\/%x])}gc			and return ('MULOP', $1);
+	    m{\G([\*\/])}gc			and return ('MULOP', $1);
 	    m{\G([+-])}gc			and return ('ADDOP', $1);
 	    m{\G\\}gc				and return ('REFGEN', $1);
 	    m{\G!}gc				and return ('NOT2', $1);
@@ -1081,13 +1152,13 @@ sub my_lexer {
 	    # Miscellaneous characters
 	    
 	    m{\G\$\^}gc				and return ('$^', '');
-	    m{\G([;=~()\[\]\{\}\$\@])}gc	and return ($1, $1);
+	    m{\G([:;=~()\[\]\{\}\$\@\%])}gc	and return ($1, $1);
 	    
 	    # If we get here and the current line is not empty, then we've got
 	    # an unrecognized character.
 	    
 	    if ( m{\G(\S)}gc ) {
-		$self->my_syntax_error("unrecognized character '$1'");
+		$self->my_syntax("unrecognized character '$1'");
 	    }
 	    else {
 		die "Strange lexer error at $self->{my_filename} line $self->{my_line}.\n";

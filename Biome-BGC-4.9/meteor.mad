@@ -29,7 +29,7 @@ use DaymetInterface;
 use RunningAverage;
 use ExternalLookup;
 
-units umol, ppmCO2;
+unit umol, ppmCO2;
 
 # We start with the basic data, six parameters from the Daymet dataset.
 

@@ -20,21 +20,22 @@ use warnings;
 use Carp;
 use Exporter qw( import );
 
-%EXPORT_TAGS = ( vartypes => [qw(PLAIN_VAR CONST_VAR POOL_VAR
-				 SCALAR_VAR LIST_VAR SET_VAR)],
-		 phases => [qw(INIT_PHASE STEP_PHASE TIME_PHASE)]);
+our(@EXPORT_OK) = qw(PLAIN_VAR CONST_VAR ASSIGN_VAR DYN_VAR
+		     SCALAR_VAR LIST_VAR SET_VAR
+		     INIT_PHASE CALC_PHASE STEP_PHASE FINAL_PHASE);
 
-our $INPUT_NAME = '<none>';	# Name of the input source being currently read
-our $INPUT_LINE = 0;		# Current input line number
-our $LOAD_LINE = 0;		# Current input line number when loading
-                                # individual statements
+our(%EXPORT_TAGS) = ( vartypes => [qw(PLAIN_VAR CONST_VAR ASSIGN_VAR DYN_VAR
+				      SCALAR_VAR LIST_VAR SET_VAR)],
+		      phases => [qw(INIT_PHASE CALC_PHASE STEP_PHASE FINAL_PHASE)]);
+
+our ($INPUT_LINE);
+our ($INPUT_NAME);
 
 use constant {
     PLAIN_VAR => 1,
     CONST_VAR => 2,
-    CALC_VAR => 3,
-    STEP_VAR => 4,
-    RESULT_VAR => 5,
+    ASSIGN_VAR => 3,
+    DYN_VAR => 4,
     
     SCALAR_VAR => 1,
     LIST_VAR => 2,
@@ -48,7 +49,7 @@ use constant {
     COND_IF => 1,
     COND_UNLESS => 2,
     COND_ELSIF => 3,
-    COND_ELSE => 4
+    COND_ELSE => 4,
     
     LOOP_WHILE => 1,
     LOOP_UNTIL => 2,
@@ -65,7 +66,7 @@ our @INITIAL_UNITS = ( 'km', 'm', 'cm', 'mm', 'µm', 'nm',
 		       'mol', 
 		       'cd', 'lm', 'lx',
 		       'Bq', 'Gy', 'Sv', 'kat',
-		       'rad', 'sr'
+		       'rad', 'sr',
 		       'N', 'Pa', 'J');
 
 our @UNIT_ALIASES = ( 'um' => 'µm',
@@ -81,6 +82,7 @@ our @UNIT_ALIASES = ( 'um' => 'µm',
 		      'degF' => '℉',
 		      );
 
+our @PRIME_NUMBER;
 
 # Constructor, destructor and related methods
 # ===========================================
@@ -125,136 +127,101 @@ sub DESTROY {
 # Methods for dealing with variables
 # ----------------------------------
 
-# set_module ( $name )
+# see_package ( $name )
 # 
-# Same as the 'module' keyword in Perl.
+# Called when the Mad keyword 'package' is found.
 
-sub set_module {
+sub see_package {
 
     my ($self, $name) = @_;
     
     $self->{symtabs}{$name} = {} unless ref $self->{modules}{$name} eq 'HASH';
-    $self->{current_symtab} = $self->{symtabs}{$name};
-    $self->{current_prefix} = $name . '::';
 }
 
 
-# declare_var ( $name, $def, $type, $disp, $filename, $line )
+# see_var ( $name, $pkg, $type, $dim, $filename, $line )
 # 
-# If we have not already seen a variable with this name, add it to the
-# model. Otherwise, check to make sure we haven't discovered a conflict such
-# as a constant being modified or used as the source or sink of a flow.  The
-# parameters 'filename' and 'line' tell us where the variable was defined.
+# If we have not already seen a variable with this name, add it to the model.
+# The parameters 'filename' and 'line' tell us where the variable was
+# encountered.
 
-sub declare_var {
+sub see_var {
 
-    my ($self, $name, $type, $disp, $filename, $line) = @_;
+    my ($self, $name, $pkg, $type, $dim, $filename, $line) = @_;
     
-    my $sym = $self->{current_symtab}{$name};
+    my $stab = $self->{symtabs}{$pkg};
     
     # If this is the first time we have encountered this name, add a new entry
     # to the symbol table and return.
     
-    unless ( ref $sym eq 'HASH' ) {
+    unless ( ref $stab->{$name} eq 'HASH' ) {
 
-	my $prefix = $self->{current_prefix};
-	$self->{current_symtab}{$name} = { name => $name,
-					   type => $type,
-					   disp => $disp,
-					   pvar => $prefix . $name;
-					   dim => 0,
-					   deffn => $filename,
-					   defli => $line,
-					 };
+	$stab->{$name} = { name => $name,
+			   type => $type,
+			   dim => $dim,
+			   deffn => $filename,
+			   defli => $line,
+			 };
 	
 	return 1;
     }
     
-    # Otherwise, check to make sure that there is no conflict with the
-    # previous use of the variable.
+    # If we are setting the value, note the filename and line number.
     
-    if ( $type > 0 && $sym->{type} > 0 && $type != $sym->{type} ) {
-	$self->{parser}->my_error( $sym->{name} . " was already defined as a " .
-				   var_type_string($sym->{type}) . " at line " . 
-				   $sym->{defli} . " of file " . $sym->{deffn} . "." );
-    }
-    
-    if ( $disp > 0 && $sym->{disp} > 0 && $disp != $sym->{disp} ) {
-	$self->{parser}->my_error( $sym->{name} . " was already defined as a " .
-				   var_disp_string($sym->{disp}) . " at line " . 
-				   $sym->{defli} . " of file " . $sym->{deffn} . "." );
-    }
-    
-    # Since this is supposed to be the actual definition of the variable, and
-    # the previous mention was just a use, substitute in the current filename
-    # and line number.
-    
-    $sym->{deffn} = $filename;
-    $sym->{defli} = $line;
-}
-
-# NEEDED: use of out-of-package variables
-
-sub variable_use {
-
-    my ($self, $name, $set, $phase, $filename, $line) = @_;
-    my $sym = $self->{current_symtab}{$name};
-    
-    # Unless we have already seen this variable, we need to create a record
-    # for it.
-    
-    unless ( ref $sym eq 'HASH' ) {
-
-	my $prefix = $self->{current_prefix};
-	$self->{current_symtab}{$name} = { name => $name,
-					   pvar => $prefix . $name;
-					   deffn => $filename,
-					   defli => $line,
-					 };
-    }
-    
-    # If this variable has not been set, or is set in a later phase, we need
-    # to adjust its attributes:
-    
-    if ( $sym->{set_phase} == 0 or $phase < $sym->{set_phase} ) {
-	
-	# if we are currently setting this variable, then note the current
-	# phase as the 'set_phase'.  If a value is required in a later phase,
-	# we can forget about that since we now know that it will be set sooner.
-	
-	if ( $set ) {
-	    $sym->{set_phase} = $phase;
-	    if ( $phase < $sym->{require_phase} ) {
-		delete $sym->{require_phase};
-	    }
-	}
-	
-	# On the other hand, if we are using the value of this variable, its
-	# value is now required to have been set earlier.
-	
-	else {
-	    $self->{require_phase} = $phase;
-	}
+    if ( $type == ASSIGN_VAR ) {
+	$stab->{$name}{variable} = 1;
+	$stab->{$name}{deffn} = $filename;
+	$stab->{$name}{defli} = $line;
     }
 }
 
-sub setup_units {
+
+# has_constant ( $name, $pkg )
+# 
+# If a constant has already been declared with the given name in the given
+# package, return true.
+
+sub has_constant {
     
-    my ($self) = @_;
-    $self->{unit_index} = 0;
+    my ($self, $name, $pkg) = @_;
     
-    foreach $unit (@INITIAL_UNITS) {
-	my $i = $self->{unit_index}++;
-	$self->{unit}{$unit} = $PRIME_NUMBER[$i];
-    }
+    my $stab = $self->{symtabs}{$pkg};
     
-    while (@UNIT_ALIASES) {
-	my $new = shift @UNIT_ALIASES;
-	my $old = shift @UNIT_ALIASES;
-	
-	$self->{unit}{$new} = $self->{unit}{$old};
-    }
+    return 1 if $stab->{$name}{type} == CONST_VAR;
+    return undef; # otherwise
 }
+
+
+# has_lvalue ( $name, $pkg )
+# 
+# If a variable has already been declared with the given name in the given
+# package, and we know it is a variable because it has been set, return the
+# filename and line number at which this happened.
+
+sub has_lvalue {
+    
+    my ($self, $name, $pkg) = @_;
+    
+    my $stab = $self->{symtabs}{$pkg};
+    
+    return 1 if $stab->{$name}{variable};
+    return undef; # otherwise
+}
+
+
+# where_used ( $name, $pkg )
+# 
+# Return the filename and line where this variable was last used.
+
+sub where_used {
+
+    my ($self, $name, $pkg) = @_;
+
+    my $stab = $self->{symtabs}{$pkg};
+    
+    return ($stab->{$name}{deffn}, $stab->{$name}{defli});
+}
+
 
 # declare_unit ( $new, $old )
 # 
@@ -657,6 +624,24 @@ sub initial_value {
    7649, 7669, 7673, 7681, 7687, 7691, 7699, 7703, 7717, 7723, 
    7727, 7741, 7753, 7757, 7759, 7789, 7793, 7817, 7823, 7829, 
    7841, 7853, 7867, 7873, 7877, 7879, 7883, 7901, 7907, 7919 );
+
+sub setup_units {
+    
+    my ($self) = @_;
+    $self->{unit_index} = 0;
+    
+    foreach my $unit (@INITIAL_UNITS) {
+	my $i = $self->{unit_index}++;
+	$self->{unit}{$unit} = $PRIME_NUMBER[$i];
+    }
+    
+    while (@UNIT_ALIASES) {
+	my $new = shift @UNIT_ALIASES;
+	my $old = shift @UNIT_ALIASES;
+	
+	$self->{unit}{$new} = $self->{unit}{$old};
+    }
+}
 
 1;
 

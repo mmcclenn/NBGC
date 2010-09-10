@@ -28,12 +28,12 @@
 # Basic simulation parameters
 
 package NBGC;
-units ha;
+unit ha;
 
 include epc_hardwood;
 include epc_evergreen;
 
-step {
+calc {
 
     init $year <year> = $START_YEAR;
     init $yday <day> = $START_DAY;

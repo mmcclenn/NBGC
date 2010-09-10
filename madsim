@@ -10,6 +10,7 @@ use strict;
 use warnings;
 use Getopt::Std;
 use Graphics::PLplot;
+use Data::Dumper;
 
 use Mad::Model;
 use Mad::Parser;
@@ -92,6 +93,10 @@ else {
     }
 }
 
+
+
+print Dumper($tree);
+exit;
 
 # Now that we have a model, the next step is to create a simulator object and
 # use it to run that model.  If -p was specified, we use the PDL version of the

@@ -6,21 +6,22 @@
 package Mad::Parser;
 use strict;
 
-use Mad::Model qw(:vartypes :phases)
+use Mad::Model qw(:vartypes :phases);
 
 
 # Utility functions for parsing
 # -----------------------------
 
-# set_module ( $node )
+# set_package ( $name )
 # 
 # From here to the end of the current block, all non-dynamic variable names
-# will be evaluated in the context specified by $module_name.
+# will be evaluated in the context specified by $name.
 
-sub set_module {
+sub set_package {
 
     my ($self, $name) = @_;
-    $self->{cf}{module} = $name;
+    $self->{cf}{package} = $name;
+    $self->{model}->see_package($name);
 }
 
 
@@ -39,23 +40,17 @@ sub push_frame {
     $self->{cf} = \%attrs;
     
     $attrs{phase} = $self->{frame}[0]{phase} unless defined $attrs{phase};
-    $attrs{module} = $self->{frame}[0]{module} unless defined $attrs{module};
+    $attrs{package} = $self->{frame}[0]{package} unless defined $attrs{package};
     
     if ( defined $attrs{dimlist} ) {
-	$attrs{dimlist} = $self->merge_dimlist($self->{frame}[0]{dimlist},
-					       $attrs{dimlist});
+	$attrs{dimlist} = $self->merge_dimlist($attrs{dimlist});
     }
     else {
 	$attrs{dimlist} = $self->{frame}[0]{dimlist};
+	$attrs{dimcount} = $self->{frame}[0]{dimcount};
     }
     
     unshift @{$self->{frame}}, $self->{cf};
-    
-    if ( $attrs{tag} =~ /^(block|perlblock|function|perlfunc)$/ )
-    {
-	my $model = $self->{model};
-	$model->open_block($attrs{phase});
-    }
 }
 
 
@@ -69,54 +64,141 @@ sub pop_frame {
 
     my ($self, $tag) = @_;
     
-    while ( $self->{frame}[0]{tag} ne $tag ) {
+    while ( $self->{frame}[0]{tag} ne $tag and $self->{frame}[0]{tag} ne 'PROGRAM' ) {
+	$DB::single = 1;
 	shift @{$self->{frame}};
     }
-
-    if ( $tag =~ /^(block|perlblock|function|perlfunc)$/ )
-    {
-	my $model = $self->{model};
-	$model->close_block($attrs{phase});
+    
+    if ( $self->{frame}[0]{$tag} eq 'PROGRAM' ) {
+	$self->my_error("Frame Error (internal)");
+    }
+    else {
+	shift @{$self->{frame}};
     }
 }
 
 # Functions for adding elements to the model
 # ------------------------------------------
 
-# declare_var ( $node, $disp )
+# see_var ( $node, $type )
 # 
-# A variable declaration has been encountered.  Declare the variable specified
-# by $node, with disposition $disp (i.e. constant, variable, pool).
-
-sub declare_var {
-
-    my ($self, $node, $disp) = @_;
-    
-}
-
-
-# see_var ( $node )
+# The parser has parsed a variable, and we need to make sure that the model
+# has a record for this variable so that when we are compiling code we will be
+# able to make sure that what are supposed to be different uses of the same
+# variable really are so.  If $type is not given, it is assumed to be
+# PLAIN_VAR.  Otherwise, the allowable types are: CONST_VAR, indicating that a
+# constant was just declared (so any later attempt to set it to a different
+# value would be an error), ASSIGN_VAR, indicating that this variable is being
+# set, and DYNAMIC_VAR, indicating that this variable was declared dynamic
+# (i.e. with "my").  Note that an assignment statement will cause two calls to
+# this routine for the left-hand variable, once to note that it is being seen
+# (with empty $type) and once with $type ASSIGN_VAR to note that it is being set. 
 
 sub see_var {
 
-    my ($self, $node) = @_;
+    my ($self, $node, $type) = @_;
     
     my $model = $self->{model};
-    my $type = ref $node;
-    
     my $name = $node->{attr};
-    if ( $self->{cf}{module} ) {
-	$name = $self->{cf}{module} . "::" . $name;
+    my $pkg;
+    
+    # Determine the variable's package.  Was it specified explicitly?
+
+    if ( $name =~ /([a-zA-Z0-9_:]*)::([a-zA-Z0-9_])/ ) {
+	$pkg = $1 || 'main';
+	$name = $2;
     }
     
-    $model->see_var($name, $type, $self->{my_filename}, $self->{my_line});
+    # Otherwise, we use the current package if one was specified.
     
-    my $implicit_dimension = $self->{cf}{dimlist};
-    
-    if ( $implicit_dimension or @{$node->{children}} > 0 ) {
-	$model->dimension_var($name, $implicit_dimension, $node->{children});
+    elsif ( $self->{cf}{package} ne '' ) {
+	$pkg = $self->{cf}{package};
     }
+    
+    # Otherwise, use 'main'.
+    
+    else {
+	$pkg = 'main';
+    }
+    
+    # Calculate the variable's dimension, as the sum of the explicit dimension
+    # (given by [...] after the variable name) and the implicit dimension
+    # (given by surrounding "across [...]" constructs).
+    
+    my $explicit_dimension = scalar(@{$node->{children}});
+    my $implicit_dimension = $self->{cf}{dimcount};
+    
+    # If this is a dynamic variable, its name gets stored in the current
+    # frame, and the node is marked so that dynamic resolution will be used
+    # when compiling it.
+    
+    if ( $type == DYN_VAR ) {
+	$self->{cf}{dynamic}{$name} = 1;
+	$node->{dynamic} = 1;
+    }
+    
+    # Otherwise, we check to see if a dynamic variable was already declared in
+    # the current frame.  If so, mark it dynamic and we're done.
+    
+    elsif ( $self->{cf}{dynamic}{$name} ) {
+	$node->{dynamic} = 1;
+    }
+    
+    # If not, then the variable is a static one.  If it's being declared as a
+    # constant, make sure it wasn't already being set elsewhere.
+    
+    elsif ( $type eq CONST_VAR and $model->has_lvalue($name, $pkg) ) {
+	my ($ofile, $oline) = $model->where_used($name, $pkg);
+	$self->my_error("$name is also set at $ofile line $oline.");
+	$self->YYError("abc");
+    }
+    
+    # If it's being used as an lvalue (i.e. is being assigned a value), make
+    # sure it wasn't already declared as a constant.
+    
+    elsif ( $type eq ASSIGN_VAR and $model->has_constant($name, $pkg) ) {
+	my ($ofile, $oline) = $model->where_used($name, $pkg);
+	$self->my_error("$name was declared as a constant at $ofile line $oline.");
+	$self->YYError("def");
+    }
+    
+    # Otherwise, we add a note to the model about this variable.
+    
+    else {
+	$model->see_var($name, $pkg, $type, $explicit_dimension + $implicit_dimension,
+			$node->{filename}, $node->{line});
+	
+	$node->{lvalue} = 1 if $type eq ASSIGN_VAR;
+    }
+    
+    # Return the node as the value of this function, so that the parser
+    # actions work properly.
+    
+    return $node;
 }
+
+
+# declare_function
+# 
+# 
+
+sub declare_function {
+
+    my ($self, $name, $args, $type) = @_;
+    
+    return undef;
+}
+
+
+# use_perl
+# 
+# 
+
+sub use_perl {
+    
+    my ($self, $module) = @_;
+}
+
 
 # decare_units ( $node )
 # 
@@ -140,60 +222,6 @@ sub declare_units {
 }
 
 
-# add_expr ( $expr )
-# 
-# Add an arbitrary expression (which could have side effects, i.e. could be an
-# assignment statement) to the model, under the phase indicated by the active frame.
-
-sub add_expr {
-    
-    my ($self, $expr) = @_;
-    
-    my $model = $self->{model};
-    my $phase = $self->{cf}{phase};
-    
-    $model->add_expr($phase, $expr);
-}
-
-
-# add_control ($type, @exprs)
-# 
-# Add a control structure to the model, under the phase indicated by the
-# active frame.  Note that this only includes the conditional or loop-control
-# syntax (i.e. "if ( ... )" or "while ( ... )" or "else".  The conditional or
-# iterated code, plus delimiting brackets, are added by separate calls to
-# push_frame(), pop_frame(), add_expr(), add_control(), etc.
-
-sub add_control {
-    
-    my ($self, $type, @exprs) = @_;
-    
-    my $model = $self->{model};
-    my $phase = $self->{cf}{phase};
-    
-    $model->add_control($phase, $type, @exprs);
-}
-
-
-# add_flow ( $source, $sink, $rate )
-# 
-# Add a flow to the model.
-
-sub add_flow {
-    
-    my ($self, $source, $sink, $rate) = @_;
-    
-    my $model = $self->{model};
-    my $phase = $self->{cf}{phase};
-    
-    if ( $phase ne CALC_PHASE ) {
-	$self->my_error("attempt to define a flow in an invalid phase");
-    }
-    
-    $model->add_flow($source, $sink, $rate);
-}
-
-
 # Functions for constructing parse trees
 # --------------------------------------
 
@@ -204,9 +232,9 @@ sub add_flow {
 # another node.
 
 sub new_node {
-    my ($type, @children) = @_;
+    my ($self, $type, @children) = @_;
     
-    my $node = {children => []};
+    my $node = {children => [], filename => $self->{my_filename}, line => $self->{my_line}};
     bless $node, $type;
     
     push @{$node->{children}}, @children if @children > 0;
@@ -220,9 +248,9 @@ sub new_node {
 # value of a string or numeric literal, the name of a variable, etc.
 
 sub new_anode {
-    my ($type, $attr, @children) = @_;
+    my ($self, $type, $attr, @children) = @_;
     
-    my $node = {children => []};
+    my $node = {children => [], filename => $self->{my_filename}, line => $self->{my_line}};
     bless $node, $type;
     
     $node->{attr} = $attr if defined $attr;
@@ -248,7 +276,7 @@ sub right_child {
 # 
 # Add $child to the front of the existing list of children of $node.
 
-sub left_child {
+sub add_child {
     my ($node, $child) = @_;
     
     unshift @{$node->{children}}, $child if ref $child;
@@ -303,12 +331,15 @@ sub merge_units {
 # and its children, units, and attribute will be the same as those of $old_node.
 
 sub new_dnode {
-    my ($type, $old_node) = @_;
+    my ($self, $type, $old_node) = @_;
     
     my $node = Parse::Eyapp::Node->new($type);
     $node->{attr} = $old_node->{attr} if exists $old_node->{attr};
     $node->{units} = $old_node->{units} if exists $old_node->{units};
     $node->{children} = $old_node->{children} if exists $old_node->{children};
+    $node->{filename} = $old_node->{filename} if exists $old_node->{filename};
+    $node->{line} = $old_node->{line} if exists $old_node->{line};
     return $node;
 }
 
+1;
