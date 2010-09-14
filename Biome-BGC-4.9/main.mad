@@ -33,17 +33,16 @@ unit ha;
 include epc_hardwood;
 include epc_evergreen;
 
-calc {
-
-    init $year <year> = $START_YEAR;
-    init $yday <day> = $START_DAY;
-    init $year_length <day> = year_days($year);
-    init $location = $LOCATION;
+init $year <year> = $START_YEAR;
+init $yday <day> = $START_DAY;
+init $year_length <day> = year_days($year);
+init $location = $LOCATION;
     
+step {
     $yday++;
     if ( $yday >= $ydays ) {
 	$yday = 0;
-	$ydays = year_day(++$year);
+	$ydays = year_days(++$year);
     }
 }
 

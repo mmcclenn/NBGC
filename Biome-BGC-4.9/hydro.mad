@@ -26,15 +26,14 @@
 # Copyright (c) 2010, University of Wisconsin-Madison
 #
 
-
 # The hydrological cycle is represented by N+2 water pools, where N is the
 # number of vegetation types:
 
-init $soil_water <kgH2O/m2> = Pool;		# water stored in soil
+init $soil_water <kgH2O/m^2> = Pool;		# water stored in soil
 
-init $snow_water <kgH2O/m2> = Pool;		# water stored in snowpack
+init $snow_water <kgH2O/m^2> = Pool;		# water stored in snowpack
 
-init $canopy_water[%veg_types] <kgH20/m2> = Pool;	# water stored in vegetation canopies
+init $canopy_water[%veg_types] <kgH2O/m^2> = Pool;	# water stored in vegetation canopies
 
 
 # These are affected by a number of fluxes:

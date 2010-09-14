@@ -40,6 +40,18 @@ progseq :	/* null */
 	|	progseq tl_decl
 			{ add_child($_[1], $_[2]) }
 	
+  	|	progseq tl_across
+			{ add_child($_[1], $_[2]) }
+	
+	|	progseq block
+			{ add_child($_[1], $_[2]) }
+	
+	|	progseg perlblock
+			{ add_child($_[1], $_[2]) }
+	
+	|	progseq phaseblock
+			{ add_child($_[1], $_[2]) }
+	
 	|	progseq flow
 			{ add_child($_[1], $_[2]) }
 	
@@ -56,9 +68,6 @@ tl_decl	:	var
 	|	default
 			{ $_[1] }
 	
-	|	package
-			{ $_[1] }
-	
 	|	include
 			{ $_[1] }
 	
@@ -70,13 +79,7 @@ tl_decl	:	var
 	
 	|	function
 			{ $_[1] }
-	
-	|	across_tl
-			{ $_[1] }
-	
-	|	flow
-			{ $_[1] }
-	;
+       	;
 
 vardecl	:	simplevar.v unitopt.u
 			{ merge_units($v, $u) }
@@ -86,22 +89,22 @@ vardecl	:	simplevar.v unitopt.u
 	;
 
 package	:	PACKAGE WORD.w ';'
-			{ $_[0]->set_package($w) }
+			{ $_[0]->set_package($w); $_[0]->new_anode('PACKAGE', $w); }
 	;
 
 include	:	INCLUDE WORD.w ';'
-			{ $_[0]->parse_input($w . ".mad") }
+			{ $_[0]->parse_input($w . ".mad"); $_[0]->new_anode('INCLUDE', $w); }
 	
 	|	INCLUDE STR.w ';'
-			{ $_[0]->parse_input($w) }
+			{ $_[0]->parse_input($w); $_[0]->new_anode('INCLUDE', $w); }
 	;
 
 use	:	USE WORD.w ';'
-			{ $_[0]->use_perl($w . ".pm") }
+			{ $_[0]->use_perl($w . ".pm"); $_[0]->new_anode('USE', $w); }
 	;
 
 unit	:	UNIT wordlist.w ';'
-			{ declare_units($_[0], $w) }
+			{ declare_units($_[0], $w); $_[0]->new_node('UNIT', @{$w->{children}}); }
 	;
 
 wordlist:	WORD.w
@@ -111,50 +114,63 @@ wordlist:	WORD.w
 			{ add_child($l, $_[0]->new_anode('STRING', $w)) }
 	;
 
-function:	FUNCTION WORD.name funargs.f unitopt.u ';'
+function:	FUNCTION WORD.name '(' params.p ')' unitopt.u ';'
 			{
-			    $_[0]->declare_function($name, $f, 'MAD_FUNC');
+			    $_[0]->declare_function($name, $p, 'MAD_FUNC');
+			    merge_units($_[0]->new_anode('FUNDECL', $name, $p), $u);
 			}
 	
-	|	FUNCTION WORD.name funargs.f unitopt.u '{'
+	|	FUNCTION WORD.name '(' params.p ')' unitopt.u '{'
 			{
-			    $_[0]->declare_function($name, $f, 'MAD_FUNC');
-			    $_[0]->push_frame(tag => 'FUNCTION', name => $name,
-					      args => $f, units => $u);
+			    $_[0]->declare_function($name, $p, 'MAD_FUNC');
+			    $_[0]->push_frame(tag => 'FUNDECL', name => $name,
+					      params => $p, units => $u);
 			}
 		stmtseq.q '}'
  			{
-			    print "AAA\n";
-			    $_[0]->pop_frame('FUNCTION');
-			    print "BBB\n";
-			    merge_units($_[0]->new_anode('FUNCTION', $f, $q),
-					$u);
+			    $_[0]->pop_frame('FUNDECL');
+			    merge_units($_[0]->new_anode('FUNDECL', $name, $p, $q), $u);
 			}
 
-	|	PERL FUNCTION WORD.name funargs.f unitopt.u ';'
+	|	PERL FUNCTION WORD.name '(' params.p ')' unitopt.u ';'
 			{
-			    $_[0]->declare_function($name, $f, 'PERL_FUNC');
+			    $_[0]->declare_function($name, $p, 'PERL_FUNC');
+			    merge_units($_[0]->new_anode('PERLFUNDECL', $name, $p), $u);
 			}
 	
-	|	PERL FUNCTION WORD.name funargs.f unitopt.u '{'
+	|	PERL FUNCTION WORD.name '(' params.p ')' unitopt.u '{'
 			{
-			    $_[0]->declare_function($name, $f, 'PERL_FUNC');
-			    $_[0]->push_frame(tag => 'PERLFUNC', name => $name,
-					      args => $f, units => $u);
+			    $_[0]->declare_function($name, $p, 'PERL_FUNC');
+			    $_[0]->push_frame(tag => 'PERLFUNDECL', name => $name,
+					      params => $p, units => $u);
 			}
 		perlseq.q '}'
 			{
-			    $_[0]->pop_frame('PERLFUNC');
-			    merge_units($_[0]->new_anode('PERLFUNC', $f, $q),
-					$u);
+			    $_[0]->pop_frame('PERLFUNDECL');
+			    merge_units($_[0]->new_anode('PERLFUNDECL', $name, $p, $q), $u);
 			}
 	;
 
-funargs	:	/* null */
-	|	'(' scalar <* ','> ')'
+params	:	/* null */
+			{ $_[0]->new_node('PARAMS'); }
+	
+	|	paramlist
+			{ $_[2]; }
+	;
+
+paramlist :	param.p
 			{
-			    $_[0]->new_node('LIST', undef, @{$_[2]->{children}});
+			    $_[0]->new_node('PARAMS', $p);
 			}
+	
+	|	paramlist.l ',' param.p
+			{
+			    $_[0]->add_child($l, $p);
+			}
+	;
+
+param	:	scalar
+			{ $_[1] }
 	;
 
 unitopt	:	/* null */
@@ -182,13 +198,15 @@ unitlist:	/* null */
 			}
 	;
 
-across_tl :	ACROSS dimlist.dl '{'
+tl_across :	ACROSS dimlist.dl '{'
 			{
-			    $_[0]->push_frame(tag => 'ACROSS', dimlist => $dl);
+			    $_[0]->push_frame(tag => 'ACROSS', 
+					      dimlist => $dl->{children});
 			}
 		progseq.q '}'
 			{
 			    $_[0]->pop_frame('ACROSS');
+			    $_[0]->new_node('ACROSS', $dl, @{$q->{children}});
 			}
 	;
 
@@ -198,11 +216,20 @@ stmtseq :	/* null */
 	|	stmtseq across
 			{ add_child($_[1], $_[2]) }
 	
+	|	stmtseq block
+			{ add_child($_[1], $_[2]) }
+	
+	|	stmtseq perlblock
+			{ add_child($_[1], $_[2]) }
+	
+	|	stmtseq phaseblock
+			{ add_child($_[1], $_[2]) }
+	
 	|	stmtseq line
 			{ add_child($_[1], $_[2]) }
 	;
 
-block	:	'{' 
+block	:	'{'
 			{ 
 			    $_[0]->push_frame(tag => 'BLOCK'); 
 			}
@@ -218,9 +245,10 @@ perlblock :	PERL '{'
 			    $_[0]->lex_mode('perl');
 			    $_[0]->push_frame(tag => 'PERLBLOCK');
 			}
-		perlseq '}'
+		perlseq.q '}'
 		        {
 			    $_[0]->pop_frame('PERLBLOCK');
+			    $_[0]->new_node('PERLBLOCK', @{$q->{children}});
 			}
 			
 	|	'%{' 
@@ -228,9 +256,10 @@ perlblock :	PERL '{'
 			    $_[0]->lex_mode('pperl');
 			    $_[0]->push_frame(tag => 'PERLBLOCK');
 			} 
-		perlseq '%}'
+		perlseq.q '%}'
 			{
 			    $_[0]->pop_frame('PERLBLOCK');
+			    $_[0]->new_node('PERLBLOCK', @{$q->{children}});
 			}
 	;
 
@@ -240,8 +269,8 @@ phaseblock :	phase.p '{'
 			}
 		stmtseq.q '}'
 			{
-			    $_[0]->new_dnode($p, $q);
 			    $_[0]->pop_frame('BLOCK');
+			    $_[0]->new_node($p, @{$q->{children}});
 			}
 	;
 
@@ -254,24 +283,18 @@ phase	:	INIT
 	|	FINAL
 	;
 
-line	:	block
-			{ $_[1]; }
-
-	|	perlblock
-			{ $_[1]; }
-	
-	|	phaseblock
-			{ $_[1]; }
-	
-	|	phase.p 
+line	:	phase.p
 			{
 			    $_[0]->push_frame(tag => 'line', phase => $p);
 			}
 		sideff.e ';'
 			{
 			    $_[0]->pop_frame('line');
-			    $e;
+			    $_[0]->new_node($p, $e);
 			}
+	
+	|	package
+			{ $_[1] }
 	
 	|	cond
 			{ $_[1]; }
@@ -301,11 +324,13 @@ line	:	block
 
 across	:	ACROSS dimlist.dl '{'
 			{
-			    $_[0]->push_frame(tag => 'ACROSS', dimlist => $dl);
+			    $_[0]->push_frame(tag => 'ACROSS', 
+					      dimlist => $dl->{children});
 			}
 		stmtseq.q '}'
 			{
 			    $_[0]->pop_frame('ACROSS');
+			    $_[0]->new_child('ACROSS', $dl, @{$q->{children}});
 			}
 	;
 
@@ -340,12 +365,11 @@ sideff	:	expr
 
 cond	:	condword.c '(' 
 			{ $_[0]->push_frame(tag => $c); }
-		expr.e ')' '{' stmtseq.q '}'
+		expr.e ')' '{' stmtseq.q '}' else.x
 			{ 
 			    $_[0]->pop_frame($c);
-			    $_[0]->new_node($c, $e, $q);
+			    $_[0]->new_node($c, $e, $q, $x);
 			}
-		else
 	;
 
 condword :	IF
@@ -368,12 +392,11 @@ else	:	/* null */
 
 	|	ELSIF '(' 
 			{ $_[0]->push_frame(tag => 'ELSIF'); }
-		expr.e ')' '{' stmtseq.q '}'
+		expr.e ')' '{' stmtseq.q '}' else.x
 			{
 			    $_[0]->pop_frame('ELSIF');
-			    $_[0]->new_node('ELSIF', $e, $q);
+			    $_[0]->new_node('ELSIF', $e, $q, $x);
 			}
-		else
 	;
 
 loop	:	loopword.c '(' 
@@ -408,28 +431,18 @@ loop	:	loopword.c '('
 			}
 	;
 
-listexpr:	/* null */ %prec PREC_LOW
-
-	|	argexpr %prec PREC_LOW
-			{ $_[1] }
+argexpr :	/* null */
+			{ $_[0]->new_node('NULLARGS'); }
+	
+	|	arglist
+			{ $_[1]; }
 	;
 
-argexpr	:	argexpr ','
-			{ $_[1] }
-
-	|	argexpr ',' term.t
-			{
-			    if ( ref $_[1] eq 'LIST' ) {
-				push @{$_[1]->{children}}, $t;
-				$_[1];
-			    }
-			    else {
-				$_[0]->new_node('LIST', $_[1], $t);
-			    }
-			}
-
-	|	term %prec PREC_LOW
-			{ $_[1] }
+arglist	:	term.t
+			{ $_[0]->new_node('ARGS', $t); }
+	
+	|	argexpr.a ',' term.t
+			{ add_child($a, $t); }
 	;
 
 expr	:	expr.l ANDOP expr.r
@@ -457,7 +470,7 @@ term	:	termbinop
 	|	term.a '?' term.b ':' term.c
 			{ $_[0]->new_node('TRI', $a, $b, $c) }
 	
-	|	'(' argexpr ')' 
+	|	'(' expr ')' 
 			{ $_[2] }
 	
 	|	varexpr
@@ -476,6 +489,10 @@ term	:	termbinop
 			{ $_[0]->new_anode('STR', $_[1]) }
 	
 	|	funcall
+			{ $_[1] }
+	
+	|
+		objname
 			{ $_[1] }
 	
 	|	objblock
@@ -560,13 +577,13 @@ varexpr	:	simplevar.v
 	|	varexpr.v DOT WORD.f
 			{
 			    $_[0]->see_var($v, PLAIN_VAR);
-			    $_[0]->new_node('FIELD', $v, $f);
+			    $_[0]->new_anode('DOTFLD', $f, $v);
 			}
 	
-	|	varexpr.v DOT FUNC.m '(' listexpr.args ')'
-			{ 
+	|	varexpr.v DOT FUNC.m '(' argexpr.a ')'
+			{
 			    $_[0]->see_var($v, PLAIN_VAR);
-			    $_[0]->new_node('METHOD', $v, $m, $args);
+			    $_[0]->new_anode('METHOD', $m, $v, $a);
 			}
 	;
 
@@ -594,15 +611,15 @@ scalarvar:	scalar.v
 	;
 
 scalar	:	'$' WORD
-			{ $_[0]->new_anode('SCALAR', $_[2]); }
+			{ $_[0]->new_anode('SCALARV', $_[2]); }
 	;
 
 array	:	'@' WORD
-			{ $_[0]->new_anode('ARRAY', $_[2]); }
+			{ $_[0]->new_anode('ARRAYV', $_[2]); }
 	;
 
 set	:	'%' WORD
-			{ $_[0]->new_anode('SET', $_[2]); }
+			{ $_[0]->new_anode('SETV', $_[2]); }
 	;
 
 indexvar:	'$^'
@@ -629,36 +646,39 @@ subspec	:	'[' ']'
 			{ $_[2] }
 	;
 
-funcall	:	FUNC.fun '(' listexpr.args ')'
-			{ $_[0]->new_node('FUNCALL', $fun, @{$args->{children}}) }
+funcall	:	FUNC.fun '(' argexpr.a ')'
+			{ $_[0]->new_anode('FUNCALL', $fun, @{$a->{children}}) }
 
-        |	FUNC.fun '(' listexpr.args ')' DOT WORD.fld
-			{ $_[0]->new_node('DOTFLD', $fld,
-				   $_[0]->new_node('FUNCALL', $fun, @{$args->{children}}) ) }
+        |	FUNC.fun '(' argexpr.a ')' DOT WORD.fld
+			{ $_[0]->new_anode('DOTFLD', $fld,
+				            $_[0]->new_node('FUNCALL', $fun, 
+						   @{$a->{children}}) ) }
+	;
+
+objname:	WORD.n
+			{ $_[0]->new_anode('NEWOBJ', $n) }
 	;
 
 objblock:	WORD.n pairblock.p
 			{ $_[0]->new_anode('NEWOBJ', $n, $p) }
 	;
 
-pairblock:	'{' pairlist '}'
+pairblock :	'{' pairlist '}'
 			{ $_[0]->new_dnode('PAIRBLOCK', $_[2]) }
 	
 	|	'{' pairlist ',' '}'
 			{ $_[0]->new_dnode('PAIRBLOCK', $_[2]) }
 	;
 
-pairlist:	/* null */
-	
-	|	pair.p
+pairlist:	pair.p
 			{ $_[0]->new_node('LIST', $p) }
-
+	
 	|	pairlist.l ',' pair.p
-			{ $_[0]->add_child($l, $p) }
+			{ add_child($l, $p) }
 	;
 
 pair	:	WORD.left ':' expr.right
-			{ $_[0]->new_node('PAIR', $left, $right) }
+			{ $_[0]->new_anode('KEY', $left, $right) }
 	;
 
 flow	:      	scalar.so MULOP.op expr.coeff FLOWRIGHT scalar.sn
@@ -841,12 +861,6 @@ sub parse_input {
 	$self->{my_filename} = $filename;
 	$self->{my_line} = 1;
 	$self->{my_input} = \$input;
-	
-	# Now parse the input, and return the resulting tree (if any).
-	
-	my $tree = $self->YYParse( yylex => \&my_lex_wrapper, yyerror => \&my_syntax, yybuildingtree => 1,
-				   yydebug => 0x05);
-	return $tree;
     }
 }
 
@@ -916,12 +930,12 @@ sub validate_unit {
     my ($self, $raw) = @_;
     my ($invert, $unit, $count);
     
-    if ( $raw =~ m{^([/*]?)\s*([a-zA-Z]+)\^?([0-9]*)$} ) {
+    if ( $raw =~ m{^([/*]?)\s*([a-zA-Z0-9]+)(\^([0-9]+))?$} ) {
 	$unit = $1 eq '/' ? "~$2" : $2;
-	$count = $3 ne '' ? $3+0 : 1;
+	$count = $4 ne '' ? $4+0 : 1;
 	return ($unit) x $count;
     }
-    elsif ( $raw =~ m{^\*?\s*([a-zA-Z]+)\^?-([0-9]+)$} ) {
+    elsif ( $raw =~ m{^\*?\s*([a-zA-Z]+)\^-([0-9]+)$} ) {
 	$unit = "~$1";
 	$count = $2 ne '' ? $2+0 : 1;
 	return ($unit) x $count;
@@ -1070,7 +1084,7 @@ sub my_lexer {
 	    if ( $self->{lex_mode} eq 'units' ) {
 		my $t;
 		m{\G>}gc		and $self->{lex_mode} = 'mad', return ('>', '');
-		m{\G\s*([/*]?\s*[a-zA-Z]+\^?-?[0-9]*)}gc	and return ('UNIT', $1);
+		m{\G\s*([/*]?\s*[a-zA-Z0-9]+(:?\^-?[0-9]+)?)}gc	and return ('UNIT', $1);
 		return ('ERROR', '');
 	    }
 	    
@@ -1079,17 +1093,17 @@ sub my_lexer {
 	    
 	    m{\Gacross(?!\w)}gc		and return ('ACROSS', '');
 	    m{\Gand(?!\w)}gc		and return ('ANDOP', '');
-	    m{\Gcalc(?!\w)}gc		and return ('CALC', '');
+	    m{\Gcalc(?!\w)}gc		and return ('CALC', 'CALC');
 	    m{\Gconst(?!\w)}gc		and return ('CONST', '');
 	    m{\Gelse(?!\w)}gc		and return ('ELSE', '');
 	    m{\Gelsif(?!\w)}gc		and return ('ELSIF', '');
 	    m{\Gexternal(?!\w)}gc	and return ('EXTERNAL', '');
-	    m{\Gfinal(?!\w)}gc		and return ('FINAL', '');
+	    m{\Gfinal(?!\w)}gc		and return ('FINAL', 'FINAL');
 	    m{\Gfor(?!\w)}gc		and return ('FOR', '');
 	    m{\Gfunction(?!\w)}gc	and return ('FUNCTION', '');
 	    m{\Ginclude(?!\w)}gc	and return ('INCLUDE', '');
 	    m{\Gif(?!\w)}gc		and return ('IF', '');
-	    m{\Ginit(?!\w)}gc		and return ('INIT', '');
+	    m{\Ginit(?!\w)}gc		and return ('INIT', 'INIT');
 	    m{\Glast(?!\w)}gc		and return ('LAST', '');
 	    m{\Gnext(?!\w)}gc		and return ('NEXT', '');
 	    m{\Gnot(?!\w)}gc		and return ('NOTOP', '');
@@ -1100,7 +1114,7 @@ sub my_lexer {
 	    m{\Gresult(?!\w)}gc		and return ('RESULT', '');
 	    m{\Greturn(?!\w)}gc		and return ('RETURN', '');
 	    m{\Grun(?!\w)}gc		and return ('RUN', '');
-	    m{\Gstep(?!\w)}gc		and return ('STEP', '');
+	    m{\Gstep(?!\w)}gc		and return ('STEP', 'STEP');
 	    m{\Gunit(?!\w)}gc		and return ('UNIT', '');
 	    m{\Gunless(?!\w)}gc		and return ('UNLESS', '');
 	    m{\Guntil(?!\w)}gc		and return ('UNTIL', '');

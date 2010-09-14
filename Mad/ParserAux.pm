@@ -43,10 +43,9 @@ sub push_frame {
     $attrs{package} = $self->{frame}[0]{package} unless defined $attrs{package};
     
     if ( defined $attrs{dimlist} ) {
-	$attrs{dimlist} = $self->merge_dimlist($attrs{dimlist});
+	$attrs{dimcount} += scalar(@{$attrs{dimlist}});
     }
     else {
-	$attrs{dimlist} = $self->{frame}[0]{dimlist};
 	$attrs{dimcount} = $self->{frame}[0]{dimcount};
     }
     
@@ -259,12 +258,12 @@ sub new_anode {
     return $node;
 }
 
-# right_child ( $node, $child )
+# add_child ( $node, $child )
 # 
 # Add $child to the children of an existing node in the parse tree,
 # provided that $child is a reference to a node.  If it is not, do nothing.
 
-sub right_child {
+sub add_child {
     my ($node, $child) = @_;
     
     push @{$node->{children}}, $child if ref $child;
@@ -276,7 +275,7 @@ sub right_child {
 # 
 # Add $child to the front of the existing list of children of $node.
 
-sub add_child {
+sub left_child {
     my ($node, $child) = @_;
     
     unshift @{$node->{children}}, $child if ref $child;
@@ -340,6 +339,52 @@ sub new_dnode {
     $node->{filename} = $old_node->{filename} if exists $old_node->{filename};
     $node->{line} = $old_node->{line} if exists $old_node->{line};
     return $node;
+}
+
+
+# Functions for reporting results
+# -------------------------------
+
+our ($STRING_OFFSET) = "  ";
+
+sub printout {
+
+    my ($self, $node, $indent) = @_;
+    
+    if ( $indent > 9 ) {
+	print "$indent> ";
+	print $STRING_OFFSET x ($indent-2) . ref($node);
+    }
+    elsif ( $indent > 3 ) {
+	print "$indent > ";
+	print $STRING_OFFSET x ($indent-2) . ref($node);
+    }
+    else {
+	print $STRING_OFFSET x $indent . ref($node);
+    }
+    
+    eval {
+	if ( $node->{attr} ne '' ) {
+	    print ": $node->{attr}";
+	}
+
+	if ( $node->{units} ne '' ) {
+	    print " <" . join(',', @{$node->{units}}) . ">";
+	}
+
+	print "\n";
+	
+	foreach my $child ( @{$node->{children}} ) {
+	    $self->printout($child, $indent+1);
+	}
+    };
+	
+    if ( $@ ) {
+	$DB::single = 1;
+	print "*ERROR*\n";
+    }
+    
+    #return $result;
 }
 
 1;
