@@ -96,8 +96,14 @@ my $tree = $parser->YYParse( yylex => \&Mad::Parser::my_lexer,
 			     yyerror => \&Mad::Parser::my_syntax, yybuildingtree => 1,
 			     yydebug => 0x0);
 
+my $errcount = $parser->YYNberr();
 
-$parser->printout($tree);
+if ( $errcount == 0 ) {
+    $parser->printout($tree);
+}
+else {
+    print STDERR "Found $errcount errors.\n";
+}
 
 exit;
 

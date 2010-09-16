@@ -27,73 +27,76 @@
 #
 
 
+use Pool;
+unit kgN;
+
 # The nitrogen cycle is defined by 25N+5 pools, where N is the number of
 # distinct vegetation types being modelled.
 
-init $soil_nitrogen_1 <kgN/m2> = Pool;	# fast microbial nitrogen recycling
+init $soil_nitrogen_1 <kgN/m^2> = Pool;	# fast microbial nitrogen recycling
 
-init $soil_nitrogen_2 <kgN/m2> = Pool;	# medium microbial nitrogen recycling
+init $soil_nitrogen_2 <kgN/m^2> = Pool;	# medium microbial nitrogen recycling
 
-init $soil_nitrogen_3 <kgN/m2> = Pool;	# slow microbial nitrogen recycling
+init $soil_nitrogen_3 <kgN/m^2> = Pool;	# slow microbial nitrogen recycling
 
-init $soil_nitrogen_4 <kgN/m2> = Pool;	# recalcitrant organic nitrogen (humus, slowest)
+init $soil_nitrogen_4 <kgN/m^2> = Pool;	# recalcitrant organic nitrogen (humus, slowest)
 
-init $soil_mineral_nitrogen <kgN/m2> = Pool;	# soil mineral N
+init $soil_mineral_nitrogen <kgN/m^2> = Pool;	# soil mineral N
 
 across [ %veg_types ] {
 
-    init $leaf_N <kgN/m2> = Pool;	    # nitrogen in leaves
+    init $leaf_N <kgN/m^2> = Pool;	    # nitrogen in leaves
 
-    init $leaf_storage_N <kgN/m2> = Pool;
+    init $leaf_storage_N <kgN/m^2> = Pool;
 
-    init $leaf_trans_N <kgN/m2> = Pool;
+    init $leaf_trans_N <kgN/m^2> = Pool;
 
-    init $fine_root_N <kgN/m2> = Pool;	    # nitrogen in fine roots
+    init $fine_root_N <kgN/m^2> = Pool;	    # nitrogen in fine roots
 
-    init $fine_root_storage_N <kgN/m2> = Pool;
+    init $fine_root_storage_N <kgN/m^2> = Pool;
 
-    init $fine_root_trans_N <kgN/m2> = Pool;
+    init $fine_root_trans_N <kgN/m^2> = Pool;
 
-    init $live_stem_N <kgN/m2> = Pool;	    # nitrogen in live stems
+    init $live_stem_N <kgN/m^2> = Pool;	    # nitrogen in live stems
 
-    init $live_stem_storage_N <kgN/m2> = Pool;
+    init $live_stem_storage_N <kgN/m^2> = Pool;
 
-    init $live_stem_trans_N <kgN/m2> = Pool;
+    init $live_stem_trans_N <kgN/m^2> = Pool;
 
-    init $dead_stem_N <kgN/m2> = Pool;	    # nitrogen in dead stems
+    init $dead_stem_N <kgN/m^2> = Pool;	    # nitrogen in dead stems
 
-    init $dead_stem_storage_N <kgN/m2> = Pool;
+    init $dead_stem_storage_N <kgN/m^2> = Pool;
 
-    init $dead_stem_trans_N <kgN/m2> = Pool;
+    init $dead_stem_trans_N <kgN/m^2> = Pool;
 
-    init $live_coarse_root_N <kgN/m2> = Pool;	# nitrogen in live coarse roots
+    init $live_coarse_root_N <kgN/m^2> = Pool;	# nitrogen in live coarse roots
 
-    init $live_coarse_root_storage_N <kgN/m2> = Pool;
+    init $live_coarse_root_storage_N <kgN/m^2> = Pool;
 
-    init $live_coarse_root_trans_N <kgN/m2> = Pool;
+    init $live_coarse_root_trans_N <kgN/m^2> = Pool;
 
-    init $dead_coarse_root_N <kgN/m2> = Pool;	# nitrogen in dead coarse roots
+    init $dead_coarse_root_N <kgN/m^2> = Pool;	# nitrogen in dead coarse roots
 
-    init $dead_coarse_root_storage_N <kgN/m2> = Pool;
+    init $dead_coarse_root_storage_N <kgN/m^2> = Pool;
 
-    init $dead_coarse_root_trans_N <kgN/m2> = Pool;
+    init $dead_coarse_root_trans_N <kgN/m^2> = Pool;
 
-    init $coarse_woody_debris_N <kgN/m2> = Pool;   # coarse woody debris
+    init $coarse_woody_debris_N <kgN/m^2> = Pool;   # coarse woody debris
 							# nitrogen
 
-    init $litter_nitrogen_1 <kgN/m2> = Pool;	# litter labile nitrogen
+    init $litter_nitrogen_1 <kgN/m^2> = Pool;	# litter labile nitrogen
 
-    init $litter_nitrogen_2 <kgN/m2> = Pool;	# litter unshielded cellulose
+    init $litter_nitrogen_2 <kgN/m^2> = Pool;	# litter unshielded cellulose
 						    # nitrogen
 
-    init $litter_nitrogen_3 <kgN/m2> = Pool;	# litter shielded cellulose
+    init $litter_nitrogen_3 <kgN/m^2> = Pool;	# litter shielded cellulose
 						    # nitrogen 
 
-    init $litter_nitrogen_4 <kgN/m2> = Pool;	# litter lignin N
+    init $litter_nitrogen_4 <kgN/m^2> = Pool;	# litter lignin N
 
-    init $temp_plant_N <kgN/m2> = Pool;		# temporary plant nitrogen
+    init $temp_plant_N <kgN/m^2> = Pool;		# temporary plant nitrogen
 						    # pool 
 
-    init $retrans_N <kgN/m2> = Pool;		# plant retranslocated
+    init $retrans_N <kgN/m^2> = Pool;		# plant retranslocated
 						    # nitrogen pool
 }

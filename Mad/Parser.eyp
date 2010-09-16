@@ -26,7 +26,7 @@ use Mad::ParserAux;
 %nonassoc ')'
 %left '('
 %left '[' '{'
-
+%nonassoc '<'
 
 %%
 
@@ -62,13 +62,7 @@ progseq :	/* null */
 progstart:	/* null */
 	;
 
-tl_decl	:	var
-			{ $_[1] }
-	
-	|	default
-			{ $_[1] }
-	
-	|	include
+tl_decl	:	include
 			{ $_[1] }
 	
 	|	use
@@ -81,46 +75,48 @@ tl_decl	:	var
 			{ $_[1] }
        	;
 
-vardecl	:	simplevar.v unitopt.u
-			{ merge_units($v, $u) }
-	
-	|	simplevar.v dimspec.d unitopt.u
-			{ merge_units(add_child($v, $d), $u) }
-	;
-
-package	:	PACKAGE WORD.w ';'
-			{ $_[0]->set_package($w); $_[0]->new_anode('PACKAGE', $w); }
-	;
-
 include	:	INCLUDE WORD.w ';'
-			{ $_[0]->parse_input($w . ".mad"); $_[0]->new_anode('INCLUDE', $w); }
+			{
+ 			    $_[0]->push_frame(tag => 'INCLUDE');
+			    $_[0]->parse_include($w . ".mad");
+			    $_[0]->pop_frame('INCLUDE');
+			}
 	
 	|	INCLUDE STR.w ';'
-			{ $_[0]->parse_input($w); $_[0]->new_anode('INCLUDE', $w); }
+			{
+ 			    $_[0]->push_frame(tag => 'INCLUDE');
+			    $_[0]->parse_include($w);
+			    $_[0]->pop_frame('INCLUDE');
+			}
 	;
 
 use	:	USE WORD.w ';'
-			{ $_[0]->use_perl($w . ".pm"); $_[0]->new_anode('USE', $w); }
+			{
+			    $_[0]->use_perl($w . ".pm");
+			}
 	;
 
-unit	:	UNIT wordlist.w ';'
-			{ declare_units($_[0], $w); $_[0]->new_node('UNIT', @{$w->{children}}); }
+unit	:	UNIT unitdecl ';'
 	;
 
-wordlist:	WORD.w
-			{ $_[0]->new_node('LIST', $_[0]->new_anode('STRING', $w)) }
+unitdecl:	WORD.w
+			{
+			    $_[0]->declare_unit($w);
+			}
 
-	|	wordlist.l ',' WORD.w
-			{ add_child($l, $_[0]->new_anode('STRING', $w)) }
+	|	unitdecl ',' WORD.w
+			{
+			    $_[0]->declare_unit($w);
+			}
 	;
 
-function:	FUNCTION WORD.name '(' params.p ')' unitopt.u ';'
+function:	FUNCTION FUNC.name '(' params.p ')' unitopt.u ';'
 			{
 			    $_[0]->declare_function($name, $p, 'MAD_FUNC');
 			    merge_units($_[0]->new_anode('FUNDECL', $name, $p), $u);
 			}
 	
-	|	FUNCTION WORD.name '(' params.p ')' unitopt.u '{'
+	|	FUNCTION FUNC.name '(' params.p ')' unitopt.u '{'
 			{
 			    $_[0]->declare_function($name, $p, 'MAD_FUNC');
 			    $_[0]->push_frame(tag => 'FUNDECL', name => $name,
@@ -132,13 +128,13 @@ function:	FUNCTION WORD.name '(' params.p ')' unitopt.u ';'
 			    merge_units($_[0]->new_anode('FUNDECL', $name, $p, $q), $u);
 			}
 
-	|	PERL FUNCTION WORD.name '(' params.p ')' unitopt.u ';'
+	|	PERL FUNCTION FUNC.name '(' params.p ')' unitopt.u ';'
 			{
 			    $_[0]->declare_function($name, $p, 'PERL_FUNC');
 			    merge_units($_[0]->new_anode('PERLFUNDECL', $name, $p), $u);
 			}
 	
-	|	PERL FUNCTION WORD.name '(' params.p ')' unitopt.u '{'
+	|	PERL FUNCTION FUNC.name '(' params.p ')' unitopt.u '{'
 			{
 			    $_[0]->declare_function($name, $p, 'PERL_FUNC');
 			    $_[0]->push_frame(tag => 'PERLFUNDECL', name => $name,
@@ -181,6 +177,9 @@ unitopt	:	/* null */
 
 unitspec:	'<' unitlist.ulist '>'
 			{ merge_units($_[0]->new_node('UNITSPEC'), $ulist, 1) }
+	
+	|	error '>'
+			{ $_[0]->YYErrok(); undef; }
 	;
 
 unitlist:	/* null */
@@ -190,7 +189,7 @@ unitlist:	/* null */
 			{
 			    my (@u) = $_[0]->validate_unit($_[2]);
 			    if ( $u[0] eq 'ERROR' ) {
-				$_[0]->YYError();
+				
 			    }
 			    else {
 				add_units($_[1], @u);
@@ -322,6 +321,17 @@ line	:	phase.p
 			}
 	;
 
+vardecl	:	simplevar.v unitopt.u
+			{ merge_units($v, $u) }
+	
+	|	simplevar.v dimspec.d unitopt.u
+			{ merge_units(add_child($v, $d), $u) }
+	;
+
+package	:	PACKAGE WORD.w ';'
+			{ $_[0]->set_package($w); $_[0]->new_anode('PACKAGE', $w); }
+	;
+
 across	:	ACROSS dimlist.dl '{'
 			{
 			    $_[0]->push_frame(tag => 'ACROSS', 
@@ -431,20 +441,6 @@ loop	:	loopword.c '('
 			}
 	;
 
-argexpr :	/* null */
-			{ $_[0]->new_node('NULLARGS'); }
-	
-	|	arglist
-			{ $_[1]; }
-	;
-
-arglist	:	term.t
-			{ $_[0]->new_node('ARGS', $t); }
-	
-	|	argexpr.a ',' term.t
-			{ add_child($a, $t); }
-	;
-
 expr	:	expr.l ANDOP expr.r
 			{ $_[0]->new_node('AND', $l, $r) }
 
@@ -493,9 +489,6 @@ term	:	termbinop
 	
 	|
 		objname
-			{ $_[1] }
-	
-	|	objblock
 			{ $_[1] }
 	
         |	RETURN expr.e
@@ -593,13 +586,13 @@ dynvar :	MY simplevar.v
 			}
 	;
 
-simplevar :	scalar
+simplevar :	scalar %prec PREC_LOW
 			{ $_[1] }
 
-	|	array
+	|	array %prec PREC_LOW
 			{ $_[1] }
 	
-	|	set
+	|	set %prec PREC_LOW
 			{ $_[1] }
 	;
 
@@ -648,37 +641,39 @@ subspec	:	'[' ']'
 
 funcall	:	FUNC.fun '(' argexpr.a ')'
 			{ $_[0]->new_anode('FUNCALL', $fun, @{$a->{children}}) }
-
+	
         |	FUNC.fun '(' argexpr.a ')' DOT WORD.fld
 			{ $_[0]->new_anode('DOTFLD', $fld,
 				            $_[0]->new_node('FUNCALL', $fun, 
 						   @{$a->{children}}) ) }
 	;
 
-objname:	WORD.n
-			{ $_[0]->new_anode('NEWOBJ', $n) }
+objname:	WORD.n %prec PREC_LOW
+			{ $_[0]->new_anode('FUNCALL', $n) }
 	;
 
-objblock:	WORD.n pairblock.p
-			{ $_[0]->new_anode('NEWOBJ', $n, $p) }
-	;
-
-pairblock :	'{' pairlist '}'
-			{ $_[0]->new_dnode('PAIRBLOCK', $_[2]) }
+argexpr :	/* null */
 	
-	|	'{' pairlist ',' '}'
-			{ $_[0]->new_dnode('PAIRBLOCK', $_[2]) }
+	|	arglist
+			{ $_[1] }
 	;
 
-pairlist:	pair.p
-			{ $_[0]->new_node('LIST', $p) }
+arglist	:	arg.t
+			{ $_[0]->new_node('ARGS', $t); }
 	
-	|	pairlist.l ',' pair.p
-			{ add_child($l, $p) }
+	|	argexpr.a ',' arg.t
+			{ add_child($a, $t); }
 	;
 
-pair	:	WORD.left ':' expr.right
-			{ $_[0]->new_anode('KEY', $left, $right) }
+arg	:	term
+			{ $_[1] }
+	
+	|	pair
+			{ $_[1] }
+	;
+
+pair	:	WORD.tag ':' expr.value
+			{ $_[0]->new_anode('KEY', $tag, $value) }
 	;
 
 flow	:      	scalar.so MULOP.op expr.coeff FLOWRIGHT scalar.sn
@@ -806,12 +801,6 @@ sub parse_input {
     
     if ( $filename ne '' ) {
 	
-	# identify the directory path of the current filename (if any) so that
-	# we can look up the next filename in the same directory.
-	
-	my ($base) = ($self->{my_filename} =~ m{(.*/)});  
-	$filename = "$base/$filename" if $base ne '';
-	
 	# Read the entire file as if it were a single line, by locally
 	# undefining $/ ($INPUT_RECORD_SEPARATOR).
 	
@@ -841,28 +830,56 @@ sub parse_input {
 	$input = <STDIN>;
     }
     
+    # Remember the name of the file we are reading from, the starting line
+    # number (1) and the contents that we read in.
+    
+    $self->{my_filename} = $filename;
+    $self->{my_line} = 1;
+    $self->{my_input} = \$input;
+}
+
+
+sub parse_include {
+
+    my ($self, $filename) = @_;
+    my $input;
+    
+    # identify the directory path of the current filename (if any) so that
+    # we can look up the next filename in the same directory.
+    
+    my ($base) = ($self->{my_filename} =~ m{(.*/)});  
+    $filename = "$base$filename" if $base ne '';
+    
+    # Read the entire file as if it were a single line, by locally
+    # undefining $/ ($INPUT_RECORD_SEPARATOR).
+    
+    local $/;
+    
+    # Open the file, or die trying.  Read the contents into $input.
+    
+    open my $ifh, "<", $filename or die "Error reading file \"$filename\": $!";
+    $input = <$ifh>;
+
     # If we actually got some input, process it.
     
     if ( $input =~ /\S/ ) {
 	
-	# If we are in the middle of handling another file, record that
-	# information on the input stack.
+	# Push the current file's information on the stack, so that we can
+	# return to it when we're done with this included file.
 	
-	if ( $self->{my_filename} ne '' ) {
-	    unshift @{$self->{my_input_stack}}, {file => $self->{my_filename}, 
-						 line => $self->{my_line}, 
-						 input => $self->{my_input}};
-	}
+	unshift @{$self->{my_input_stack}}, {file => $self->{my_filename}, 
+					     line => $self->{my_line}, 
+					     input => $self->{my_input}};
 	
 	# Now remember the name of the file we are reading from, the starting
-	# line number (1) and the contents that were read in.  Also start out
-	# in the default package.
+	# line number (1) and the contents that were read in.
 	
 	$self->{my_filename} = $filename;
 	$self->{my_line} = 1;
 	$self->{my_input} = \$input;
     }
 }
+
 
 # pop_input ( )
 # 
@@ -917,33 +934,6 @@ sub lex_mode {
     $self->{brcount} = 1;
 }
 
-# validate_unit ( $raw )
-# 
-# Validate the unit specification contained in $raw.  If its syntax is
-# incorrect, return 'ERROR'.  Otherwise, figure out the unit's power and
-# return a list containing the unit that many times.  For example, <m^2> means
-# "meters squared" and would result in the list ("m", "m").  Units that would
-# appear in the denominator are prefixed with "~".  For example, <s^-2> means
-# "per second per second" and would result in the list ("~s", "~s").
-
-sub validate_unit {
-    my ($self, $raw) = @_;
-    my ($invert, $unit, $count);
-    
-    if ( $raw =~ m{^([/*]?)\s*([a-zA-Z0-9]+)(\^([0-9]+))?$} ) {
-	$unit = $1 eq '/' ? "~$2" : $2;
-	$count = $4 ne '' ? $4+0 : 1;
-	return ($unit) x $count;
-    }
-    elsif ( $raw =~ m{^\*?\s*([a-zA-Z]+)\^-([0-9]+)$} ) {
-	$unit = "~$1";
-	$count = $2 ne '' ? $2+0 : 1;
-	return ($unit) x $count;
-    }
-    else {
-	return 'ERROR';
-    }
-}
 
 # count_brace ( $adjustment )
 # 
@@ -965,31 +955,44 @@ sub count_brace {
     }
 }
 
-# my_error ( $msg )
+# my_syntax ( $msg )
 # 
 # Terminate parsing because of an error.
 
 sub my_syntax {
-    my ($self, $msg, $filename, $line) = @_;
+    my ($self, $msg) = @_;
     
-    $filename = $self->{my_filename} unless defined $filename;
-    $line = $self->{my_line} unless defined $line;
+    my $filename = $self->{error_filename} || $self->{my_filename};
+    my $line = $self->{error_line} || $self->{my_line};
     
-    if ( $msg ne '' ) {
-        die "Syntax error at $filename line $line: $msg\n";
+    $self->{error_filename} = undef;
+    $self->{error_line} = undef;
+    
+    my $token = $self->YYCurval();
+    my $near = ", near '$token'" if $token;
+    
+    $msg = $self->{my_error} unless defined $msg;
+    $self->{my_error} = undef;
+    
+    if ( $msg ) {
+        warn "Syntax error at $filename line $line$near: $msg\n";
     }
     else {
-        die "Syntax error at $filename line $line.\n";
+	my @expected = $self->YYExpect();
+	if ( @expected == 1 ) {
+	    warn "Syntax error at $filename line $line$near: expected $expected[0]";
+	}
+	else {
+	    warn "Syntax error at $filename line $line$near.\n";
+	}
     }
 }
 
 sub my_error {
     my ($self, $msg, $filename, $line) = @_;
     
-    $filename = $self->{my_filename} unless defined $filename;
-    $line = $self->{my_line} unless defined $line;
-    
-    die "Error at $self->{my_filename} line $self->{my_line}: $msg\n";
+    $self->my_syntax($msg);
+    ${$$self{NBERR}} += 1;
 }
 
 sub my_warning {
@@ -1127,7 +1130,7 @@ sub my_lexer {
 	    # (i.e. sin, push, etc.) if followed by a parenthesis, and a
 	    # bareword otherwise.
 	    
-	    m{\G(\w(?<!\d)\w*(?=\())}gc		and return ('FUNC', $1);
+	    m{\G(\w(?<!\d)\w*(?=\s*\())}gc		and return ('FUNC', $1);
 	    m{\G(\w(?<!\d)\w*)}gc		and return ('WORD', $1);
 	    
 	    # Now check for numeric and string literals

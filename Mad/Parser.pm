@@ -35,7 +35,7 @@ our $LEX = sub {
 
       m{\G(\s+)}gc and $self->tokenline($1 =~ tr{\n}{});
 
-      m{\G(FLOWRIGHT|ASSIGNOP|loopword|FLOWLEFT|FUNCTION|YADAYADA|FOREACH|INCLUDE|perlseq|PACKAGE|default|progseg|DORDOR|UNLESS|ACROSS|ANDAND|RETURN|DOTDOT|ANDOP|FINAL|RELOP|INCOP|ADDOP|MULOP|CONST|XOROP|POWOP|NOTOP|ELSIF|STEP|ELSE|OROP|UNIT|OROR|WORD|PERL|NOT2|FUNC|INIT|CALC|FOR|var|STR|USE|NUM|DOT|VAR|\%\}|\%\{|MY|\$\^|IF|\:|\}|\<|\@|\%|\[|\,|\)|\?|\{|\$|\]|\(|\>|\;|\=)}gc and return ($1, $1);
+      m{\G(FLOWRIGHT|ASSIGNOP|loopword|FLOWLEFT|FUNCTION|YADAYADA|FOREACH|INCLUDE|perlseq|PACKAGE|progseg|DORDOR|UNLESS|ACROSS|ANDAND|RETURN|DOTDOT|ANDOP|FINAL|RELOP|INCOP|ADDOP|MULOP|CONST|XOROP|POWOP|NOTOP|ELSIF|STEP|ELSE|OROP|UNIT|OROR|WORD|PERL|NOT2|FUNC|INIT|CALC|FOR|STR|USE|NUM|DOT|VAR|\%\}|\%\{|MY|\$\^|IF|\:|\}|\<|\@|\%|\[|\,|\)|\?|\{|\$|\]|\(|\>|\;|\=)}gc and return ($1, $1);
 
 
 
@@ -84,168 +84,163 @@ sub new {
   [ 'progseq_8' => 'progseq', [ 'progseq', 'flow' ], 0 ],
   [ 'progseq_9' => 'progseq', [ 'progseq', 'line' ], 0 ],
   [ 'progstart_10' => 'progstart', [  ], 0 ],
-  [ 'tl_decl_11' => 'tl_decl', [ 'var' ], 0 ],
-  [ 'tl_decl_12' => 'tl_decl', [ 'default' ], 0 ],
-  [ 'tl_decl_13' => 'tl_decl', [ 'include' ], 0 ],
-  [ 'tl_decl_14' => 'tl_decl', [ 'use' ], 0 ],
-  [ 'tl_decl_15' => 'tl_decl', [ 'unit' ], 0 ],
-  [ 'tl_decl_16' => 'tl_decl', [ 'function' ], 0 ],
-  [ 'vardecl_17' => 'vardecl', [ 'simplevar', 'unitopt' ], 0 ],
-  [ 'vardecl_18' => 'vardecl', [ 'simplevar', 'dimspec', 'unitopt' ], 0 ],
-  [ 'package_19' => 'package', [ 'PACKAGE', 'WORD', ';' ], 0 ],
-  [ 'include_20' => 'include', [ 'INCLUDE', 'WORD', ';' ], 0 ],
-  [ 'include_21' => 'include', [ 'INCLUDE', 'STR', ';' ], 0 ],
-  [ 'use_22' => 'use', [ 'USE', 'WORD', ';' ], 0 ],
-  [ 'unit_23' => 'unit', [ 'UNIT', 'wordlist', ';' ], 0 ],
-  [ 'wordlist_24' => 'wordlist', [ 'WORD' ], 0 ],
-  [ 'wordlist_25' => 'wordlist', [ 'wordlist', ',', 'WORD' ], 0 ],
-  [ 'function_26' => 'function', [ 'FUNCTION', 'WORD', '(', 'params', ')', 'unitopt', ';' ], 0 ],
-  [ 'function_27' => 'function', [ 'FUNCTION', 'WORD', '(', 'params', ')', 'unitopt', '{', '@27-7', 'stmtseq', '}' ], 0 ],
-  [ '_CODE' => '@27-7', [  ], 0 ],
-  [ 'function_29' => 'function', [ 'PERL', 'FUNCTION', 'WORD', '(', 'params', ')', 'unitopt', ';' ], 0 ],
-  [ 'function_30' => 'function', [ 'PERL', 'FUNCTION', 'WORD', '(', 'params', ')', 'unitopt', '{', '@30-8', 'perlseq', '}' ], 0 ],
-  [ '_CODE' => '@30-8', [  ], 0 ],
-  [ 'params_32' => 'params', [  ], 0 ],
-  [ 'params_33' => 'params', [ 'paramlist' ], 0 ],
-  [ 'paramlist_34' => 'paramlist', [ 'param' ], 0 ],
-  [ 'paramlist_35' => 'paramlist', [ 'paramlist', ',', 'param' ], 0 ],
-  [ 'param_36' => 'param', [ 'scalar' ], 0 ],
-  [ 'unitopt_37' => 'unitopt', [  ], 0 ],
-  [ 'unitopt_38' => 'unitopt', [ 'unitspec' ], 0 ],
-  [ 'unitspec_39' => 'unitspec', [ '<', 'unitlist', '>' ], 0 ],
-  [ 'unitlist_40' => 'unitlist', [  ], 0 ],
-  [ 'unitlist_41' => 'unitlist', [ 'unitlist', 'UNIT' ], 0 ],
-  [ 'tl_across_42' => 'tl_across', [ 'ACROSS', 'dimlist', '{', '@42-3', 'progseq', '}' ], 0 ],
-  [ '_CODE' => '@42-3', [  ], 0 ],
-  [ 'stmtseq_44' => 'stmtseq', [  ], 0 ],
-  [ 'stmtseq_45' => 'stmtseq', [ 'stmtseq', 'across' ], 0 ],
-  [ 'stmtseq_46' => 'stmtseq', [ 'stmtseq', 'block' ], 0 ],
-  [ 'stmtseq_47' => 'stmtseq', [ 'stmtseq', 'perlblock' ], 0 ],
-  [ 'stmtseq_48' => 'stmtseq', [ 'stmtseq', 'phaseblock' ], 0 ],
-  [ 'stmtseq_49' => 'stmtseq', [ 'stmtseq', 'line' ], 0 ],
-  [ 'block_50' => 'block', [ '{', '@50-1', 'stmtseq', '}' ], 0 ],
+  [ 'tl_decl_11' => 'tl_decl', [ 'include' ], 0 ],
+  [ 'tl_decl_12' => 'tl_decl', [ 'use' ], 0 ],
+  [ 'tl_decl_13' => 'tl_decl', [ 'unit' ], 0 ],
+  [ 'tl_decl_14' => 'tl_decl', [ 'function' ], 0 ],
+  [ 'include_15' => 'include', [ 'INCLUDE', 'WORD', ';' ], 0 ],
+  [ 'include_16' => 'include', [ 'INCLUDE', 'STR', ';' ], 0 ],
+  [ 'use_17' => 'use', [ 'USE', 'WORD', ';' ], 0 ],
+  [ 'unit_18' => 'unit', [ 'UNIT', 'unitdecl', ';' ], 0 ],
+  [ 'unitdecl_19' => 'unitdecl', [ 'WORD' ], 0 ],
+  [ 'unitdecl_20' => 'unitdecl', [ 'unitdecl', ',', 'WORD' ], 0 ],
+  [ 'function_21' => 'function', [ 'FUNCTION', 'FUNC', '(', 'params', ')', 'unitopt', ';' ], 0 ],
+  [ 'function_22' => 'function', [ 'FUNCTION', 'FUNC', '(', 'params', ')', 'unitopt', '{', '@22-7', 'stmtseq', '}' ], 0 ],
+  [ '_CODE' => '@22-7', [  ], 0 ],
+  [ 'function_24' => 'function', [ 'PERL', 'FUNCTION', 'FUNC', '(', 'params', ')', 'unitopt', ';' ], 0 ],
+  [ 'function_25' => 'function', [ 'PERL', 'FUNCTION', 'FUNC', '(', 'params', ')', 'unitopt', '{', '@25-8', 'perlseq', '}' ], 0 ],
+  [ '_CODE' => '@25-8', [  ], 0 ],
+  [ 'params_27' => 'params', [  ], 0 ],
+  [ 'params_28' => 'params', [ 'paramlist' ], 0 ],
+  [ 'paramlist_29' => 'paramlist', [ 'param' ], 0 ],
+  [ 'paramlist_30' => 'paramlist', [ 'paramlist', ',', 'param' ], 0 ],
+  [ 'param_31' => 'param', [ 'scalar' ], 0 ],
+  [ 'unitopt_32' => 'unitopt', [  ], 0 ],
+  [ 'unitopt_33' => 'unitopt', [ 'unitspec' ], 0 ],
+  [ 'unitspec_34' => 'unitspec', [ '<', 'unitlist', '>' ], 0 ],
+  [ 'unitspec_35' => 'unitspec', [ 'error', '>' ], 0 ],
+  [ 'unitlist_36' => 'unitlist', [  ], 0 ],
+  [ 'unitlist_37' => 'unitlist', [ 'unitlist', 'UNIT' ], 0 ],
+  [ 'tl_across_38' => 'tl_across', [ 'ACROSS', 'dimlist', '{', '@38-3', 'progseq', '}' ], 0 ],
+  [ '_CODE' => '@38-3', [  ], 0 ],
+  [ 'stmtseq_40' => 'stmtseq', [  ], 0 ],
+  [ 'stmtseq_41' => 'stmtseq', [ 'stmtseq', 'across' ], 0 ],
+  [ 'stmtseq_42' => 'stmtseq', [ 'stmtseq', 'block' ], 0 ],
+  [ 'stmtseq_43' => 'stmtseq', [ 'stmtseq', 'perlblock' ], 0 ],
+  [ 'stmtseq_44' => 'stmtseq', [ 'stmtseq', 'phaseblock' ], 0 ],
+  [ 'stmtseq_45' => 'stmtseq', [ 'stmtseq', 'line' ], 0 ],
+  [ 'block_46' => 'block', [ '{', '@46-1', 'stmtseq', '}' ], 0 ],
+  [ '_CODE' => '@46-1', [  ], 0 ],
+  [ 'perlblock_48' => 'perlblock', [ 'PERL', '{', '@48-2', 'perlseq', '}' ], 0 ],
+  [ '_CODE' => '@48-2', [  ], 0 ],
+  [ 'perlblock_50' => 'perlblock', [ '%{', '@50-1', 'perlseq', '%}' ], 0 ],
   [ '_CODE' => '@50-1', [  ], 0 ],
-  [ 'perlblock_52' => 'perlblock', [ 'PERL', '{', '@52-2', 'perlseq', '}' ], 0 ],
+  [ 'phaseblock_52' => 'phaseblock', [ 'phase', '{', '@52-2', 'stmtseq', '}' ], 0 ],
   [ '_CODE' => '@52-2', [  ], 0 ],
-  [ 'perlblock_54' => 'perlblock', [ '%{', '@54-1', 'perlseq', '%}' ], 0 ],
-  [ '_CODE' => '@54-1', [  ], 0 ],
-  [ 'phaseblock_56' => 'phaseblock', [ 'phase', '{', '@56-2', 'stmtseq', '}' ], 0 ],
-  [ '_CODE' => '@56-2', [  ], 0 ],
-  [ 'phase_58' => 'phase', [ 'INIT' ], 0 ],
-  [ 'phase_59' => 'phase', [ 'CALC' ], 0 ],
-  [ 'phase_60' => 'phase', [ 'STEP' ], 0 ],
-  [ 'phase_61' => 'phase', [ 'FINAL' ], 0 ],
-  [ 'line_62' => 'line', [ 'phase', '@62-1', 'sideff', ';' ], 0 ],
-  [ '_CODE' => '@62-1', [  ], 0 ],
-  [ 'line_64' => 'line', [ 'package' ], 0 ],
-  [ 'line_65' => 'line', [ 'cond' ], 0 ],
-  [ 'line_66' => 'line', [ 'loop' ], 0 ],
-  [ 'line_67' => 'line', [ 'sideff', ';' ], 0 ],
-  [ 'line_68' => 'line', [ 'VAR', 'vardecl', ';' ], 0 ],
-  [ 'line_69' => 'line', [ 'CONST', 'vardecl', '=', '@69-3', 'expr', ';' ], 0 ],
-  [ '_CODE' => '@69-3', [  ], 0 ],
-  [ 'across_71' => 'across', [ 'ACROSS', 'dimlist', '{', '@71-3', 'stmtseq', '}' ], 0 ],
-  [ '_CODE' => '@71-3', [  ], 0 ],
-  [ 'dimlist_73' => 'dimlist', [ 'dimspec' ], 0 ],
-  [ 'dimlist_74' => 'dimlist', [ 'dimlist', 'dimspec' ], 0 ],
-  [ 'dimspec_75' => 'dimspec', [ '[', 'label', 'array', ']' ], 0 ],
-  [ 'dimspec_76' => 'dimspec', [ '[', 'label', 'set', ']' ], 0 ],
-  [ 'label_77' => 'label', [  ], 0 ],
-  [ 'label_78' => 'label', [ 'WORD', ':' ], 0 ],
-  [ 'sideff_79' => 'sideff', [ 'expr' ], 0 ],
-  [ 'sideff_80' => 'sideff', [ 'expr', 'IF', 'expr' ], 0 ],
-  [ 'sideff_81' => 'sideff', [ 'expr', 'UNLESS', 'expr' ], 0 ],
-  [ 'cond_82' => 'cond', [ 'condword', '(', '@82-2', 'expr', ')', '{', 'stmtseq', '}', 'else' ], 0 ],
-  [ '_CODE' => '@82-2', [  ], 0 ],
-  [ 'condword_84' => 'condword', [ 'IF' ], 0 ],
-  [ 'condword_85' => 'condword', [ 'UNLESS' ], 0 ],
-  [ 'else_86' => 'else', [  ], 0 ],
-  [ 'else_87' => 'else', [ 'ELSE', '{', '@87-2', 'stmtseq', '}' ], 0 ],
-  [ '_CODE' => '@87-2', [  ], 0 ],
-  [ 'else_89' => 'else', [ 'ELSIF', '(', '@89-2', 'expr', ')', '{', 'stmtseq', '}', 'else' ], 0 ],
-  [ '_CODE' => '@89-2', [  ], 0 ],
-  [ 'loop_91' => 'loop', [ 'loopword', '(', '@91-2', 'expr', ')', '{', 'stmtseq', '}' ], 0 ],
-  [ '_CODE' => '@91-2', [  ], 0 ],
-  [ 'loop_93' => 'loop', [ 'FOREACH', '@93-1', 'scalarvar', '(', 'expr', ')', '{', 'stmtseq', '}' ], 0 ],
-  [ '_CODE' => '@93-1', [  ], 0 ],
-  [ 'loop_95' => 'loop', [ 'FOR', '(', '@95-2', 'expr', ';', 'expr', ';', 'expr', ')', '{', 'stmtseq', '}' ], 0 ],
-  [ '_CODE' => '@95-2', [  ], 0 ],
-  [ 'argexpr_97' => 'argexpr', [  ], 0 ],
-  [ 'argexpr_98' => 'argexpr', [ 'arglist' ], 0 ],
-  [ 'arglist_99' => 'arglist', [ 'term' ], 0 ],
-  [ 'arglist_100' => 'arglist', [ 'argexpr', ',', 'term' ], 0 ],
-  [ 'expr_101' => 'expr', [ 'expr', 'ANDOP', 'expr' ], 0 ],
-  [ 'expr_102' => 'expr', [ 'expr', 'OROP', 'expr' ], 0 ],
-  [ 'expr_103' => 'expr', [ 'expr', 'XOROP', 'expr' ], 0 ],
-  [ 'expr_104' => 'expr', [ 'NOTOP', 'expr' ], 0 ],
-  [ 'expr_105' => 'expr', [ 'term' ], 0 ],
-  [ 'term_106' => 'term', [ 'termbinop' ], 0 ],
-  [ 'term_107' => 'term', [ 'termunop' ], 0 ],
-  [ 'term_108' => 'term', [ 'term', '?', 'term', ':', 'term' ], 0 ],
-  [ 'term_109' => 'term', [ '(', 'expr', ')' ], 0 ],
-  [ 'term_110' => 'term', [ 'varexpr' ], 0 ],
-  [ 'term_111' => 'term', [ 'dynvar' ], 0 ],
-  [ 'term_112' => 'term', [ 'indexvar' ], 0 ],
-  [ 'term_113' => 'term', [ 'NUM' ], 0 ],
-  [ 'term_114' => 'term', [ 'STR' ], 0 ],
-  [ 'term_115' => 'term', [ 'funcall' ], 0 ],
-  [ 'term_116' => 'term', [ 'objname' ], 0 ],
-  [ 'term_117' => 'term', [ 'objblock' ], 0 ],
-  [ 'term_118' => 'term', [ 'RETURN', 'expr' ], 0 ],
-  [ 'term_119' => 'term', [ 'term', 'unitspec' ], 0 ],
-  [ 'term_120' => 'term', [ 'YADAYADA' ], 0 ],
-  [ 'termbinop_121' => 'termbinop', [ 'term', 'ASSIGNOP', 'term' ], 0 ],
-  [ 'termbinop_122' => 'termbinop', [ 'term', '=', 'term' ], 0 ],
-  [ 'termbinop_123' => 'termbinop', [ 'term', 'ADDOP', 'term' ], 0 ],
-  [ 'termbinop_124' => 'termbinop', [ 'term', 'MULOP', 'term' ], 0 ],
-  [ 'termbinop_125' => 'termbinop', [ 'term', '%', 'term' ], 0 ],
-  [ 'termbinop_126' => 'termbinop', [ 'term', 'POWOP', 'term' ], 0 ],
-  [ 'termbinop_127' => 'termbinop', [ 'term', 'RELOP', 'term' ], 0 ],
-  [ 'termbinop_128' => 'termbinop', [ 'term', 'DOTDOT', 'term' ], 0 ],
-  [ 'termbinop_129' => 'termbinop', [ 'term', 'ANDAND', 'term' ], 0 ],
-  [ 'termbinop_130' => 'termbinop', [ 'term', 'OROR', 'term' ], 0 ],
-  [ 'termbinop_131' => 'termbinop', [ 'term', 'DORDOR', 'term' ], 0 ],
-  [ 'termunop_132' => 'termunop', [ 'ADDOP', 'term' ], 0 ],
-  [ 'termunop_133' => 'termunop', [ 'NOT2', 'term' ], 0 ],
-  [ 'termunop_134' => 'termunop', [ 'term', 'INCOP' ], 0 ],
-  [ 'termunop_135' => 'termunop', [ 'INCOP', 'term' ], 0 ],
-  [ 'varexpr_136' => 'varexpr', [ 'simplevar' ], 0 ],
-  [ 'varexpr_137' => 'varexpr', [ 'simplevar', 'subexpr' ], 0 ],
-  [ 'varexpr_138' => 'varexpr', [ 'varexpr', 'DOT', 'WORD' ], 0 ],
-  [ 'varexpr_139' => 'varexpr', [ 'varexpr', 'DOT', 'FUNC', '(', 'argexpr', ')' ], 0 ],
-  [ 'dynvar_140' => 'dynvar', [ 'MY', 'simplevar' ], 0 ],
-  [ 'simplevar_141' => 'simplevar', [ 'scalar' ], 0 ],
-  [ 'simplevar_142' => 'simplevar', [ 'array' ], 0 ],
-  [ 'simplevar_143' => 'simplevar', [ 'set' ], 0 ],
-  [ 'scalarvar_144' => 'scalarvar', [ 'scalar' ], 0 ],
-  [ 'scalarvar_145' => 'scalarvar', [ 'MY', 'scalar' ], 0 ],
-  [ 'scalar_146' => 'scalar', [ '$', 'WORD' ], 0 ],
-  [ 'array_147' => 'array', [ '@', 'WORD' ], 0 ],
-  [ 'set_148' => 'set', [ '%', 'WORD' ], 0 ],
-  [ 'indexvar_149' => 'indexvar', [ '$^' ], 0 ],
-  [ 'indexvar_150' => 'indexvar', [ '$^', 'NUM' ], 0 ],
-  [ 'indexvar_151' => 'indexvar', [ '$^', 'WORD' ], 0 ],
-  [ 'subexpr_152' => 'subexpr', [ 'subspec' ], 0 ],
-  [ 'subexpr_153' => 'subexpr', [ 'subexpr', 'subspec' ], 0 ],
-  [ 'subspec_154' => 'subspec', [ '[', ']' ], 0 ],
-  [ 'subspec_155' => 'subspec', [ '[', 'expr', ']' ], 0 ],
-  [ 'funcall_156' => 'funcall', [ 'FUNC', '(', 'argexpr', ')' ], 0 ],
-  [ 'funcall_157' => 'funcall', [ 'FUNC', '(', 'argexpr', ')', 'DOT', 'WORD' ], 0 ],
-  [ 'objname_158' => 'objname', [ 'WORD' ], 0 ],
-  [ 'objblock_159' => 'objblock', [ 'WORD', 'pairblock' ], 0 ],
-  [ 'pairblock_160' => 'pairblock', [ '{', 'pairlist', '}' ], 0 ],
-  [ 'pairblock_161' => 'pairblock', [ '{', 'pairlist', ',', '}' ], 0 ],
-  [ 'pairlist_162' => 'pairlist', [ 'pair' ], 0 ],
-  [ 'pairlist_163' => 'pairlist', [ 'pairlist', ',', 'pair' ], 0 ],
-  [ 'pair_164' => 'pair', [ 'WORD', ':', 'expr' ], 0 ],
-  [ 'flow_165' => 'flow', [ 'scalar', 'MULOP', 'expr', 'FLOWRIGHT', 'scalar' ], 0 ],
-  [ 'flow_166' => 'flow', [ 'scalar', 'MULOP', 'expr', 'FLOWLEFT', 'scalar' ], 0 ],
-  [ 'flow_167' => 'flow', [ 'scalar', 'FLOWRIGHT', 'scalar', 'MULOP', 'expr' ], 0 ],
-  [ 'flow_168' => 'flow', [ 'scalar', 'FLOWLEFT', 'scalar', 'MULOP', 'expr' ], 0 ],
-  [ 'flow_169' => 'flow', [ 'scalar', '(', 'expr', ')', 'FLOWRIGHT', 'scalar' ], 0 ],
-  [ 'flow_170' => 'flow', [ 'scalar', '(', 'expr', ')', 'FLOWLEFT', 'scalar' ], 0 ],
-  [ 'flow_171' => 'flow', [ 'scalar', 'FLOWRIGHT', 'scalar', '(', 'expr', ')' ], 0 ],
-  [ 'flow_172' => 'flow', [ 'scalar', 'FLOWLEFT', 'scalar', '(', 'expr', ')' ], 0 ],
+  [ 'phase_54' => 'phase', [ 'INIT' ], 0 ],
+  [ 'phase_55' => 'phase', [ 'CALC' ], 0 ],
+  [ 'phase_56' => 'phase', [ 'STEP' ], 0 ],
+  [ 'phase_57' => 'phase', [ 'FINAL' ], 0 ],
+  [ 'line_58' => 'line', [ 'phase', '@58-1', 'sideff', ';' ], 0 ],
+  [ '_CODE' => '@58-1', [  ], 0 ],
+  [ 'line_60' => 'line', [ 'package' ], 0 ],
+  [ 'line_61' => 'line', [ 'cond' ], 0 ],
+  [ 'line_62' => 'line', [ 'loop' ], 0 ],
+  [ 'line_63' => 'line', [ 'sideff', ';' ], 0 ],
+  [ 'line_64' => 'line', [ 'VAR', 'vardecl', ';' ], 0 ],
+  [ 'line_65' => 'line', [ 'CONST', 'vardecl', '=', '@65-3', 'expr', ';' ], 0 ],
+  [ '_CODE' => '@65-3', [  ], 0 ],
+  [ 'vardecl_67' => 'vardecl', [ 'simplevar', 'unitopt' ], 0 ],
+  [ 'vardecl_68' => 'vardecl', [ 'simplevar', 'dimspec', 'unitopt' ], 0 ],
+  [ 'package_69' => 'package', [ 'PACKAGE', 'WORD', ';' ], 0 ],
+  [ 'across_70' => 'across', [ 'ACROSS', 'dimlist', '{', '@70-3', 'stmtseq', '}' ], 0 ],
+  [ '_CODE' => '@70-3', [  ], 0 ],
+  [ 'dimlist_72' => 'dimlist', [ 'dimspec' ], 0 ],
+  [ 'dimlist_73' => 'dimlist', [ 'dimlist', 'dimspec' ], 0 ],
+  [ 'dimspec_74' => 'dimspec', [ '[', 'label', 'array', ']' ], 0 ],
+  [ 'dimspec_75' => 'dimspec', [ '[', 'label', 'set', ']' ], 0 ],
+  [ 'label_76' => 'label', [  ], 0 ],
+  [ 'label_77' => 'label', [ 'WORD', ':' ], 0 ],
+  [ 'sideff_78' => 'sideff', [ 'expr' ], 0 ],
+  [ 'sideff_79' => 'sideff', [ 'expr', 'IF', 'expr' ], 0 ],
+  [ 'sideff_80' => 'sideff', [ 'expr', 'UNLESS', 'expr' ], 0 ],
+  [ 'cond_81' => 'cond', [ 'condword', '(', '@81-2', 'expr', ')', '{', 'stmtseq', '}', 'else' ], 0 ],
+  [ '_CODE' => '@81-2', [  ], 0 ],
+  [ 'condword_83' => 'condword', [ 'IF' ], 0 ],
+  [ 'condword_84' => 'condword', [ 'UNLESS' ], 0 ],
+  [ 'else_85' => 'else', [  ], 0 ],
+  [ 'else_86' => 'else', [ 'ELSE', '{', '@86-2', 'stmtseq', '}' ], 0 ],
+  [ '_CODE' => '@86-2', [  ], 0 ],
+  [ 'else_88' => 'else', [ 'ELSIF', '(', '@88-2', 'expr', ')', '{', 'stmtseq', '}', 'else' ], 0 ],
+  [ '_CODE' => '@88-2', [  ], 0 ],
+  [ 'loop_90' => 'loop', [ 'loopword', '(', '@90-2', 'expr', ')', '{', 'stmtseq', '}' ], 0 ],
+  [ '_CODE' => '@90-2', [  ], 0 ],
+  [ 'loop_92' => 'loop', [ 'FOREACH', '@92-1', 'scalarvar', '(', 'expr', ')', '{', 'stmtseq', '}' ], 0 ],
+  [ '_CODE' => '@92-1', [  ], 0 ],
+  [ 'loop_94' => 'loop', [ 'FOR', '(', '@94-2', 'expr', ';', 'expr', ';', 'expr', ')', '{', 'stmtseq', '}' ], 0 ],
+  [ '_CODE' => '@94-2', [  ], 0 ],
+  [ 'expr_96' => 'expr', [ 'expr', 'ANDOP', 'expr' ], 0 ],
+  [ 'expr_97' => 'expr', [ 'expr', 'OROP', 'expr' ], 0 ],
+  [ 'expr_98' => 'expr', [ 'expr', 'XOROP', 'expr' ], 0 ],
+  [ 'expr_99' => 'expr', [ 'NOTOP', 'expr' ], 0 ],
+  [ 'expr_100' => 'expr', [ 'term' ], 0 ],
+  [ 'term_101' => 'term', [ 'termbinop' ], 0 ],
+  [ 'term_102' => 'term', [ 'termunop' ], 0 ],
+  [ 'term_103' => 'term', [ 'term', '?', 'term', ':', 'term' ], 0 ],
+  [ 'term_104' => 'term', [ '(', 'expr', ')' ], 0 ],
+  [ 'term_105' => 'term', [ 'varexpr' ], 0 ],
+  [ 'term_106' => 'term', [ 'dynvar' ], 0 ],
+  [ 'term_107' => 'term', [ 'indexvar' ], 0 ],
+  [ 'term_108' => 'term', [ 'NUM' ], 0 ],
+  [ 'term_109' => 'term', [ 'STR' ], 0 ],
+  [ 'term_110' => 'term', [ 'funcall' ], 0 ],
+  [ 'term_111' => 'term', [ 'objname' ], 0 ],
+  [ 'term_112' => 'term', [ 'RETURN', 'expr' ], 0 ],
+  [ 'term_113' => 'term', [ 'term', 'unitspec' ], 0 ],
+  [ 'term_114' => 'term', [ 'YADAYADA' ], 0 ],
+  [ 'termbinop_115' => 'termbinop', [ 'term', 'ASSIGNOP', 'term' ], 0 ],
+  [ 'termbinop_116' => 'termbinop', [ 'term', '=', 'term' ], 0 ],
+  [ 'termbinop_117' => 'termbinop', [ 'term', 'ADDOP', 'term' ], 0 ],
+  [ 'termbinop_118' => 'termbinop', [ 'term', 'MULOP', 'term' ], 0 ],
+  [ 'termbinop_119' => 'termbinop', [ 'term', '%', 'term' ], 0 ],
+  [ 'termbinop_120' => 'termbinop', [ 'term', 'POWOP', 'term' ], 0 ],
+  [ 'termbinop_121' => 'termbinop', [ 'term', 'RELOP', 'term' ], 0 ],
+  [ 'termbinop_122' => 'termbinop', [ 'term', 'DOTDOT', 'term' ], 0 ],
+  [ 'termbinop_123' => 'termbinop', [ 'term', 'ANDAND', 'term' ], 0 ],
+  [ 'termbinop_124' => 'termbinop', [ 'term', 'OROR', 'term' ], 0 ],
+  [ 'termbinop_125' => 'termbinop', [ 'term', 'DORDOR', 'term' ], 0 ],
+  [ 'termunop_126' => 'termunop', [ 'ADDOP', 'term' ], 0 ],
+  [ 'termunop_127' => 'termunop', [ 'NOT2', 'term' ], 0 ],
+  [ 'termunop_128' => 'termunop', [ 'term', 'INCOP' ], 0 ],
+  [ 'termunop_129' => 'termunop', [ 'INCOP', 'term' ], 0 ],
+  [ 'varexpr_130' => 'varexpr', [ 'simplevar' ], 0 ],
+  [ 'varexpr_131' => 'varexpr', [ 'simplevar', 'subexpr' ], 0 ],
+  [ 'varexpr_132' => 'varexpr', [ 'varexpr', 'DOT', 'WORD' ], 0 ],
+  [ 'varexpr_133' => 'varexpr', [ 'varexpr', 'DOT', 'FUNC', '(', 'argexpr', ')' ], 0 ],
+  [ 'dynvar_134' => 'dynvar', [ 'MY', 'simplevar' ], 0 ],
+  [ 'simplevar_135' => 'simplevar', [ 'scalar' ], 0 ],
+  [ 'simplevar_136' => 'simplevar', [ 'array' ], 0 ],
+  [ 'simplevar_137' => 'simplevar', [ 'set' ], 0 ],
+  [ 'scalarvar_138' => 'scalarvar', [ 'scalar' ], 0 ],
+  [ 'scalarvar_139' => 'scalarvar', [ 'MY', 'scalar' ], 0 ],
+  [ 'scalar_140' => 'scalar', [ '$', 'WORD' ], 0 ],
+  [ 'array_141' => 'array', [ '@', 'WORD' ], 0 ],
+  [ 'set_142' => 'set', [ '%', 'WORD' ], 0 ],
+  [ 'indexvar_143' => 'indexvar', [ '$^' ], 0 ],
+  [ 'indexvar_144' => 'indexvar', [ '$^', 'NUM' ], 0 ],
+  [ 'indexvar_145' => 'indexvar', [ '$^', 'WORD' ], 0 ],
+  [ 'subexpr_146' => 'subexpr', [ 'subspec' ], 0 ],
+  [ 'subexpr_147' => 'subexpr', [ 'subexpr', 'subspec' ], 0 ],
+  [ 'subspec_148' => 'subspec', [ '[', ']' ], 0 ],
+  [ 'subspec_149' => 'subspec', [ '[', 'expr', ']' ], 0 ],
+  [ 'funcall_150' => 'funcall', [ 'FUNC', '(', 'argexpr', ')' ], 0 ],
+  [ 'funcall_151' => 'funcall', [ 'FUNC', '(', 'argexpr', ')', 'DOT', 'WORD' ], 0 ],
+  [ 'objname_152' => 'objname', [ 'WORD' ], 0 ],
+  [ 'argexpr_153' => 'argexpr', [  ], 0 ],
+  [ 'argexpr_154' => 'argexpr', [ 'arglist' ], 0 ],
+  [ 'arglist_155' => 'arglist', [ 'arg' ], 0 ],
+  [ 'arglist_156' => 'arglist', [ 'argexpr', ',', 'arg' ], 0 ],
+  [ 'arg_157' => 'arg', [ 'term' ], 0 ],
+  [ 'arg_158' => 'arg', [ 'pair' ], 0 ],
+  [ 'pair_159' => 'pair', [ 'WORD', ':', 'expr' ], 0 ],
+  [ 'flow_160' => 'flow', [ 'scalar', 'MULOP', 'expr', 'FLOWRIGHT', 'scalar' ], 0 ],
+  [ 'flow_161' => 'flow', [ 'scalar', 'MULOP', 'expr', 'FLOWLEFT', 'scalar' ], 0 ],
+  [ 'flow_162' => 'flow', [ 'scalar', 'FLOWRIGHT', 'scalar', 'MULOP', 'expr' ], 0 ],
+  [ 'flow_163' => 'flow', [ 'scalar', 'FLOWLEFT', 'scalar', 'MULOP', 'expr' ], 0 ],
+  [ 'flow_164' => 'flow', [ 'scalar', '(', 'expr', ')', 'FLOWRIGHT', 'scalar' ], 0 ],
+  [ 'flow_165' => 'flow', [ 'scalar', '(', 'expr', ')', 'FLOWLEFT', 'scalar' ], 0 ],
+  [ 'flow_166' => 'flow', [ 'scalar', 'FLOWRIGHT', 'scalar', '(', 'expr', ')' ], 0 ],
+  [ 'flow_167' => 'flow', [ 'scalar', 'FLOWLEFT', 'scalar', '(', 'expr', ')' ], 0 ],
 ],
     yyTERMS  =>
 { '' => { ISSEMANTIC => 0 },
@@ -314,11 +309,10 @@ sub new {
 	WORD => { ISSEMANTIC => 1 },
 	XOROP => { ISSEMANTIC => 1 },
 	YADAYADA => { ISSEMANTIC => 1 },
-	default => { ISSEMANTIC => 1 },
+	error => { ISSEMANTIC => 1 },
 	loopword => { ISSEMANTIC => 1 },
 	perlseq => { ISSEMANTIC => 1 },
 	progseg => { ISSEMANTIC => 1 },
-	var => { ISSEMANTIC => 1 },
 	error => { ISSEMANTIC => 0 },
 },
     yyFILENAME  => 'Parser.eyp',
@@ -351,7 +345,6 @@ sub new {
 			'ACROSS' => -2,
 			'NOTOP' => -2,
 			'FINAL' => -2,
-			'default' => -2,
 			'INCLUDE' => -2,
 			"(" => -2,
 			'VAR' => -2,
@@ -364,7 +357,6 @@ sub new {
 			'RETURN' => -2,
 			'INIT' => -2,
 			'FUNCTION' => -2,
-			'var' => -2,
 			'STR' => -2,
 			'CALC' => -2,
 			"{" => -2,
@@ -394,84 +386,81 @@ sub new {
 	{#State 4
 		ACTIONS => {
 			'' => -1,
-			'WORD' => 46,
-			'PACKAGE' => 47,
+			'WORD' => 44,
+			'PACKAGE' => 45,
 			"\@" => 10,
-			'PERL' => 49,
-			'MY' => 50,
+			'PERL' => 47,
+			'MY' => 48,
 			"%" => 12,
-			"\$^" => 51,
+			"\$^" => 49,
 			'UNLESS' => 13,
-			'NUM' => 52,
+			'NUM' => 50,
 			'STEP' => 15,
-			"\$" => 54,
-			'IF' => 53,
+			"\$" => 52,
+			'IF' => 51,
 			'loopword' => 16,
 			'FOREACH' => 18,
 			'ACROSS' => 20,
-			'NOTOP' => 56,
+			'NOTOP' => 54,
 			'FINAL' => 23,
-			'default' => 59,
 			'INCLUDE' => 24,
-			"(" => 60,
-			'VAR' => 61,
+			"(" => 57,
+			'VAR' => 58,
 			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'UNIT' => 32,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'var' => 34,
-			'FUNCTION' => 35,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'USE' => 44,
-			'YADAYADA' => 72
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'UNIT' => 31,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'FUNCTION' => 33,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'USE' => 42,
+			'YADAYADA' => 69
 		},
 		GOTOS => {
 			'scalar' => 9,
-			'sideff' => 28,
-			'function' => 27,
+			'sideff' => 27,
+			'function' => 26,
 			'objname' => 11,
-			'include' => 63,
-			'tl_across' => 48,
-			'term' => 65,
+			'include' => 60,
+			'tl_across' => 46,
+			'term' => 61,
 			'loop' => 14,
-			'array' => 31,
-			'use' => 67,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
+			'array' => 30,
+			'use' => 64,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
 			'flow' => 17,
-			'set' => 36,
+			'set' => 34,
 			'termunop' => 19,
 			'line' => 21,
 			'cond' => 22,
-			'dynvar' => 58,
-			'phaseblock' => 57,
-			'condword' => 71,
-			'funcall' => 38,
-			'tl_decl' => 41,
-			'package' => 42,
-			'unit' => 45,
-			'varexpr' => 43,
-			'block' => 73,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
+			'dynvar' => 56,
+			'phaseblock' => 55,
+			'condword' => 67,
+			'funcall' => 36,
+			'tl_decl' => 39,
+			'package' => 40,
+			'varexpr' => 41,
+			'unit' => 43,
+			'block' => 70,
+			'indexvar' => 71,
+			'simplevar' => 72
 		}
 	},
 	{#State 5
 		DEFAULT => 0
 	},
 	{#State 6
-		DEFAULT => -55,
+		DEFAULT => -51,
 		GOTOS => {
-			'@54-1' => 76
+			'@50-1' => 73
 		}
 	},
 	{#State 7
@@ -479,645 +468,257 @@ sub new {
 	},
 	{#State 8
 		ACTIONS => {
-			"{" => 77
+			"{" => 74
 		}
 	},
 	{#State 9
 		ACTIONS => {
-			'XOROP' => -141,
-			"<" => -141,
-			'DORDOR' => -141,
-			";" => -141,
-			'FLOWLEFT' => 78,
-			'ADDOP' => -141,
-			"%" => -141,
-			'ANDOP' => -141,
-			'UNLESS' => -141,
-			'ASSIGNOP' => -141,
-			'IF' => -141,
-			"[" => -141,
-			'FLOWRIGHT' => 81,
-			'POWOP' => -141,
-			'DOT' => -141,
-			"?" => -141,
-			'DOTDOT' => -141,
-			'MULOP' => 79,
-			'OROP' => -141,
-			"=" => -141,
-			"(" => 80,
-			'ANDAND' => -141,
-			'OROR' => -141,
-			'RELOP' => -141,
-			'INCOP' => -141
+			'XOROP' => -135,
+			"<" => -135,
+			'DORDOR' => -135,
+			";" => -135,
+			'FLOWLEFT' => 75,
+			'ADDOP' => -135,
+			"%" => -135,
+			'ANDOP' => -135,
+			'UNLESS' => -135,
+			'ASSIGNOP' => -135,
+			'IF' => -135,
+			'error' => -135,
+			"[" => -135,
+			'FLOWRIGHT' => 78,
+			'POWOP' => -135,
+			'DOT' => -135,
+			"?" => -135,
+			'DOTDOT' => -135,
+			'MULOP' => 76,
+			'OROP' => -135,
+			"=" => -135,
+			"(" => 77,
+			'ANDAND' => -135,
+			'OROR' => -135,
+			'RELOP' => -135,
+			'INCOP' => -135
 		}
 	},
 	{#State 10
 		ACTIONS => {
-			'WORD' => 82
+			'WORD' => 79
 		}
 	},
 	{#State 11
-		DEFAULT => -116
+		DEFAULT => -111
 	},
 	{#State 12
 		ACTIONS => {
-			'WORD' => 83
+			'WORD' => 80
 		}
 	},
 	{#State 13
-		DEFAULT => -85
+		DEFAULT => -84
 	},
 	{#State 14
-		DEFAULT => -66
+		DEFAULT => -62
 	},
 	{#State 15
-		DEFAULT => -60
+		DEFAULT => -56
 	},
 	{#State 16
 		ACTIONS => {
-			"(" => 84
+			"(" => 81
 		}
 	},
 	{#State 17
 		DEFAULT => -8
 	},
 	{#State 18
-		DEFAULT => -94,
+		DEFAULT => -93,
 		GOTOS => {
-			'@93-1' => 85
+			'@92-1' => 82
 		}
 	},
 	{#State 19
-		DEFAULT => -107
+		DEFAULT => -102
 	},
 	{#State 20
 		ACTIONS => {
-			"[" => 86
+			"[" => 83
 		},
 		GOTOS => {
-			'dimlist' => 88,
-			'dimspec' => 87
+			'dimlist' => 85,
+			'dimspec' => 84
 		}
 	},
 	{#State 21
 		DEFAULT => -9
 	},
 	{#State 22
-		DEFAULT => -65
+		DEFAULT => -61
 	},
 	{#State 23
-		DEFAULT => -61
+		DEFAULT => -57
 	},
 	{#State 24
 		ACTIONS => {
-			'WORD' => 90,
-			'STR' => 89
+			'WORD' => 87,
+			'STR' => 86
 		}
 	},
 	{#State 25
 		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
 			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
+			'ADDOP' => 29,
+			'MY' => 48,
 			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
 			'INCOP' => 25
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
+			'scalar' => 88,
+			'dynvar' => 56,
 			'objname' => 11,
-			'funcall' => 38,
-			'term' => 92,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
+			'funcall' => 36,
+			'term' => 89,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
 			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'set' => 34
 		}
 	},
 	{#State 26
-		DEFAULT => -117
+		DEFAULT => -14
 	},
 	{#State 27
-		DEFAULT => -16
+		ACTIONS => {
+			";" => 90
+		}
 	},
 	{#State 28
 		ACTIONS => {
-			";" => 93
+			"(" => 91
 		}
 	},
 	{#State 29
 		ACTIONS => {
-			"(" => 94
-		}
-	},
-	{#State 30
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
 			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
+			'ADDOP' => 29,
+			'MY' => 48,
 			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
 			'INCOP' => 25
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
+			'scalar' => 88,
+			'dynvar' => 56,
 			'objname' => 11,
-			'funcall' => 38,
-			'term' => 95,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
+			'funcall' => 36,
+			'term' => 92,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
 			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'set' => 34
 		}
 	},
+	{#State 30
+		DEFAULT => -136
+	},
 	{#State 31
-		DEFAULT => -142
+		ACTIONS => {
+			'WORD' => 94
+		},
+		GOTOS => {
+			'unitdecl' => 93
+		}
 	},
 	{#State 32
 		ACTIONS => {
-			'WORD' => 97
+			'WORD' => -59,
+			'NOT2' => -59,
+			"\@" => -59,
+			'ADDOP' => -59,
+			'MY' => -59,
+			"%" => -59,
+			'FUNC' => -59,
+			"\$^" => -59,
+			'NUM' => -59,
+			'RETURN' => -59,
+			"\$" => -59,
+			'STR' => -59,
+			'NOTOP' => -59,
+			"{" => 95,
+			"(" => -59,
+			'YADAYADA' => -59,
+			'INCOP' => -59
 		},
 		GOTOS => {
-			'wordlist' => 96
+			'@58-1' => 96
 		}
 	},
 	{#State 33
 		ACTIONS => {
-			'WORD' => -63,
-			'NOT2' => -63,
-			"\@" => -63,
-			'ADDOP' => -63,
-			'MY' => -63,
-			"%" => -63,
-			'FUNC' => -63,
-			"\$^" => -63,
-			'NUM' => -63,
-			'RETURN' => -63,
-			"\$" => -63,
-			'STR' => -63,
-			'NOTOP' => -63,
-			"{" => 98,
-			"(" => -63,
-			'YADAYADA' => -63,
-			'INCOP' => -63
-		},
-		GOTOS => {
-			'@62-1' => 99
+			'FUNC' => 97
 		}
 	},
 	{#State 34
-		DEFAULT => -11
+		DEFAULT => -137
 	},
 	{#State 35
-		ACTIONS => {
-			'WORD' => 100
-		}
+		DEFAULT => -109
 	},
 	{#State 36
-		DEFAULT => -143
+		DEFAULT => -110
 	},
 	{#State 37
-		DEFAULT => -114
+		DEFAULT => -47,
+		GOTOS => {
+			'@46-1' => 98
+		}
 	},
 	{#State 38
-		DEFAULT => -115
+		ACTIONS => {
+			"\@" => 10,
+			"\$" => 52,
+			"%" => 12
+		},
+		GOTOS => {
+			'array' => 30,
+			'vardecl' => 99,
+			'scalar' => 88,
+			'simplevar' => 100,
+			'set' => 34
+		}
 	},
 	{#State 39
-		DEFAULT => -51,
-		GOTOS => {
-			'@50-1' => 101
-		}
-	},
-	{#State 40
-		ACTIONS => {
-			"\@" => 10,
-			"\$" => 54,
-			"%" => 12
-		},
-		GOTOS => {
-			'array' => 31,
-			'vardecl' => 102,
-			'scalar' => 91,
-			'simplevar' => 103,
-			'set' => 36
-		}
-	},
-	{#State 41
 		DEFAULT => -3
 	},
-	{#State 42
-		DEFAULT => -64
+	{#State 40
+		DEFAULT => -60
 	},
-	{#State 43
-		ACTIONS => {
-			'WORD' => -110,
-			'' => -110,
-			"}" => -110,
-			":" => -110,
-			'PACKAGE' => -110,
-			'XOROP' => -110,
-			"\@" => -110,
-			"<" => -110,
-			'DORDOR' => -110,
-			'PERL' => -110,
-			'MY' => -110,
-			"%" => -110,
-			'ANDOP' => -110,
-			"\$^" => -110,
-			'UNLESS' => -110,
-			'NUM' => -110,
-			'STEP' => -110,
-			'ASSIGNOP' => -110,
-			'IF' => -110,
-			"\$" => -110,
-			'loopword' => -110,
-			'FOREACH' => -110,
-			"]" => -110,
-			'POWOP' => -110,
-			'ACROSS' => -110,
-			'NOTOP' => -110,
-			'FINAL' => -110,
-			'DOT' => 104,
-			'OROP' => -110,
-			'default' => -110,
-			'INCLUDE' => -110,
-			"(" => -110,
-			'VAR' => -110,
-			'ANDAND' => -110,
-			'INCOP' => -110,
-			'RELOP' => -110,
-			'NOT2' => -110,
-			";" => -110,
-			'FOR' => -110,
-			'FLOWLEFT' => -110,
-			'ADDOP' => -110,
-			"," => -110,
-			'FUNC' => -110,
-			'UNIT' => -110,
-			'RETURN' => -110,
-			'INIT' => -110,
-			'FUNCTION' => -110,
-			'var' => -110,
-			'FLOWRIGHT' => -110,
-			")" => -110,
-			'STR' => -110,
-			'CALC' => -110,
-			"?" => -110,
-			'DOTDOT' => -110,
-			'MULOP' => -110,
-			"{" => -110,
-			'CONST' => -110,
-			"=" => -110,
-			'USE' => -110,
-			'YADAYADA' => -110,
-			'OROR' => -110
-		}
-	},
-	{#State 44
-		ACTIONS => {
-			'WORD' => 105
-		}
-	},
-	{#State 45
-		DEFAULT => -15
-	},
-	{#State 46
-		ACTIONS => {
-			'WORD' => -158,
-			'' => -158,
-			"}" => -158,
-			":" => -158,
-			'PACKAGE' => -158,
-			'XOROP' => -158,
-			"\@" => -158,
-			"<" => -158,
-			'DORDOR' => -158,
-			'PERL' => -158,
-			'MY' => -158,
-			"%" => -158,
-			'ANDOP' => -158,
-			"\$^" => -158,
-			'UNLESS' => -158,
-			'NUM' => -158,
-			'STEP' => -158,
-			'ASSIGNOP' => -158,
-			'IF' => -158,
-			"\$" => -158,
-			'loopword' => -158,
-			'FOREACH' => -158,
-			"]" => -158,
-			'POWOP' => -158,
-			'ACROSS' => -158,
-			'NOTOP' => -158,
-			'FINAL' => -158,
-			'OROP' => -158,
-			'default' => -158,
-			'INCLUDE' => -158,
-			"(" => -158,
-			'VAR' => -158,
-			'ANDAND' => -158,
-			'INCOP' => -158,
-			'RELOP' => -158,
-			'NOT2' => -158,
-			";" => -158,
-			'FOR' => -158,
-			'FLOWLEFT' => -158,
-			'ADDOP' => -158,
-			"," => -158,
-			'FUNC' => -158,
-			'UNIT' => -158,
-			'RETURN' => -158,
-			'INIT' => -158,
-			'FUNCTION' => -158,
-			'var' => -158,
-			'FLOWRIGHT' => -158,
-			")" => -158,
-			'STR' => -158,
-			'CALC' => -158,
-			"?" => -158,
-			'DOTDOT' => -158,
-			"{" => 106,
-			'MULOP' => -158,
-			'CONST' => -158,
-			"=" => -158,
-			'USE' => -158,
-			'YADAYADA' => -158,
-			'OROR' => -158
-		},
-		GOTOS => {
-			'pairblock' => 107
-		}
-	},
-	{#State 47
-		ACTIONS => {
-			'WORD' => 108
-		}
-	},
-	{#State 48
-		DEFAULT => -4
-	},
-	{#State 49
-		ACTIONS => {
-			'FUNCTION' => 109
-		}
-	},
-	{#State 50
-		ACTIONS => {
-			"\@" => 10,
-			"\$" => 54,
-			"%" => 12
-		},
-		GOTOS => {
-			'array' => 31,
-			'scalar' => 91,
-			'simplevar' => 110,
-			'set' => 36
-		}
-	},
-	{#State 51
-		ACTIONS => {
-			'' => -149,
-			"}" => -149,
-			":" => -149,
-			'WORD' => 111,
-			'PACKAGE' => -149,
-			'XOROP' => -149,
-			"\@" => -149,
-			"<" => -149,
-			'DORDOR' => -149,
-			'PERL' => -149,
-			'MY' => -149,
-			"%" => -149,
-			'ANDOP' => -149,
-			"\$^" => -149,
-			'UNLESS' => -149,
-			'NUM' => 112,
-			'STEP' => -149,
-			'ASSIGNOP' => -149,
-			'IF' => -149,
-			"\$" => -149,
-			'loopword' => -149,
-			'FOREACH' => -149,
-			"]" => -149,
-			'POWOP' => -149,
-			'ACROSS' => -149,
-			'NOTOP' => -149,
-			'FINAL' => -149,
-			'OROP' => -149,
-			'default' => -149,
-			'INCLUDE' => -149,
-			"(" => -149,
-			'VAR' => -149,
-			'ANDAND' => -149,
-			'INCOP' => -149,
-			'RELOP' => -149,
-			'NOT2' => -149,
-			";" => -149,
-			'FOR' => -149,
-			'FLOWLEFT' => -149,
-			'ADDOP' => -149,
-			"," => -149,
-			'FUNC' => -149,
-			'UNIT' => -149,
-			'RETURN' => -149,
-			'INIT' => -149,
-			'FUNCTION' => -149,
-			'var' => -149,
-			'FLOWRIGHT' => -149,
-			")" => -149,
-			'STR' => -149,
-			'CALC' => -149,
-			"?" => -149,
-			'DOTDOT' => -149,
-			'MULOP' => -149,
-			"{" => -149,
-			'CONST' => -149,
-			"=" => -149,
-			'USE' => -149,
-			'YADAYADA' => -149,
-			'OROR' => -149
-		}
-	},
-	{#State 52
-		DEFAULT => -113
-	},
-	{#State 53
-		DEFAULT => -84
-	},
-	{#State 54
-		ACTIONS => {
-			'WORD' => 113
-		}
-	},
-	{#State 55
-		DEFAULT => -106
-	},
-	{#State 56
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 114,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 57
-		DEFAULT => -7
-	},
-	{#State 58
-		DEFAULT => -111
-	},
-	{#State 59
-		DEFAULT => -12
-	},
-	{#State 60
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 115,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 61
-		ACTIONS => {
-			"\@" => 10,
-			"\$" => 54,
-			"%" => 12
-		},
-		GOTOS => {
-			'array' => 31,
-			'vardecl' => 116,
-			'scalar' => 91,
-			'simplevar' => 103,
-			'set' => 36
-		}
-	},
-	{#State 62
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 117,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 63
-		DEFAULT => -13
-	},
-	{#State 64
-		ACTIONS => {
-			"(" => 118
-		}
-	},
-	{#State 65
+	{#State 41
 		ACTIONS => {
 			'WORD' => -105,
 			'' => -105,
@@ -1126,2366 +727,441 @@ sub new {
 			'PACKAGE' => -105,
 			'XOROP' => -105,
 			"\@" => -105,
-			'DORDOR' => 120,
-			"<" => 119,
+			"<" => -105,
+			'DORDOR' => -105,
 			'PERL' => -105,
 			'MY' => -105,
-			"%" => 121,
+			"%" => -105,
 			'ANDOP' => -105,
 			"\$^" => -105,
 			'UNLESS' => -105,
 			'NUM' => -105,
 			'STEP' => -105,
-			'ASSIGNOP' => 122,
+			'ASSIGNOP' => -105,
 			'IF' => -105,
 			"\$" => -105,
 			'loopword' => -105,
 			'FOREACH' => -105,
 			"]" => -105,
+			'POWOP' => -105,
 			'ACROSS' => -105,
-			'POWOP' => 130,
 			'NOTOP' => -105,
 			'FINAL' => -105,
+			'DOT' => 101,
 			'OROP' => -105,
-			'default' => -105,
 			'INCLUDE' => -105,
 			"(" => -105,
 			'VAR' => -105,
-			'ANDAND' => 131,
-			'RELOP' => 125,
-			'INCOP' => 124,
+			'ANDAND' => -105,
+			'INCOP' => -105,
+			'RELOP' => -105,
 			'NOT2' => -105,
 			";" => -105,
 			'FOR' => -105,
 			'FLOWLEFT' => -105,
-			'ADDOP' => 126,
+			'ADDOP' => -105,
 			"," => -105,
 			'FUNC' => -105,
 			'UNIT' => -105,
 			'RETURN' => -105,
 			'INIT' => -105,
-			'var' => -105,
+			'error' => -105,
 			'FUNCTION' => -105,
 			'FLOWRIGHT' => -105,
 			")" => -105,
 			'STR' => -105,
 			'CALC' => -105,
-			"?" => 127,
+			"?" => -105,
+			'DOTDOT' => -105,
+			'MULOP' => -105,
 			"{" => -105,
-			'DOTDOT' => 132,
-			'MULOP' => 128,
 			'CONST' => -105,
-			"=" => 133,
+			"=" => -105,
 			'USE' => -105,
 			'YADAYADA' => -105,
-			'OROR' => 129
-		},
-		GOTOS => {
-			'unitspec' => 123
+			'OROR' => -105
 		}
 	},
-	{#State 66
+	{#State 42
 		ACTIONS => {
-			'XOROP' => 137,
-			";" => -79,
-			'IF' => 138,
-			'OROP' => 136,
-			'ANDOP' => 134,
-			'UNLESS' => 135
+			'WORD' => 102
 		}
 	},
-	{#State 67
-		DEFAULT => -14
+	{#State 43
+		DEFAULT => -13
 	},
-	{#State 68
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 139,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 69
-		DEFAULT => -58
-	},
-	{#State 70
-		DEFAULT => -59
-	},
-	{#State 71
-		ACTIONS => {
-			"(" => 140
-		}
-	},
-	{#State 72
-		DEFAULT => -120
-	},
-	{#State 73
-		DEFAULT => -5
-	},
-	{#State 74
-		DEFAULT => -112
-	},
-	{#State 75
-		ACTIONS => {
-			'WORD' => -136,
-			'' => -136,
-			"}" => -136,
-			":" => -136,
-			'PACKAGE' => -136,
-			'XOROP' => -136,
-			"\@" => -136,
-			"<" => -136,
-			'DORDOR' => -136,
-			'PERL' => -136,
-			'MY' => -136,
-			"%" => -136,
-			'ANDOP' => -136,
-			"\$^" => -136,
-			'UNLESS' => -136,
-			'NUM' => -136,
-			'STEP' => -136,
-			'ASSIGNOP' => -136,
-			'IF' => -136,
-			"\$" => -136,
-			'loopword' => -136,
-			'FOREACH' => -136,
-			"[" => 141,
-			"]" => -136,
-			'POWOP' => -136,
-			'ACROSS' => -136,
-			'NOTOP' => -136,
-			'FINAL' => -136,
-			'DOT' => -136,
-			'OROP' => -136,
-			'default' => -136,
-			'INCLUDE' => -136,
-			"(" => -136,
-			'VAR' => -136,
-			'ANDAND' => -136,
-			'INCOP' => -136,
-			'RELOP' => -136,
-			'NOT2' => -136,
-			";" => -136,
-			'FOR' => -136,
-			'FLOWLEFT' => -136,
-			'ADDOP' => -136,
-			"," => -136,
-			'FUNC' => -136,
-			'UNIT' => -136,
-			'RETURN' => -136,
-			'INIT' => -136,
-			'FUNCTION' => -136,
-			'var' => -136,
-			'FLOWRIGHT' => -136,
-			")" => -136,
-			'STR' => -136,
-			'CALC' => -136,
-			"?" => -136,
-			'DOTDOT' => -136,
-			'MULOP' => -136,
-			"{" => -136,
-			'CONST' => -136,
-			"=" => -136,
-			'USE' => -136,
-			'YADAYADA' => -136,
-			'OROR' => -136
-		},
-		GOTOS => {
-			'subexpr' => 143,
-			'subspec' => 142
-		}
-	},
-	{#State 76
-		ACTIONS => {
-			'perlseq' => 144
-		}
-	},
-	{#State 77
-		DEFAULT => -53,
-		GOTOS => {
-			'@52-2' => 145
-		}
-	},
-	{#State 78
-		ACTIONS => {
-			"\$" => 54
-		},
-		GOTOS => {
-			'scalar' => 146
-		}
-	},
-	{#State 79
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 147,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 80
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 148,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 81
-		ACTIONS => {
-			"\$" => 54
-		},
-		GOTOS => {
-			'scalar' => 149
-		}
-	},
-	{#State 82
-		DEFAULT => -147
-	},
-	{#State 83
-		DEFAULT => -148
-	},
-	{#State 84
-		DEFAULT => -92,
-		GOTOS => {
-			'@91-2' => 150
-		}
-	},
-	{#State 85
-		ACTIONS => {
-			"\$" => 54,
-			'MY' => 152
-		},
-		GOTOS => {
-			'scalar' => 151,
-			'scalarvar' => 153
-		}
-	},
-	{#State 86
-		ACTIONS => {
-			'WORD' => 154,
-			"\@" => -77,
-			"%" => -77
-		},
-		GOTOS => {
-			'label' => 155
-		}
-	},
-	{#State 87
-		DEFAULT => -73
-	},
-	{#State 88
-		ACTIONS => {
-			"{" => 156,
-			"[" => 86
-		},
-		GOTOS => {
-			'dimspec' => 157
-		}
-	},
-	{#State 89
-		ACTIONS => {
-			";" => 158
-		}
-	},
-	{#State 90
-		ACTIONS => {
-			";" => 159
-		}
-	},
-	{#State 91
-		DEFAULT => -141
-	},
-	{#State 92
-		ACTIONS => {
-			'WORD' => -135,
-			'' => -135,
-			"}" => -135,
-			":" => -135,
-			'PACKAGE' => -135,
-			'XOROP' => -135,
-			"\@" => -135,
-			'DORDOR' => -135,
-			"<" => 119,
-			'PERL' => -135,
-			'MY' => -135,
-			"%" => -135,
-			'ANDOP' => -135,
-			"\$^" => -135,
-			'UNLESS' => -135,
-			'NUM' => -135,
-			'STEP' => -135,
-			'ASSIGNOP' => -135,
-			'IF' => -135,
-			"\$" => -135,
-			'loopword' => -135,
-			'FOREACH' => -135,
-			"]" => -135,
-			'ACROSS' => -135,
-			'POWOP' => -135,
-			'NOTOP' => -135,
-			'FINAL' => -135,
-			'OROP' => -135,
-			'default' => -135,
-			'INCLUDE' => -135,
-			"(" => -135,
-			'VAR' => -135,
-			'ANDAND' => -135,
-			'RELOP' => -135,
-			'INCOP' => undef,
-			'NOT2' => -135,
-			";" => -135,
-			'FOR' => -135,
-			'FLOWLEFT' => -135,
-			'ADDOP' => -135,
-			"," => -135,
-			'FUNC' => -135,
-			'UNIT' => -135,
-			'RETURN' => -135,
-			'INIT' => -135,
-			'var' => -135,
-			'FUNCTION' => -135,
-			'FLOWRIGHT' => -135,
-			")" => -135,
-			'STR' => -135,
-			'CALC' => -135,
-			"?" => -135,
-			"{" => -135,
-			'DOTDOT' => -135,
-			'MULOP' => -135,
-			'CONST' => -135,
-			"=" => -135,
-			'USE' => -135,
-			'YADAYADA' => -135,
-			'OROR' => -135
-		},
-		GOTOS => {
-			'unitspec' => 123
-		}
-	},
-	{#State 93
-		DEFAULT => -67
-	},
-	{#State 94
-		DEFAULT => -96,
-		GOTOS => {
-			'@95-2' => 160
-		}
-	},
-	{#State 95
-		ACTIONS => {
-			'WORD' => -132,
-			'' => -132,
-			"}" => -132,
-			":" => -132,
-			'PACKAGE' => -132,
-			'XOROP' => -132,
-			"\@" => -132,
-			'DORDOR' => -132,
-			"<" => 119,
-			'PERL' => -132,
-			'MY' => -132,
-			"%" => -132,
-			'ANDOP' => -132,
-			"\$^" => -132,
-			'UNLESS' => -132,
-			'NUM' => -132,
-			'STEP' => -132,
-			'ASSIGNOP' => -132,
-			'IF' => -132,
-			"\$" => -132,
-			'loopword' => -132,
-			'FOREACH' => -132,
-			"]" => -132,
-			'ACROSS' => -132,
-			'POWOP' => 130,
-			'NOTOP' => -132,
-			'FINAL' => -132,
-			'OROP' => -132,
-			'default' => -132,
-			'INCLUDE' => -132,
-			"(" => -132,
-			'VAR' => -132,
-			'ANDAND' => -132,
-			'RELOP' => -132,
-			'INCOP' => 124,
-			'NOT2' => -132,
-			";" => -132,
-			'FOR' => -132,
-			'FLOWLEFT' => -132,
-			'ADDOP' => -132,
-			"," => -132,
-			'FUNC' => -132,
-			'UNIT' => -132,
-			'RETURN' => -132,
-			'INIT' => -132,
-			'var' => -132,
-			'FUNCTION' => -132,
-			'FLOWRIGHT' => -132,
-			")" => -132,
-			'STR' => -132,
-			'CALC' => -132,
-			"?" => -132,
-			"{" => -132,
-			'DOTDOT' => -132,
-			'MULOP' => -132,
-			'CONST' => -132,
-			"=" => -132,
-			'USE' => -132,
-			'YADAYADA' => -132,
-			'OROR' => -132
-		},
-		GOTOS => {
-			'unitspec' => 123
-		}
-	},
-	{#State 96
-		ACTIONS => {
-			";" => 162,
-			"," => 161
-		}
-	},
-	{#State 97
-		DEFAULT => -24
-	},
-	{#State 98
-		DEFAULT => -57,
-		GOTOS => {
-			'@56-2' => 163
-		}
-	},
-	{#State 99
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'sideff' => 164,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 66,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 100
-		ACTIONS => {
-			"(" => 165
-		}
-	},
-	{#State 101
-		DEFAULT => -44,
-		GOTOS => {
-			'stmtseq' => 166
-		}
-	},
-	{#State 102
-		ACTIONS => {
-			"=" => 167
-		}
-	},
-	{#State 103
-		ACTIONS => {
-			"<" => 119,
-			";" => -37,
-			"[" => 86,
-			"=" => -37
-		},
-		GOTOS => {
-			'unitspec' => 169,
-			'unitopt' => 168,
-			'dimspec' => 170
-		}
-	},
-	{#State 104
-		ACTIONS => {
-			'WORD' => 171,
-			'FUNC' => 172
-		}
-	},
-	{#State 105
-		ACTIONS => {
-			";" => 173
-		}
-	},
-	{#State 106
-		ACTIONS => {
-			'WORD' => 175
-		},
-		GOTOS => {
-			'pair' => 176,
-			'pairlist' => 174
-		}
-	},
-	{#State 107
-		DEFAULT => -159
-	},
-	{#State 108
-		ACTIONS => {
-			";" => 177
-		}
-	},
-	{#State 109
-		ACTIONS => {
-			'WORD' => 178
-		}
-	},
-	{#State 110
-		DEFAULT => -140
-	},
-	{#State 111
-		DEFAULT => -151
-	},
-	{#State 112
-		DEFAULT => -150
-	},
-	{#State 113
-		DEFAULT => -146
-	},
-	{#State 114
-		ACTIONS => {
-			'WORD' => -104,
-			'' => -104,
-			"}" => -104,
-			":" => -104,
-			'PACKAGE' => -104,
-			"\@" => -104,
-			"<" => -104,
-			'DORDOR' => -104,
-			'XOROP' => -104,
-			'PERL' => -104,
-			'MY' => -104,
-			"%" => -104,
-			'ANDOP' => -104,
-			"\$^" => -104,
-			'UNLESS' => -104,
-			'NUM' => -104,
-			'STEP' => -104,
-			'ASSIGNOP' => -104,
-			'IF' => -104,
-			"\$" => -104,
-			'loopword' => -104,
-			'FOREACH' => -104,
-			"]" => -104,
-			'POWOP' => -104,
-			'ACROSS' => -104,
-			'NOTOP' => -104,
-			'FINAL' => -104,
-			'OROP' => -104,
-			'default' => -104,
-			'INCLUDE' => -104,
-			"(" => -104,
-			'VAR' => -104,
-			'ANDAND' => -104,
-			'INCOP' => -104,
-			'RELOP' => -104,
-			'NOT2' => -104,
-			";" => -104,
-			'FOR' => -104,
-			'FLOWLEFT' => -104,
-			'ADDOP' => -104,
-			"," => -104,
-			'FUNC' => -104,
-			'UNIT' => -104,
-			'RETURN' => -104,
-			'INIT' => -104,
-			'FUNCTION' => -104,
-			'var' => -104,
-			'FLOWRIGHT' => -104,
-			")" => -104,
-			'STR' => -104,
-			'CALC' => -104,
-			"?" => -104,
-			'DOTDOT' => -104,
-			'MULOP' => -104,
-			"{" => -104,
-			'CONST' => -104,
-			"=" => -104,
-			'USE' => -104,
-			'YADAYADA' => -104,
-			'OROR' => -104
-		}
-	},
-	{#State 115
-		ACTIONS => {
-			'XOROP' => 137,
-			'OROP' => 136,
-			")" => 179,
-			'ANDOP' => 134
-		}
-	},
-	{#State 116
-		ACTIONS => {
-			";" => 180
-		}
-	},
-	{#State 117
-		ACTIONS => {
-			'WORD' => -133,
-			'' => -133,
-			"}" => -133,
-			":" => -133,
-			'PACKAGE' => -133,
-			'XOROP' => -133,
-			"\@" => -133,
-			'DORDOR' => -133,
-			"<" => 119,
-			'PERL' => -133,
-			'MY' => -133,
-			"%" => -133,
-			'ANDOP' => -133,
-			"\$^" => -133,
-			'UNLESS' => -133,
-			'NUM' => -133,
-			'STEP' => -133,
-			'ASSIGNOP' => -133,
-			'IF' => -133,
-			"\$" => -133,
-			'loopword' => -133,
-			'FOREACH' => -133,
-			"]" => -133,
-			'ACROSS' => -133,
-			'POWOP' => 130,
-			'NOTOP' => -133,
-			'FINAL' => -133,
-			'OROP' => -133,
-			'default' => -133,
-			'INCLUDE' => -133,
-			"(" => -133,
-			'VAR' => -133,
-			'ANDAND' => -133,
-			'RELOP' => -133,
-			'INCOP' => 124,
-			'NOT2' => -133,
-			";" => -133,
-			'FOR' => -133,
-			'FLOWLEFT' => -133,
-			'ADDOP' => -133,
-			"," => -133,
-			'FUNC' => -133,
-			'UNIT' => -133,
-			'RETURN' => -133,
-			'INIT' => -133,
-			'var' => -133,
-			'FUNCTION' => -133,
-			'FLOWRIGHT' => -133,
-			")" => -133,
-			'STR' => -133,
-			'CALC' => -133,
-			"?" => -133,
-			"{" => -133,
-			'DOTDOT' => -133,
-			'MULOP' => -133,
-			'CONST' => -133,
-			"=" => -133,
-			'USE' => -133,
-			'YADAYADA' => -133,
-			'OROR' => -133
-		},
-		GOTOS => {
-			'unitspec' => 123
-		}
-	},
-	{#State 118
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			"," => -97,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			")" => -97,
-			'STR' => 37,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 183,
-			'array' => 31,
-			'arglist' => 181,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'argexpr' => 182,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 119
-		DEFAULT => -40,
-		GOTOS => {
-			'unitlist' => 184
-		}
-	},
-	{#State 120
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 185,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 121
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 186,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 122
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 187,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 123
-		DEFAULT => -119
-	},
-	{#State 124
-		DEFAULT => -134
-	},
-	{#State 125
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 188,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 126
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 189,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 127
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 190,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 128
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 191,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 129
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 192,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 130
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 193,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 131
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 194,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 132
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 195,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 133
-		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 196,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 134
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 197,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 135
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 198,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 136
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 199,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 137
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 200,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 138
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 201,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 139
-		ACTIONS => {
-			'WORD' => -118,
-			'' => -118,
-			"}" => -118,
-			":" => -118,
-			'PACKAGE' => -118,
-			"\@" => -118,
-			"<" => -118,
-			'DORDOR' => -118,
-			'XOROP' => 137,
-			'PERL' => -118,
-			'MY' => -118,
-			"%" => -118,
-			'ANDOP' => 134,
-			"\$^" => -118,
-			'UNLESS' => -118,
-			'NUM' => -118,
-			'STEP' => -118,
-			'ASSIGNOP' => -118,
-			'IF' => -118,
-			"\$" => -118,
-			'loopword' => -118,
-			'FOREACH' => -118,
-			"]" => -118,
-			'POWOP' => -118,
-			'ACROSS' => -118,
-			'NOTOP' => -118,
-			'FINAL' => -118,
-			'OROP' => 136,
-			'default' => -118,
-			'INCLUDE' => -118,
-			"(" => -118,
-			'VAR' => -118,
-			'ANDAND' => -118,
-			'INCOP' => -118,
-			'RELOP' => -118,
-			'NOT2' => -118,
-			";" => -118,
-			'FOR' => -118,
-			'FLOWLEFT' => -118,
-			'ADDOP' => -118,
-			"," => -118,
-			'FUNC' => -118,
-			'UNIT' => -118,
-			'RETURN' => -118,
-			'INIT' => -118,
-			'FUNCTION' => -118,
-			'var' => -118,
-			'FLOWRIGHT' => -118,
-			")" => -118,
-			'STR' => -118,
-			'CALC' => -118,
-			"?" => -118,
-			'DOTDOT' => -118,
-			'MULOP' => -118,
-			"{" => -118,
-			'CONST' => -118,
-			"=" => -118,
-			'USE' => -118,
-			'YADAYADA' => -118,
-			'OROR' => -118
-		}
-	},
-	{#State 140
-		DEFAULT => -83,
-		GOTOS => {
-			'@82-2' => 202
-		}
-	},
-	{#State 141
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			"]" => 203,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 204,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 142
+	{#State 44
 		DEFAULT => -152
 	},
-	{#State 143
+	{#State 45
 		ACTIONS => {
-			'WORD' => -137,
-			'' => -137,
-			"}" => -137,
-			":" => -137,
-			'PACKAGE' => -137,
-			'XOROP' => -137,
-			"\@" => -137,
-			"<" => -137,
-			'DORDOR' => -137,
-			'PERL' => -137,
-			'MY' => -137,
-			"%" => -137,
-			'ANDOP' => -137,
-			"\$^" => -137,
-			'UNLESS' => -137,
-			'NUM' => -137,
-			'STEP' => -137,
-			'ASSIGNOP' => -137,
-			'IF' => -137,
-			"\$" => -137,
-			'loopword' => -137,
-			'FOREACH' => -137,
-			"[" => 141,
-			"]" => -137,
-			'POWOP' => -137,
-			'ACROSS' => -137,
-			'NOTOP' => -137,
-			'FINAL' => -137,
-			'DOT' => -137,
-			'OROP' => -137,
-			'default' => -137,
-			'INCLUDE' => -137,
-			"(" => -137,
-			'VAR' => -137,
-			'ANDAND' => -137,
-			'INCOP' => -137,
-			'RELOP' => -137,
-			'NOT2' => -137,
-			";" => -137,
-			'FOR' => -137,
-			'FLOWLEFT' => -137,
-			'ADDOP' => -137,
-			"," => -137,
-			'FUNC' => -137,
-			'UNIT' => -137,
-			'RETURN' => -137,
-			'INIT' => -137,
-			'FUNCTION' => -137,
-			'var' => -137,
-			'FLOWRIGHT' => -137,
-			")" => -137,
-			'STR' => -137,
-			'CALC' => -137,
-			"?" => -137,
-			'DOTDOT' => -137,
-			'MULOP' => -137,
-			"{" => -137,
-			'CONST' => -137,
-			"=" => -137,
-			'USE' => -137,
-			'YADAYADA' => -137,
-			'OROR' => -137
-		},
-		GOTOS => {
-			'subspec' => 205
+			'WORD' => 103
 		}
 	},
-	{#State 144
+	{#State 46
+		DEFAULT => -4
+	},
+	{#State 47
 		ACTIONS => {
-			"%}" => 206
+			'FUNCTION' => 104
 		}
 	},
-	{#State 145
-		ACTIONS => {
-			'perlseq' => 207
-		}
-	},
-	{#State 146
-		ACTIONS => {
-			"(" => 209,
-			'MULOP' => 208
-		}
-	},
-	{#State 147
-		ACTIONS => {
-			'XOROP' => 137,
-			'FLOWLEFT' => 210,
-			'OROP' => 136,
-			'FLOWRIGHT' => 211,
-			'ANDOP' => 134
-		}
-	},
-	{#State 148
-		ACTIONS => {
-			'XOROP' => 137,
-			'OROP' => 136,
-			")" => 212,
-			'ANDOP' => 134
-		}
-	},
-	{#State 149
-		ACTIONS => {
-			"(" => 214,
-			'MULOP' => 213
-		}
-	},
-	{#State 150
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 215,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
-	},
-	{#State 151
-		DEFAULT => -144
-	},
-	{#State 152
-		ACTIONS => {
-			"\$" => 54
-		},
-		GOTOS => {
-			'scalar' => 216
-		}
-	},
-	{#State 153
-		ACTIONS => {
-			"(" => 217
-		}
-	},
-	{#State 154
-		ACTIONS => {
-			":" => 218
-		}
-	},
-	{#State 155
+	{#State 48
 		ACTIONS => {
 			"\@" => 10,
+			"\$" => 52,
 			"%" => 12
 		},
 		GOTOS => {
-			'array' => 219,
-			'set' => 220
+			'array' => 30,
+			'scalar' => 88,
+			'simplevar' => 105,
+			'set' => 34
 		}
 	},
-	{#State 156
-		DEFAULT => -43,
-		GOTOS => {
-			'@42-3' => 221
-		}
-	},
-	{#State 157
-		DEFAULT => -74
-	},
-	{#State 158
-		DEFAULT => -21
-	},
-	{#State 159
-		DEFAULT => -20
-	},
-	{#State 160
+	{#State 49
 		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
+			'' => -143,
+			"}" => -143,
+			":" => -143,
+			'WORD' => 106,
+			'PACKAGE' => -143,
+			'XOROP' => -143,
+			"\@" => -143,
+			"<" => -143,
+			'DORDOR' => -143,
+			'PERL' => -143,
+			'MY' => -143,
+			"%" => -143,
+			'ANDOP' => -143,
+			"\$^" => -143,
+			'UNLESS' => -143,
+			'NUM' => 107,
+			'STEP' => -143,
+			'ASSIGNOP' => -143,
+			'IF' => -143,
+			"\$" => -143,
+			'loopword' => -143,
+			'FOREACH' => -143,
+			"]" => -143,
+			'POWOP' => -143,
+			'ACROSS' => -143,
+			'NOTOP' => -143,
+			'FINAL' => -143,
+			'OROP' => -143,
+			'INCLUDE' => -143,
+			"(" => -143,
+			'VAR' => -143,
+			'ANDAND' => -143,
+			'INCOP' => -143,
+			'RELOP' => -143,
+			'NOT2' => -143,
+			";" => -143,
+			'FOR' => -143,
+			'FLOWLEFT' => -143,
+			'ADDOP' => -143,
+			"," => -143,
+			'FUNC' => -143,
+			'UNIT' => -143,
+			'RETURN' => -143,
+			'INIT' => -143,
+			'error' => -143,
+			'FUNCTION' => -143,
+			'FLOWRIGHT' => -143,
+			")" => -143,
+			'STR' => -143,
+			'CALC' => -143,
+			"?" => -143,
+			'DOTDOT' => -143,
+			'MULOP' => -143,
+			"{" => -143,
+			'CONST' => -143,
+			"=" => -143,
+			'USE' => -143,
+			'YADAYADA' => -143,
+			'OROR' => -143
+		}
+	},
+	{#State 50
+		DEFAULT => -108
+	},
+	{#State 51
+		DEFAULT => -83
+	},
+	{#State 52
+		ACTIONS => {
+			'WORD' => 108
+		}
+	},
+	{#State 53
+		DEFAULT => -101
+	},
+	{#State 54
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
 			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
+			'ADDOP' => 29,
+			'MY' => 48,
 			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
 			'INCOP' => 25
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
+			'scalar' => 88,
+			'dynvar' => 56,
 			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 222,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 109,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
 			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'set' => 34
 		}
 	},
-	{#State 161
+	{#State 55
+		DEFAULT => -7
+	},
+	{#State 56
+		DEFAULT => -106
+	},
+	{#State 57
 		ACTIONS => {
-			'WORD' => 223
-		}
-	},
-	{#State 162
-		DEFAULT => -23
-	},
-	{#State 163
-		DEFAULT => -44,
-		GOTOS => {
-			'stmtseq' => 224
-		}
-	},
-	{#State 164
-		ACTIONS => {
-			";" => 225
-		}
-	},
-	{#State 165
-		ACTIONS => {
-			"\$" => 54,
-			")" => -32
-		},
-		GOTOS => {
-			'params' => 229,
-			'scalar' => 226,
-			'paramlist' => 227,
-			'param' => 228
-		}
-	},
-	{#State 166
-		ACTIONS => {
-			"%{" => 6,
-			'WORD' => 46,
-			"}" => 230,
-			'PACKAGE' => 47,
+			'WORD' => 44,
+			'NOT2' => 59,
 			"\@" => 10,
-			'PERL' => 8,
-			'MY' => 50,
+			'ADDOP' => 29,
+			'MY' => 48,
 			"%" => 12,
-			"\$^" => 51,
-			'UNLESS' => 13,
-			'NUM' => 52,
-			'STEP' => 15,
-			'IF' => 53,
-			"\$" => 54,
-			'loopword' => 16,
-			'FOREACH' => 18,
-			'ACROSS' => 231,
-			'NOTOP' => 56,
-			'FINAL' => 23,
-			"(" => 60,
-			'VAR' => 61,
-			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'YADAYADA' => 72
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'sideff' => 28,
+			'scalar' => 88,
+			'dynvar' => 56,
 			'objname' => 11,
-			'term' => 65,
-			'loop' => 14,
-			'array' => 31,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
-			'set' => 36,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 110,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
 			'termunop' => 19,
-			'line' => 232,
-			'cond' => 22,
-			'dynvar' => 58,
-			'phaseblock' => 233,
-			'perlblock' => 234,
-			'condword' => 71,
-			'funcall' => 38,
-			'across' => 235,
-			'package' => 42,
-			'varexpr' => 43,
-			'block' => 236,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
+			'set' => 34
 		}
 	},
-	{#State 167
-		DEFAULT => -70,
-		GOTOS => {
-			'@69-3' => 237
-		}
-	},
-	{#State 168
-		DEFAULT => -17
-	},
-	{#State 169
-		DEFAULT => -38
-	},
-	{#State 170
+	{#State 58
 		ACTIONS => {
-			"<" => 119,
-			";" => -37,
-			"=" => -37
+			"\@" => 10,
+			"\$" => 52,
+			"%" => 12
 		},
 		GOTOS => {
-			'unitspec' => 169,
-			'unitopt' => 238
+			'array' => 30,
+			'vardecl' => 111,
+			'scalar' => 88,
+			'simplevar' => 100,
+			'set' => 34
 		}
 	},
-	{#State 171
-		DEFAULT => -138
-	},
-	{#State 172
+	{#State 59
 		ACTIONS => {
-			"(" => 239
-		}
-	},
-	{#State 173
-		DEFAULT => -22
-	},
-	{#State 174
-		ACTIONS => {
-			"}" => 240,
-			"," => 241
-		}
-	},
-	{#State 175
-		ACTIONS => {
-			":" => 242
-		}
-	},
-	{#State 176
-		DEFAULT => -162
-	},
-	{#State 177
-		DEFAULT => -19
-	},
-	{#State 178
-		ACTIONS => {
-			"(" => 243
-		}
-	},
-	{#State 179
-		DEFAULT => -109
-	},
-	{#State 180
-		DEFAULT => -68
-	},
-	{#State 181
-		DEFAULT => -98
-	},
-	{#State 182
-		ACTIONS => {
-			"," => 244,
-			")" => 245
-		}
-	},
-	{#State 183
-		ACTIONS => {
-			'DORDOR' => 120,
-			"<" => 119,
-			'ADDOP' => 126,
-			"," => -99,
-			"%" => 121,
-			'ASSIGNOP' => 122,
-			")" => -99,
-			'POWOP' => 130,
-			"?" => 127,
-			'MULOP' => 128,
-			'DOTDOT' => 132,
-			"=" => 133,
-			'OROR' => 129,
-			'ANDAND' => 131,
-			'RELOP' => 125,
-			'INCOP' => 124
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
 		},
 		GOTOS => {
-			'unitspec' => 123
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 112,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
 		}
 	},
-	{#State 184
-		ACTIONS => {
-			'UNIT' => 246,
-			">" => 247
-		}
+	{#State 60
+		DEFAULT => -11
 	},
-	{#State 185
+	{#State 61
 		ACTIONS => {
-			'WORD' => -131,
-			'' => -131,
-			"}" => -131,
-			":" => -131,
-			'PACKAGE' => -131,
-			'XOROP' => -131,
-			"\@" => -131,
-			'DORDOR' => -131,
-			"<" => 119,
-			'PERL' => -131,
-			'MY' => -131,
-			"%" => 121,
-			'ANDOP' => -131,
-			"\$^" => -131,
-			'UNLESS' => -131,
-			'NUM' => -131,
-			'STEP' => -131,
-			'ASSIGNOP' => -131,
-			'IF' => -131,
-			"\$" => -131,
-			'loopword' => -131,
-			'FOREACH' => -131,
-			"]" => -131,
-			'ACROSS' => -131,
-			'POWOP' => 130,
-			'NOTOP' => -131,
-			'FINAL' => -131,
-			'OROP' => -131,
-			'default' => -131,
-			'INCLUDE' => -131,
-			"(" => -131,
-			'VAR' => -131,
-			'ANDAND' => 131,
-			'RELOP' => 125,
-			'INCOP' => 124,
-			'NOT2' => -131,
-			";" => -131,
-			'FOR' => -131,
-			'FLOWLEFT' => -131,
-			'ADDOP' => 126,
-			"," => -131,
-			'FUNC' => -131,
-			'UNIT' => -131,
-			'RETURN' => -131,
-			'INIT' => -131,
-			'var' => -131,
-			'FUNCTION' => -131,
-			'FLOWRIGHT' => -131,
-			")" => -131,
-			'STR' => -131,
-			'CALC' => -131,
-			"?" => -131,
-			"{" => -131,
-			'DOTDOT' => -131,
-			'MULOP' => 128,
-			'CONST' => -131,
-			"=" => -131,
-			'USE' => -131,
-			'YADAYADA' => -131,
-			'OROR' => -131
+			'WORD' => -100,
+			'' => -100,
+			"}" => -100,
+			":" => -100,
+			'PACKAGE' => -100,
+			'XOROP' => -100,
+			"\@" => -100,
+			'DORDOR' => 114,
+			"<" => 113,
+			'PERL' => -100,
+			'MY' => -100,
+			"%" => 115,
+			'ANDOP' => -100,
+			"\$^" => -100,
+			'UNLESS' => -100,
+			'NUM' => -100,
+			'STEP' => -100,
+			'ASSIGNOP' => 116,
+			'IF' => -100,
+			"\$" => -100,
+			'loopword' => -100,
+			'FOREACH' => -100,
+			"]" => -100,
+			'ACROSS' => -100,
+			'POWOP' => 125,
+			'NOTOP' => -100,
+			'FINAL' => -100,
+			'OROP' => -100,
+			'INCLUDE' => -100,
+			"(" => -100,
+			'VAR' => -100,
+			'ANDAND' => 126,
+			'RELOP' => 119,
+			'INCOP' => 118,
+			'NOT2' => -100,
+			";" => -100,
+			'FOR' => -100,
+			'FLOWLEFT' => -100,
+			'ADDOP' => 120,
+			"," => -100,
+			'FUNC' => -100,
+			'UNIT' => -100,
+			'RETURN' => -100,
+			'INIT' => -100,
+			'FUNCTION' => -100,
+			'error' => 121,
+			'FLOWRIGHT' => -100,
+			")" => -100,
+			'STR' => -100,
+			'CALC' => -100,
+			"?" => 122,
+			"{" => -100,
+			'DOTDOT' => 127,
+			'MULOP' => 123,
+			'CONST' => -100,
+			"=" => 128,
+			'USE' => -100,
+			'YADAYADA' => -100,
+			'OROR' => 124
 		},
 		GOTOS => {
-			'unitspec' => 123
+			'unitspec' => 117
 		}
 	},
-	{#State 186
+	{#State 62
 		ACTIONS => {
-			'WORD' => -125,
-			'' => -125,
-			"}" => -125,
-			":" => -125,
-			'PACKAGE' => -125,
-			'XOROP' => -125,
-			"\@" => -125,
-			'DORDOR' => -125,
-			"<" => 119,
-			'PERL' => -125,
-			'MY' => -125,
-			"%" => -125,
-			'ANDOP' => -125,
-			"\$^" => -125,
-			'UNLESS' => -125,
-			'NUM' => -125,
-			'STEP' => -125,
-			'ASSIGNOP' => -125,
-			'IF' => -125,
-			"\$" => -125,
-			'loopword' => -125,
-			'FOREACH' => -125,
-			"]" => -125,
-			'ACROSS' => -125,
-			'POWOP' => 130,
-			'NOTOP' => -125,
-			'FINAL' => -125,
-			'OROP' => -125,
-			'default' => -125,
-			'INCLUDE' => -125,
-			"(" => -125,
-			'VAR' => -125,
-			'ANDAND' => -125,
-			'RELOP' => -125,
-			'INCOP' => 124,
-			'NOT2' => -125,
-			";" => -125,
-			'FOR' => -125,
-			'FLOWLEFT' => -125,
-			'ADDOP' => -125,
-			"," => -125,
-			'FUNC' => -125,
-			'UNIT' => -125,
-			'RETURN' => -125,
-			'INIT' => -125,
-			'var' => -125,
-			'FUNCTION' => -125,
-			'FLOWRIGHT' => -125,
-			")" => -125,
-			'STR' => -125,
-			'CALC' => -125,
-			"?" => -125,
-			"{" => -125,
-			'DOTDOT' => -125,
-			'MULOP' => -125,
-			'CONST' => -125,
-			"=" => -125,
-			'USE' => -125,
-			'YADAYADA' => -125,
-			'OROR' => -125
+			"(" => 129
+		}
+	},
+	{#State 63
+		ACTIONS => {
+			'XOROP' => 133,
+			";" => -78,
+			'IF' => 134,
+			'OROP' => 132,
+			'ANDOP' => 130,
+			'UNLESS' => 131
+		}
+	},
+	{#State 64
+		DEFAULT => -12
+	},
+	{#State 65
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
 		},
 		GOTOS => {
-			'unitspec' => 123
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 135,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
 		}
 	},
-	{#State 187
+	{#State 66
+		DEFAULT => -54
+	},
+	{#State 67
 		ACTIONS => {
-			'WORD' => -121,
-			'' => -121,
-			"}" => -121,
-			":" => -121,
-			'PACKAGE' => -121,
-			'XOROP' => -121,
-			"\@" => -121,
-			'DORDOR' => 120,
-			"<" => 119,
-			'PERL' => -121,
-			'MY' => -121,
-			"%" => 121,
-			'ANDOP' => -121,
-			"\$^" => -121,
-			'UNLESS' => -121,
-			'NUM' => -121,
-			'STEP' => -121,
-			'ASSIGNOP' => 122,
-			'IF' => -121,
-			"\$" => -121,
-			'loopword' => -121,
-			'FOREACH' => -121,
-			"]" => -121,
-			'ACROSS' => -121,
-			'POWOP' => 130,
-			'NOTOP' => -121,
-			'FINAL' => -121,
-			'OROP' => -121,
-			'default' => -121,
-			'INCLUDE' => -121,
-			"(" => -121,
-			'VAR' => -121,
-			'ANDAND' => 131,
-			'RELOP' => 125,
-			'INCOP' => 124,
-			'NOT2' => -121,
-			";" => -121,
-			'FOR' => -121,
-			'FLOWLEFT' => -121,
-			'ADDOP' => 126,
-			"," => -121,
-			'FUNC' => -121,
-			'UNIT' => -121,
-			'RETURN' => -121,
-			'INIT' => -121,
-			'var' => -121,
-			'FUNCTION' => -121,
-			'FLOWRIGHT' => -121,
-			")" => -121,
-			'STR' => -121,
-			'CALC' => -121,
-			"?" => 127,
-			"{" => -121,
-			'DOTDOT' => 132,
-			'MULOP' => 128,
-			'CONST' => -121,
-			"=" => 133,
-			'USE' => -121,
-			'YADAYADA' => -121,
-			'OROR' => 129
-		},
-		GOTOS => {
-			'unitspec' => 123
+			"(" => 136
 		}
 	},
-	{#State 188
-		ACTIONS => {
-			'WORD' => -127,
-			'' => -127,
-			"}" => -127,
-			":" => -127,
-			'PACKAGE' => -127,
-			'XOROP' => -127,
-			"\@" => -127,
-			'DORDOR' => -127,
-			"<" => 119,
-			'PERL' => -127,
-			'MY' => -127,
-			"%" => 121,
-			'ANDOP' => -127,
-			"\$^" => -127,
-			'UNLESS' => -127,
-			'NUM' => -127,
-			'STEP' => -127,
-			'ASSIGNOP' => -127,
-			'IF' => -127,
-			"\$" => -127,
-			'loopword' => -127,
-			'FOREACH' => -127,
-			"]" => -127,
-			'ACROSS' => -127,
-			'POWOP' => 130,
-			'NOTOP' => -127,
-			'FINAL' => -127,
-			'OROP' => -127,
-			'default' => -127,
-			'INCLUDE' => -127,
-			"(" => -127,
-			'VAR' => -127,
-			'ANDAND' => -127,
-			'RELOP' => undef,
-			'INCOP' => 124,
-			'NOT2' => -127,
-			";" => -127,
-			'FOR' => -127,
-			'FLOWLEFT' => -127,
-			'ADDOP' => 126,
-			"," => -127,
-			'FUNC' => -127,
-			'UNIT' => -127,
-			'RETURN' => -127,
-			'INIT' => -127,
-			'var' => -127,
-			'FUNCTION' => -127,
-			'FLOWRIGHT' => -127,
-			")" => -127,
-			'STR' => -127,
-			'CALC' => -127,
-			"?" => -127,
-			"{" => -127,
-			'DOTDOT' => -127,
-			'MULOP' => 128,
-			'CONST' => -127,
-			"=" => -127,
-			'USE' => -127,
-			'YADAYADA' => -127,
-			'OROR' => -127
-		},
-		GOTOS => {
-			'unitspec' => 123
-		}
+	{#State 68
+		DEFAULT => -55
 	},
-	{#State 189
-		ACTIONS => {
-			'WORD' => -123,
-			'' => -123,
-			"}" => -123,
-			":" => -123,
-			'PACKAGE' => -123,
-			'XOROP' => -123,
-			"\@" => -123,
-			'DORDOR' => -123,
-			"<" => 119,
-			'PERL' => -123,
-			'MY' => -123,
-			"%" => 121,
-			'ANDOP' => -123,
-			"\$^" => -123,
-			'UNLESS' => -123,
-			'NUM' => -123,
-			'STEP' => -123,
-			'ASSIGNOP' => -123,
-			'IF' => -123,
-			"\$" => -123,
-			'loopword' => -123,
-			'FOREACH' => -123,
-			"]" => -123,
-			'ACROSS' => -123,
-			'POWOP' => 130,
-			'NOTOP' => -123,
-			'FINAL' => -123,
-			'OROP' => -123,
-			'default' => -123,
-			'INCLUDE' => -123,
-			"(" => -123,
-			'VAR' => -123,
-			'ANDAND' => -123,
-			'RELOP' => -123,
-			'INCOP' => 124,
-			'NOT2' => -123,
-			";" => -123,
-			'FOR' => -123,
-			'FLOWLEFT' => -123,
-			'ADDOP' => -123,
-			"," => -123,
-			'FUNC' => -123,
-			'UNIT' => -123,
-			'RETURN' => -123,
-			'INIT' => -123,
-			'var' => -123,
-			'FUNCTION' => -123,
-			'FLOWRIGHT' => -123,
-			")" => -123,
-			'STR' => -123,
-			'CALC' => -123,
-			"?" => -123,
-			"{" => -123,
-			'DOTDOT' => -123,
-			'MULOP' => 128,
-			'CONST' => -123,
-			"=" => -123,
-			'USE' => -123,
-			'YADAYADA' => -123,
-			'OROR' => -123
-		},
-		GOTOS => {
-			'unitspec' => 123
-		}
+	{#State 69
+		DEFAULT => -114
 	},
-	{#State 190
-		ACTIONS => {
-			":" => 248,
-			"?" => 127,
-			'DORDOR' => 120,
-			"<" => 119,
-			'DOTDOT' => 132,
-			'MULOP' => 128,
-			'ADDOP' => 126,
-			"%" => 121,
-			"=" => 133,
-			'ASSIGNOP' => 122,
-			'ANDAND' => 131,
-			'OROR' => 129,
-			'POWOP' => 130,
-			'INCOP' => 124,
-			'RELOP' => 125
-		},
-		GOTOS => {
-			'unitspec' => 123
-		}
+	{#State 70
+		DEFAULT => -5
 	},
-	{#State 191
-		ACTIONS => {
-			'WORD' => -124,
-			'' => -124,
-			"}" => -124,
-			":" => -124,
-			'PACKAGE' => -124,
-			'XOROP' => -124,
-			"\@" => -124,
-			'DORDOR' => -124,
-			"<" => 119,
-			'PERL' => -124,
-			'MY' => -124,
-			"%" => -124,
-			'ANDOP' => -124,
-			"\$^" => -124,
-			'UNLESS' => -124,
-			'NUM' => -124,
-			'STEP' => -124,
-			'ASSIGNOP' => -124,
-			'IF' => -124,
-			"\$" => -124,
-			'loopword' => -124,
-			'FOREACH' => -124,
-			"]" => -124,
-			'ACROSS' => -124,
-			'POWOP' => 130,
-			'NOTOP' => -124,
-			'FINAL' => -124,
-			'OROP' => -124,
-			'default' => -124,
-			'INCLUDE' => -124,
-			"(" => -124,
-			'VAR' => -124,
-			'ANDAND' => -124,
-			'RELOP' => -124,
-			'INCOP' => 124,
-			'NOT2' => -124,
-			";" => -124,
-			'FOR' => -124,
-			'FLOWLEFT' => -124,
-			'ADDOP' => -124,
-			"," => -124,
-			'FUNC' => -124,
-			'UNIT' => -124,
-			'RETURN' => -124,
-			'INIT' => -124,
-			'var' => -124,
-			'FUNCTION' => -124,
-			'FLOWRIGHT' => -124,
-			")" => -124,
-			'STR' => -124,
-			'CALC' => -124,
-			"?" => -124,
-			"{" => -124,
-			'DOTDOT' => -124,
-			'MULOP' => -124,
-			'CONST' => -124,
-			"=" => -124,
-			'USE' => -124,
-			'YADAYADA' => -124,
-			'OROR' => -124
-		},
-		GOTOS => {
-			'unitspec' => 123
-		}
+	{#State 71
+		DEFAULT => -107
 	},
-	{#State 192
+	{#State 72
 		ACTIONS => {
 			'WORD' => -130,
 			'' => -130,
@@ -3494,11 +1170,11 @@ sub new {
 			'PACKAGE' => -130,
 			'XOROP' => -130,
 			"\@" => -130,
+			"<" => -130,
 			'DORDOR' => -130,
-			"<" => 119,
 			'PERL' => -130,
 			'MY' => -130,
-			"%" => 121,
+			"%" => -130,
 			'ANDOP' => -130,
 			"\$^" => -130,
 			'UNLESS' => -130,
@@ -3509,39 +1185,40 @@ sub new {
 			"\$" => -130,
 			'loopword' => -130,
 			'FOREACH' => -130,
+			"[" => 137,
 			"]" => -130,
+			'POWOP' => -130,
 			'ACROSS' => -130,
-			'POWOP' => 130,
 			'NOTOP' => -130,
 			'FINAL' => -130,
+			'DOT' => -130,
 			'OROP' => -130,
-			'default' => -130,
 			'INCLUDE' => -130,
 			"(" => -130,
 			'VAR' => -130,
-			'ANDAND' => 131,
-			'RELOP' => 125,
-			'INCOP' => 124,
+			'ANDAND' => -130,
+			'INCOP' => -130,
+			'RELOP' => -130,
 			'NOT2' => -130,
 			";" => -130,
 			'FOR' => -130,
 			'FLOWLEFT' => -130,
-			'ADDOP' => 126,
+			'ADDOP' => -130,
 			"," => -130,
 			'FUNC' => -130,
 			'UNIT' => -130,
 			'RETURN' => -130,
 			'INIT' => -130,
-			'var' => -130,
+			'error' => -130,
 			'FUNCTION' => -130,
 			'FLOWRIGHT' => -130,
 			")" => -130,
 			'STR' => -130,
 			'CALC' => -130,
 			"?" => -130,
-			"{" => -130,
 			'DOTDOT' => -130,
-			'MULOP' => 128,
+			'MULOP' => -130,
+			"{" => -130,
 			'CONST' => -130,
 			"=" => -130,
 			'USE' => -130,
@@ -3549,10 +1226,240 @@ sub new {
 			'OROR' => -130
 		},
 		GOTOS => {
-			'unitspec' => 123
+			'subexpr' => 139,
+			'subspec' => 138
 		}
 	},
-	{#State 193
+	{#State 73
+		ACTIONS => {
+			'perlseq' => 140
+		}
+	},
+	{#State 74
+		DEFAULT => -49,
+		GOTOS => {
+			'@48-2' => 141
+		}
+	},
+	{#State 75
+		ACTIONS => {
+			"\$" => 52
+		},
+		GOTOS => {
+			'scalar' => 142
+		}
+	},
+	{#State 76
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 143,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 77
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 144,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 78
+		ACTIONS => {
+			"\$" => 52
+		},
+		GOTOS => {
+			'scalar' => 145
+		}
+	},
+	{#State 79
+		DEFAULT => -141
+	},
+	{#State 80
+		DEFAULT => -142
+	},
+	{#State 81
+		DEFAULT => -91,
+		GOTOS => {
+			'@90-2' => 146
+		}
+	},
+	{#State 82
+		ACTIONS => {
+			"\$" => 52,
+			'MY' => 148
+		},
+		GOTOS => {
+			'scalar' => 147,
+			'scalarvar' => 149
+		}
+	},
+	{#State 83
+		ACTIONS => {
+			'WORD' => 150,
+			"\@" => -76,
+			"%" => -76
+		},
+		GOTOS => {
+			'label' => 151
+		}
+	},
+	{#State 84
+		DEFAULT => -72
+	},
+	{#State 85
+		ACTIONS => {
+			"{" => 152,
+			"[" => 83
+		},
+		GOTOS => {
+			'dimspec' => 153
+		}
+	},
+	{#State 86
+		ACTIONS => {
+			";" => 154
+		}
+	},
+	{#State 87
+		ACTIONS => {
+			";" => 155
+		}
+	},
+	{#State 88
+		DEFAULT => -135
+	},
+	{#State 89
+		ACTIONS => {
+			'WORD' => -129,
+			'' => -129,
+			"}" => -129,
+			":" => -129,
+			'PACKAGE' => -129,
+			'XOROP' => -129,
+			"\@" => -129,
+			'DORDOR' => -129,
+			"<" => 113,
+			'PERL' => -129,
+			'MY' => -129,
+			"%" => -129,
+			'ANDOP' => -129,
+			"\$^" => -129,
+			'UNLESS' => -129,
+			'NUM' => -129,
+			'STEP' => -129,
+			'ASSIGNOP' => -129,
+			'IF' => -129,
+			"\$" => -129,
+			'loopword' => -129,
+			'FOREACH' => -129,
+			"]" => -129,
+			'ACROSS' => -129,
+			'POWOP' => -129,
+			'NOTOP' => -129,
+			'FINAL' => -129,
+			'OROP' => -129,
+			'INCLUDE' => -129,
+			"(" => -129,
+			'VAR' => -129,
+			'ANDAND' => -129,
+			'RELOP' => -129,
+			'INCOP' => undef,
+			'NOT2' => -129,
+			";" => -129,
+			'FOR' => -129,
+			'FLOWLEFT' => -129,
+			'ADDOP' => -129,
+			"," => -129,
+			'FUNC' => -129,
+			'UNIT' => -129,
+			'RETURN' => -129,
+			'INIT' => -129,
+			'FUNCTION' => -129,
+			'error' => 121,
+			'FLOWRIGHT' => -129,
+			")" => -129,
+			'STR' => -129,
+			'CALC' => -129,
+			"?" => -129,
+			"{" => -129,
+			'DOTDOT' => -129,
+			'MULOP' => -129,
+			'CONST' => -129,
+			"=" => -129,
+			'USE' => -129,
+			'YADAYADA' => -129,
+			'OROR' => -129
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 90
+		DEFAULT => -63
+	},
+	{#State 91
+		DEFAULT => -95,
+		GOTOS => {
+			'@94-2' => 156
+		}
+	},
+	{#State 92
 		ACTIONS => {
 			'WORD' => -126,
 			'' => -126,
@@ -3562,7 +1469,7 @@ sub new {
 			'XOROP' => -126,
 			"\@" => -126,
 			'DORDOR' => -126,
-			"<" => 119,
+			"<" => 113,
 			'PERL' => -126,
 			'MY' => -126,
 			"%" => -126,
@@ -3578,17 +1485,16 @@ sub new {
 			'FOREACH' => -126,
 			"]" => -126,
 			'ACROSS' => -126,
-			'POWOP' => 130,
+			'POWOP' => 125,
 			'NOTOP' => -126,
 			'FINAL' => -126,
 			'OROP' => -126,
-			'default' => -126,
 			'INCLUDE' => -126,
 			"(" => -126,
 			'VAR' => -126,
 			'ANDAND' => -126,
 			'RELOP' => -126,
-			'INCOP' => 124,
+			'INCOP' => 118,
 			'NOT2' => -126,
 			";" => -126,
 			'FOR' => -126,
@@ -3599,8 +1505,8 @@ sub new {
 			'UNIT' => -126,
 			'RETURN' => -126,
 			'INIT' => -126,
-			'var' => -126,
 			'FUNCTION' => -126,
+			'error' => 121,
 			'FLOWRIGHT' => -126,
 			")" => -126,
 			'STR' => -126,
@@ -3616,144 +1522,1993 @@ sub new {
 			'OROR' => -126
 		},
 		GOTOS => {
-			'unitspec' => 123
+			'unitspec' => 117
 		}
 	},
-	{#State 194
+	{#State 93
 		ACTIONS => {
-			'WORD' => -129,
-			'' => -129,
-			"}" => -129,
-			":" => -129,
-			'PACKAGE' => -129,
-			'XOROP' => -129,
-			"\@" => -129,
-			'DORDOR' => -129,
-			"<" => 119,
-			'PERL' => -129,
-			'MY' => -129,
-			"%" => 121,
-			'ANDOP' => -129,
-			"\$^" => -129,
-			'UNLESS' => -129,
-			'NUM' => -129,
-			'STEP' => -129,
-			'ASSIGNOP' => -129,
-			'IF' => -129,
-			"\$" => -129,
-			'loopword' => -129,
-			'FOREACH' => -129,
-			"]" => -129,
-			'ACROSS' => -129,
-			'POWOP' => 130,
-			'NOTOP' => -129,
-			'FINAL' => -129,
-			'OROP' => -129,
-			'default' => -129,
-			'INCLUDE' => -129,
-			"(" => -129,
-			'VAR' => -129,
-			'ANDAND' => -129,
-			'RELOP' => 125,
-			'INCOP' => 124,
-			'NOT2' => -129,
-			";" => -129,
-			'FOR' => -129,
-			'FLOWLEFT' => -129,
-			'ADDOP' => 126,
-			"," => -129,
-			'FUNC' => -129,
-			'UNIT' => -129,
-			'RETURN' => -129,
-			'INIT' => -129,
-			'var' => -129,
-			'FUNCTION' => -129,
-			'FLOWRIGHT' => -129,
-			")" => -129,
-			'STR' => -129,
-			'CALC' => -129,
-			"?" => -129,
-			"{" => -129,
-			'DOTDOT' => -129,
-			'MULOP' => 128,
-			'CONST' => -129,
-			"=" => -129,
-			'USE' => -129,
-			'YADAYADA' => -129,
-			'OROR' => -129
+			";" => 158,
+			"," => 157
+		}
+	},
+	{#State 94
+		DEFAULT => -19
+	},
+	{#State 95
+		DEFAULT => -53,
+		GOTOS => {
+			'@52-2' => 159
+		}
+	},
+	{#State 96
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
 		},
 		GOTOS => {
-			'unitspec' => 123
+			'scalar' => 88,
+			'dynvar' => 56,
+			'sideff' => 160,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 63,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
 		}
 	},
-	{#State 195
+	{#State 97
 		ACTIONS => {
-			'WORD' => -128,
-			'' => -128,
-			"}" => -128,
-			":" => -128,
-			'PACKAGE' => -128,
-			'XOROP' => -128,
-			"\@" => -128,
-			'DORDOR' => 120,
-			"<" => 119,
-			'PERL' => -128,
-			'MY' => -128,
-			"%" => 121,
-			'ANDOP' => -128,
-			"\$^" => -128,
-			'UNLESS' => -128,
-			'NUM' => -128,
-			'STEP' => -128,
-			'ASSIGNOP' => -128,
-			'IF' => -128,
-			"\$" => -128,
-			'loopword' => -128,
-			'FOREACH' => -128,
-			"]" => -128,
-			'ACROSS' => -128,
-			'POWOP' => 130,
-			'NOTOP' => -128,
-			'FINAL' => -128,
-			'OROP' => -128,
-			'default' => -128,
-			'INCLUDE' => -128,
-			"(" => -128,
-			'VAR' => -128,
-			'ANDAND' => 131,
-			'RELOP' => 125,
-			'INCOP' => 124,
-			'NOT2' => -128,
-			";" => -128,
-			'FOR' => -128,
-			'FLOWLEFT' => -128,
-			'ADDOP' => 126,
-			"," => -128,
-			'FUNC' => -128,
-			'UNIT' => -128,
-			'RETURN' => -128,
-			'INIT' => -128,
-			'var' => -128,
-			'FUNCTION' => -128,
-			'FLOWRIGHT' => -128,
-			")" => -128,
-			'STR' => -128,
-			'CALC' => -128,
-			"?" => -128,
-			"{" => -128,
-			'DOTDOT' => undef,
-			'MULOP' => 128,
-			'CONST' => -128,
-			"=" => -128,
-			'USE' => -128,
-			'YADAYADA' => -128,
-			'OROR' => 129
+			"(" => 161
+		}
+	},
+	{#State 98
+		DEFAULT => -40,
+		GOTOS => {
+			'stmtseq' => 162
+		}
+	},
+	{#State 99
+		ACTIONS => {
+			"=" => 163
+		}
+	},
+	{#State 100
+		ACTIONS => {
+			"<" => 113,
+			";" => -32,
+			'error' => 121,
+			"[" => 83,
+			"=" => -32
 		},
 		GOTOS => {
-			'unitspec' => 123
+			'unitspec' => 165,
+			'unitopt' => 164,
+			'dimspec' => 166
 		}
 	},
-	{#State 196
+	{#State 101
+		ACTIONS => {
+			'WORD' => 167,
+			'FUNC' => 168
+		}
+	},
+	{#State 102
+		ACTIONS => {
+			";" => 169
+		}
+	},
+	{#State 103
+		ACTIONS => {
+			";" => 170
+		}
+	},
+	{#State 104
+		ACTIONS => {
+			'FUNC' => 171
+		}
+	},
+	{#State 105
+		DEFAULT => -134
+	},
+	{#State 106
+		DEFAULT => -145
+	},
+	{#State 107
+		DEFAULT => -144
+	},
+	{#State 108
+		DEFAULT => -140
+	},
+	{#State 109
+		ACTIONS => {
+			'WORD' => -99,
+			'' => -99,
+			"}" => -99,
+			":" => -99,
+			'PACKAGE' => -99,
+			"\@" => -99,
+			"<" => -99,
+			'DORDOR' => -99,
+			'XOROP' => -99,
+			'PERL' => -99,
+			'MY' => -99,
+			"%" => -99,
+			'ANDOP' => -99,
+			"\$^" => -99,
+			'UNLESS' => -99,
+			'NUM' => -99,
+			'STEP' => -99,
+			'ASSIGNOP' => -99,
+			'IF' => -99,
+			"\$" => -99,
+			'loopword' => -99,
+			'FOREACH' => -99,
+			"]" => -99,
+			'POWOP' => -99,
+			'ACROSS' => -99,
+			'NOTOP' => -99,
+			'FINAL' => -99,
+			'OROP' => -99,
+			'INCLUDE' => -99,
+			"(" => -99,
+			'VAR' => -99,
+			'ANDAND' => -99,
+			'INCOP' => -99,
+			'RELOP' => -99,
+			'NOT2' => -99,
+			";" => -99,
+			'FOR' => -99,
+			'FLOWLEFT' => -99,
+			'ADDOP' => -99,
+			"," => -99,
+			'FUNC' => -99,
+			'UNIT' => -99,
+			'RETURN' => -99,
+			'INIT' => -99,
+			'error' => -99,
+			'FUNCTION' => -99,
+			'FLOWRIGHT' => -99,
+			")" => -99,
+			'STR' => -99,
+			'CALC' => -99,
+			"?" => -99,
+			'DOTDOT' => -99,
+			'MULOP' => -99,
+			"{" => -99,
+			'CONST' => -99,
+			"=" => -99,
+			'USE' => -99,
+			'YADAYADA' => -99,
+			'OROR' => -99
+		}
+	},
+	{#State 110
+		ACTIONS => {
+			'XOROP' => 133,
+			'OROP' => 132,
+			")" => 172,
+			'ANDOP' => 130
+		}
+	},
+	{#State 111
+		ACTIONS => {
+			";" => 173
+		}
+	},
+	{#State 112
+		ACTIONS => {
+			'WORD' => -127,
+			'' => -127,
+			"}" => -127,
+			":" => -127,
+			'PACKAGE' => -127,
+			'XOROP' => -127,
+			"\@" => -127,
+			'DORDOR' => -127,
+			"<" => 113,
+			'PERL' => -127,
+			'MY' => -127,
+			"%" => -127,
+			'ANDOP' => -127,
+			"\$^" => -127,
+			'UNLESS' => -127,
+			'NUM' => -127,
+			'STEP' => -127,
+			'ASSIGNOP' => -127,
+			'IF' => -127,
+			"\$" => -127,
+			'loopword' => -127,
+			'FOREACH' => -127,
+			"]" => -127,
+			'ACROSS' => -127,
+			'POWOP' => 125,
+			'NOTOP' => -127,
+			'FINAL' => -127,
+			'OROP' => -127,
+			'INCLUDE' => -127,
+			"(" => -127,
+			'VAR' => -127,
+			'ANDAND' => -127,
+			'RELOP' => -127,
+			'INCOP' => 118,
+			'NOT2' => -127,
+			";" => -127,
+			'FOR' => -127,
+			'FLOWLEFT' => -127,
+			'ADDOP' => -127,
+			"," => -127,
+			'FUNC' => -127,
+			'UNIT' => -127,
+			'RETURN' => -127,
+			'INIT' => -127,
+			'FUNCTION' => -127,
+			'error' => 121,
+			'FLOWRIGHT' => -127,
+			")" => -127,
+			'STR' => -127,
+			'CALC' => -127,
+			"?" => -127,
+			"{" => -127,
+			'DOTDOT' => -127,
+			'MULOP' => -127,
+			'CONST' => -127,
+			"=" => -127,
+			'USE' => -127,
+			'YADAYADA' => -127,
+			'OROR' => -127
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 113
+		DEFAULT => -36,
+		GOTOS => {
+			'unitlist' => 174
+		}
+	},
+	{#State 114
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 175,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 115
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 176,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 116
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 177,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 117
+		DEFAULT => -113
+	},
+	{#State 118
+		DEFAULT => -128
+	},
+	{#State 119
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 178,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 120
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 179,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 121
+		ACTIONS => {
+			">" => 180
+		}
+	},
+	{#State 122
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 181,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 123
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 182,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 124
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 183,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 125
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 184,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 126
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 185,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 127
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 186,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 128
+		ACTIONS => {
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 187,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 129
+		ACTIONS => {
+			'WORD' => 190,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			"," => -153,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			")" => -153,
+			'STR' => 35,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'objname' => 11,
+			'arg' => 191,
+			'term' => 193,
+			'array' => 30,
+			'pair' => 192,
+			'termbinop' => 53,
+			'termunop' => 19,
+			'set' => 34,
+			'dynvar' => 56,
+			'funcall' => 36,
+			'arglist' => 188,
+			'varexpr' => 41,
+			'argexpr' => 189,
+			'indexvar' => 71,
+			'simplevar' => 72
+		}
+	},
+	{#State 130
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 194,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 131
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 195,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 132
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 196,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 133
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 197,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 134
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 198,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 135
+		ACTIONS => {
+			'WORD' => -112,
+			'' => -112,
+			"}" => -112,
+			":" => -112,
+			'PACKAGE' => -112,
+			"\@" => -112,
+			"<" => -112,
+			'DORDOR' => -112,
+			'XOROP' => 133,
+			'PERL' => -112,
+			'MY' => -112,
+			"%" => -112,
+			'ANDOP' => 130,
+			"\$^" => -112,
+			'UNLESS' => -112,
+			'NUM' => -112,
+			'STEP' => -112,
+			'ASSIGNOP' => -112,
+			'IF' => -112,
+			"\$" => -112,
+			'loopword' => -112,
+			'FOREACH' => -112,
+			"]" => -112,
+			'POWOP' => -112,
+			'ACROSS' => -112,
+			'NOTOP' => -112,
+			'FINAL' => -112,
+			'OROP' => 132,
+			'INCLUDE' => -112,
+			"(" => -112,
+			'VAR' => -112,
+			'ANDAND' => -112,
+			'INCOP' => -112,
+			'RELOP' => -112,
+			'NOT2' => -112,
+			";" => -112,
+			'FOR' => -112,
+			'FLOWLEFT' => -112,
+			'ADDOP' => -112,
+			"," => -112,
+			'FUNC' => -112,
+			'UNIT' => -112,
+			'RETURN' => -112,
+			'INIT' => -112,
+			'error' => -112,
+			'FUNCTION' => -112,
+			'FLOWRIGHT' => -112,
+			")" => -112,
+			'STR' => -112,
+			'CALC' => -112,
+			"?" => -112,
+			'DOTDOT' => -112,
+			'MULOP' => -112,
+			"{" => -112,
+			'CONST' => -112,
+			"=" => -112,
+			'USE' => -112,
+			'YADAYADA' => -112,
+			'OROR' => -112
+		}
+	},
+	{#State 136
+		DEFAULT => -82,
+		GOTOS => {
+			'@81-2' => 199
+		}
+	},
+	{#State 137
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			"]" => 200,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 201,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 138
+		DEFAULT => -146
+	},
+	{#State 139
+		ACTIONS => {
+			'WORD' => -131,
+			'' => -131,
+			"}" => -131,
+			":" => -131,
+			'PACKAGE' => -131,
+			'XOROP' => -131,
+			"\@" => -131,
+			"<" => -131,
+			'DORDOR' => -131,
+			'PERL' => -131,
+			'MY' => -131,
+			"%" => -131,
+			'ANDOP' => -131,
+			"\$^" => -131,
+			'UNLESS' => -131,
+			'NUM' => -131,
+			'STEP' => -131,
+			'ASSIGNOP' => -131,
+			'IF' => -131,
+			"\$" => -131,
+			'loopword' => -131,
+			'FOREACH' => -131,
+			"[" => 137,
+			"]" => -131,
+			'POWOP' => -131,
+			'ACROSS' => -131,
+			'NOTOP' => -131,
+			'FINAL' => -131,
+			'DOT' => -131,
+			'OROP' => -131,
+			'INCLUDE' => -131,
+			"(" => -131,
+			'VAR' => -131,
+			'ANDAND' => -131,
+			'INCOP' => -131,
+			'RELOP' => -131,
+			'NOT2' => -131,
+			";" => -131,
+			'FOR' => -131,
+			'FLOWLEFT' => -131,
+			'ADDOP' => -131,
+			"," => -131,
+			'FUNC' => -131,
+			'UNIT' => -131,
+			'RETURN' => -131,
+			'INIT' => -131,
+			'error' => -131,
+			'FUNCTION' => -131,
+			'FLOWRIGHT' => -131,
+			")" => -131,
+			'STR' => -131,
+			'CALC' => -131,
+			"?" => -131,
+			'DOTDOT' => -131,
+			'MULOP' => -131,
+			"{" => -131,
+			'CONST' => -131,
+			"=" => -131,
+			'USE' => -131,
+			'YADAYADA' => -131,
+			'OROR' => -131
+		},
+		GOTOS => {
+			'subspec' => 202
+		}
+	},
+	{#State 140
+		ACTIONS => {
+			"%}" => 203
+		}
+	},
+	{#State 141
+		ACTIONS => {
+			'perlseq' => 204
+		}
+	},
+	{#State 142
+		ACTIONS => {
+			"(" => 206,
+			'MULOP' => 205
+		}
+	},
+	{#State 143
+		ACTIONS => {
+			'XOROP' => 133,
+			'FLOWLEFT' => 207,
+			'OROP' => 132,
+			'FLOWRIGHT' => 208,
+			'ANDOP' => 130
+		}
+	},
+	{#State 144
+		ACTIONS => {
+			'XOROP' => 133,
+			'OROP' => 132,
+			")" => 209,
+			'ANDOP' => 130
+		}
+	},
+	{#State 145
+		ACTIONS => {
+			"(" => 211,
+			'MULOP' => 210
+		}
+	},
+	{#State 146
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 212,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 147
+		DEFAULT => -138
+	},
+	{#State 148
+		ACTIONS => {
+			"\$" => 52
+		},
+		GOTOS => {
+			'scalar' => 213
+		}
+	},
+	{#State 149
+		ACTIONS => {
+			"(" => 214
+		}
+	},
+	{#State 150
+		ACTIONS => {
+			":" => 215
+		}
+	},
+	{#State 151
+		ACTIONS => {
+			"\@" => 10,
+			"%" => 12
+		},
+		GOTOS => {
+			'array' => 216,
+			'set' => 217
+		}
+	},
+	{#State 152
+		DEFAULT => -39,
+		GOTOS => {
+			'@38-3' => 218
+		}
+	},
+	{#State 153
+		DEFAULT => -73
+	},
+	{#State 154
+		DEFAULT => -16
+	},
+	{#State 155
+		DEFAULT => -15
+	},
+	{#State 156
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 219,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 157
+		ACTIONS => {
+			'WORD' => 220
+		}
+	},
+	{#State 158
+		DEFAULT => -18
+	},
+	{#State 159
+		DEFAULT => -40,
+		GOTOS => {
+			'stmtseq' => 221
+		}
+	},
+	{#State 160
+		ACTIONS => {
+			";" => 222
+		}
+	},
+	{#State 161
+		ACTIONS => {
+			"\$" => 52,
+			")" => -27
+		},
+		GOTOS => {
+			'params' => 226,
+			'scalar' => 223,
+			'paramlist' => 224,
+			'param' => 225
+		}
+	},
+	{#State 162
+		ACTIONS => {
+			"%{" => 6,
+			'WORD' => 44,
+			"}" => 227,
+			'PACKAGE' => 45,
+			"\@" => 10,
+			'PERL' => 8,
+			'MY' => 48,
+			"%" => 12,
+			"\$^" => 49,
+			'UNLESS' => 13,
+			'NUM' => 50,
+			'STEP' => 15,
+			'IF' => 51,
+			"\$" => 52,
+			'loopword' => 16,
+			'FOREACH' => 18,
+			'ACROSS' => 228,
+			'NOTOP' => 54,
+			'FINAL' => 23,
+			"(" => 57,
+			'VAR' => 58,
+			'INCOP' => 25,
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'YADAYADA' => 69
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'sideff' => 27,
+			'objname' => 11,
+			'term' => 61,
+			'loop' => 14,
+			'array' => 30,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
+			'set' => 34,
+			'termunop' => 19,
+			'line' => 229,
+			'cond' => 22,
+			'dynvar' => 56,
+			'phaseblock' => 230,
+			'perlblock' => 231,
+			'condword' => 67,
+			'funcall' => 36,
+			'across' => 232,
+			'package' => 40,
+			'varexpr' => 41,
+			'block' => 233,
+			'indexvar' => 71,
+			'simplevar' => 72
+		}
+	},
+	{#State 163
+		DEFAULT => -66,
+		GOTOS => {
+			'@65-3' => 234
+		}
+	},
+	{#State 164
+		DEFAULT => -67
+	},
+	{#State 165
+		DEFAULT => -33
+	},
+	{#State 166
+		ACTIONS => {
+			"<" => 113,
+			";" => -32,
+			'error' => 121,
+			"=" => -32
+		},
+		GOTOS => {
+			'unitspec' => 165,
+			'unitopt' => 235
+		}
+	},
+	{#State 167
+		DEFAULT => -132
+	},
+	{#State 168
+		ACTIONS => {
+			"(" => 236
+		}
+	},
+	{#State 169
+		DEFAULT => -17
+	},
+	{#State 170
+		DEFAULT => -69
+	},
+	{#State 171
+		ACTIONS => {
+			"(" => 237
+		}
+	},
+	{#State 172
+		DEFAULT => -104
+	},
+	{#State 173
+		DEFAULT => -64
+	},
+	{#State 174
+		ACTIONS => {
+			'UNIT' => 238,
+			">" => 239
+		}
+	},
+	{#State 175
+		ACTIONS => {
+			'WORD' => -125,
+			'' => -125,
+			"}" => -125,
+			":" => -125,
+			'PACKAGE' => -125,
+			'XOROP' => -125,
+			"\@" => -125,
+			'DORDOR' => -125,
+			"<" => 113,
+			'PERL' => -125,
+			'MY' => -125,
+			"%" => 115,
+			'ANDOP' => -125,
+			"\$^" => -125,
+			'UNLESS' => -125,
+			'NUM' => -125,
+			'STEP' => -125,
+			'ASSIGNOP' => -125,
+			'IF' => -125,
+			"\$" => -125,
+			'loopword' => -125,
+			'FOREACH' => -125,
+			"]" => -125,
+			'ACROSS' => -125,
+			'POWOP' => 125,
+			'NOTOP' => -125,
+			'FINAL' => -125,
+			'OROP' => -125,
+			'INCLUDE' => -125,
+			"(" => -125,
+			'VAR' => -125,
+			'ANDAND' => 126,
+			'RELOP' => 119,
+			'INCOP' => 118,
+			'NOT2' => -125,
+			";" => -125,
+			'FOR' => -125,
+			'FLOWLEFT' => -125,
+			'ADDOP' => 120,
+			"," => -125,
+			'FUNC' => -125,
+			'UNIT' => -125,
+			'RETURN' => -125,
+			'INIT' => -125,
+			'FUNCTION' => -125,
+			'error' => 121,
+			'FLOWRIGHT' => -125,
+			")" => -125,
+			'STR' => -125,
+			'CALC' => -125,
+			"?" => -125,
+			"{" => -125,
+			'DOTDOT' => -125,
+			'MULOP' => 123,
+			'CONST' => -125,
+			"=" => -125,
+			'USE' => -125,
+			'YADAYADA' => -125,
+			'OROR' => -125
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 176
+		ACTIONS => {
+			'WORD' => -119,
+			'' => -119,
+			"}" => -119,
+			":" => -119,
+			'PACKAGE' => -119,
+			'XOROP' => -119,
+			"\@" => -119,
+			'DORDOR' => -119,
+			"<" => 113,
+			'PERL' => -119,
+			'MY' => -119,
+			"%" => -119,
+			'ANDOP' => -119,
+			"\$^" => -119,
+			'UNLESS' => -119,
+			'NUM' => -119,
+			'STEP' => -119,
+			'ASSIGNOP' => -119,
+			'IF' => -119,
+			"\$" => -119,
+			'loopword' => -119,
+			'FOREACH' => -119,
+			"]" => -119,
+			'ACROSS' => -119,
+			'POWOP' => 125,
+			'NOTOP' => -119,
+			'FINAL' => -119,
+			'OROP' => -119,
+			'INCLUDE' => -119,
+			"(" => -119,
+			'VAR' => -119,
+			'ANDAND' => -119,
+			'RELOP' => -119,
+			'INCOP' => 118,
+			'NOT2' => -119,
+			";" => -119,
+			'FOR' => -119,
+			'FLOWLEFT' => -119,
+			'ADDOP' => -119,
+			"," => -119,
+			'FUNC' => -119,
+			'UNIT' => -119,
+			'RETURN' => -119,
+			'INIT' => -119,
+			'FUNCTION' => -119,
+			'error' => 121,
+			'FLOWRIGHT' => -119,
+			")" => -119,
+			'STR' => -119,
+			'CALC' => -119,
+			"?" => -119,
+			"{" => -119,
+			'DOTDOT' => -119,
+			'MULOP' => -119,
+			'CONST' => -119,
+			"=" => -119,
+			'USE' => -119,
+			'YADAYADA' => -119,
+			'OROR' => -119
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 177
+		ACTIONS => {
+			'WORD' => -115,
+			'' => -115,
+			"}" => -115,
+			":" => -115,
+			'PACKAGE' => -115,
+			'XOROP' => -115,
+			"\@" => -115,
+			'DORDOR' => 114,
+			"<" => 113,
+			'PERL' => -115,
+			'MY' => -115,
+			"%" => 115,
+			'ANDOP' => -115,
+			"\$^" => -115,
+			'UNLESS' => -115,
+			'NUM' => -115,
+			'STEP' => -115,
+			'ASSIGNOP' => 116,
+			'IF' => -115,
+			"\$" => -115,
+			'loopword' => -115,
+			'FOREACH' => -115,
+			"]" => -115,
+			'ACROSS' => -115,
+			'POWOP' => 125,
+			'NOTOP' => -115,
+			'FINAL' => -115,
+			'OROP' => -115,
+			'INCLUDE' => -115,
+			"(" => -115,
+			'VAR' => -115,
+			'ANDAND' => 126,
+			'RELOP' => 119,
+			'INCOP' => 118,
+			'NOT2' => -115,
+			";" => -115,
+			'FOR' => -115,
+			'FLOWLEFT' => -115,
+			'ADDOP' => 120,
+			"," => -115,
+			'FUNC' => -115,
+			'UNIT' => -115,
+			'RETURN' => -115,
+			'INIT' => -115,
+			'FUNCTION' => -115,
+			'error' => 121,
+			'FLOWRIGHT' => -115,
+			")" => -115,
+			'STR' => -115,
+			'CALC' => -115,
+			"?" => 122,
+			"{" => -115,
+			'DOTDOT' => 127,
+			'MULOP' => 123,
+			'CONST' => -115,
+			"=" => 128,
+			'USE' => -115,
+			'YADAYADA' => -115,
+			'OROR' => 124
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 178
+		ACTIONS => {
+			'WORD' => -121,
+			'' => -121,
+			"}" => -121,
+			":" => -121,
+			'PACKAGE' => -121,
+			'XOROP' => -121,
+			"\@" => -121,
+			'DORDOR' => -121,
+			"<" => 113,
+			'PERL' => -121,
+			'MY' => -121,
+			"%" => 115,
+			'ANDOP' => -121,
+			"\$^" => -121,
+			'UNLESS' => -121,
+			'NUM' => -121,
+			'STEP' => -121,
+			'ASSIGNOP' => -121,
+			'IF' => -121,
+			"\$" => -121,
+			'loopword' => -121,
+			'FOREACH' => -121,
+			"]" => -121,
+			'ACROSS' => -121,
+			'POWOP' => 125,
+			'NOTOP' => -121,
+			'FINAL' => -121,
+			'OROP' => -121,
+			'INCLUDE' => -121,
+			"(" => -121,
+			'VAR' => -121,
+			'ANDAND' => -121,
+			'RELOP' => undef,
+			'INCOP' => 118,
+			'NOT2' => -121,
+			";" => -121,
+			'FOR' => -121,
+			'FLOWLEFT' => -121,
+			'ADDOP' => 120,
+			"," => -121,
+			'FUNC' => -121,
+			'UNIT' => -121,
+			'RETURN' => -121,
+			'INIT' => -121,
+			'FUNCTION' => -121,
+			'error' => 121,
+			'FLOWRIGHT' => -121,
+			")" => -121,
+			'STR' => -121,
+			'CALC' => -121,
+			"?" => -121,
+			"{" => -121,
+			'DOTDOT' => -121,
+			'MULOP' => 123,
+			'CONST' => -121,
+			"=" => -121,
+			'USE' => -121,
+			'YADAYADA' => -121,
+			'OROR' => -121
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 179
+		ACTIONS => {
+			'WORD' => -117,
+			'' => -117,
+			"}" => -117,
+			":" => -117,
+			'PACKAGE' => -117,
+			'XOROP' => -117,
+			"\@" => -117,
+			'DORDOR' => -117,
+			"<" => 113,
+			'PERL' => -117,
+			'MY' => -117,
+			"%" => 115,
+			'ANDOP' => -117,
+			"\$^" => -117,
+			'UNLESS' => -117,
+			'NUM' => -117,
+			'STEP' => -117,
+			'ASSIGNOP' => -117,
+			'IF' => -117,
+			"\$" => -117,
+			'loopword' => -117,
+			'FOREACH' => -117,
+			"]" => -117,
+			'ACROSS' => -117,
+			'POWOP' => 125,
+			'NOTOP' => -117,
+			'FINAL' => -117,
+			'OROP' => -117,
+			'INCLUDE' => -117,
+			"(" => -117,
+			'VAR' => -117,
+			'ANDAND' => -117,
+			'RELOP' => -117,
+			'INCOP' => 118,
+			'NOT2' => -117,
+			";" => -117,
+			'FOR' => -117,
+			'FLOWLEFT' => -117,
+			'ADDOP' => -117,
+			"," => -117,
+			'FUNC' => -117,
+			'UNIT' => -117,
+			'RETURN' => -117,
+			'INIT' => -117,
+			'FUNCTION' => -117,
+			'error' => 121,
+			'FLOWRIGHT' => -117,
+			")" => -117,
+			'STR' => -117,
+			'CALC' => -117,
+			"?" => -117,
+			"{" => -117,
+			'DOTDOT' => -117,
+			'MULOP' => 123,
+			'CONST' => -117,
+			"=" => -117,
+			'USE' => -117,
+			'YADAYADA' => -117,
+			'OROR' => -117
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 180
+		DEFAULT => -35
+	},
+	{#State 181
+		ACTIONS => {
+			":" => 240,
+			"?" => 122,
+			'DORDOR' => 114,
+			"<" => 113,
+			'DOTDOT' => 127,
+			'MULOP' => 123,
+			'ADDOP' => 120,
+			"%" => 115,
+			"=" => 128,
+			'ASSIGNOP' => 116,
+			'error' => 121,
+			'ANDAND' => 126,
+			'OROR' => 124,
+			'POWOP' => 125,
+			'INCOP' => 118,
+			'RELOP' => 119
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 182
+		ACTIONS => {
+			'WORD' => -118,
+			'' => -118,
+			"}" => -118,
+			":" => -118,
+			'PACKAGE' => -118,
+			'XOROP' => -118,
+			"\@" => -118,
+			'DORDOR' => -118,
+			"<" => 113,
+			'PERL' => -118,
+			'MY' => -118,
+			"%" => -118,
+			'ANDOP' => -118,
+			"\$^" => -118,
+			'UNLESS' => -118,
+			'NUM' => -118,
+			'STEP' => -118,
+			'ASSIGNOP' => -118,
+			'IF' => -118,
+			"\$" => -118,
+			'loopword' => -118,
+			'FOREACH' => -118,
+			"]" => -118,
+			'ACROSS' => -118,
+			'POWOP' => 125,
+			'NOTOP' => -118,
+			'FINAL' => -118,
+			'OROP' => -118,
+			'INCLUDE' => -118,
+			"(" => -118,
+			'VAR' => -118,
+			'ANDAND' => -118,
+			'RELOP' => -118,
+			'INCOP' => 118,
+			'NOT2' => -118,
+			";" => -118,
+			'FOR' => -118,
+			'FLOWLEFT' => -118,
+			'ADDOP' => -118,
+			"," => -118,
+			'FUNC' => -118,
+			'UNIT' => -118,
+			'RETURN' => -118,
+			'INIT' => -118,
+			'FUNCTION' => -118,
+			'error' => 121,
+			'FLOWRIGHT' => -118,
+			")" => -118,
+			'STR' => -118,
+			'CALC' => -118,
+			"?" => -118,
+			"{" => -118,
+			'DOTDOT' => -118,
+			'MULOP' => -118,
+			'CONST' => -118,
+			"=" => -118,
+			'USE' => -118,
+			'YADAYADA' => -118,
+			'OROR' => -118
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 183
+		ACTIONS => {
+			'WORD' => -124,
+			'' => -124,
+			"}" => -124,
+			":" => -124,
+			'PACKAGE' => -124,
+			'XOROP' => -124,
+			"\@" => -124,
+			'DORDOR' => -124,
+			"<" => 113,
+			'PERL' => -124,
+			'MY' => -124,
+			"%" => 115,
+			'ANDOP' => -124,
+			"\$^" => -124,
+			'UNLESS' => -124,
+			'NUM' => -124,
+			'STEP' => -124,
+			'ASSIGNOP' => -124,
+			'IF' => -124,
+			"\$" => -124,
+			'loopword' => -124,
+			'FOREACH' => -124,
+			"]" => -124,
+			'ACROSS' => -124,
+			'POWOP' => 125,
+			'NOTOP' => -124,
+			'FINAL' => -124,
+			'OROP' => -124,
+			'INCLUDE' => -124,
+			"(" => -124,
+			'VAR' => -124,
+			'ANDAND' => 126,
+			'RELOP' => 119,
+			'INCOP' => 118,
+			'NOT2' => -124,
+			";" => -124,
+			'FOR' => -124,
+			'FLOWLEFT' => -124,
+			'ADDOP' => 120,
+			"," => -124,
+			'FUNC' => -124,
+			'UNIT' => -124,
+			'RETURN' => -124,
+			'INIT' => -124,
+			'FUNCTION' => -124,
+			'error' => 121,
+			'FLOWRIGHT' => -124,
+			")" => -124,
+			'STR' => -124,
+			'CALC' => -124,
+			"?" => -124,
+			"{" => -124,
+			'DOTDOT' => -124,
+			'MULOP' => 123,
+			'CONST' => -124,
+			"=" => -124,
+			'USE' => -124,
+			'YADAYADA' => -124,
+			'OROR' => -124
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 184
+		ACTIONS => {
+			'WORD' => -120,
+			'' => -120,
+			"}" => -120,
+			":" => -120,
+			'PACKAGE' => -120,
+			'XOROP' => -120,
+			"\@" => -120,
+			'DORDOR' => -120,
+			"<" => 113,
+			'PERL' => -120,
+			'MY' => -120,
+			"%" => -120,
+			'ANDOP' => -120,
+			"\$^" => -120,
+			'UNLESS' => -120,
+			'NUM' => -120,
+			'STEP' => -120,
+			'ASSIGNOP' => -120,
+			'IF' => -120,
+			"\$" => -120,
+			'loopword' => -120,
+			'FOREACH' => -120,
+			"]" => -120,
+			'ACROSS' => -120,
+			'POWOP' => 125,
+			'NOTOP' => -120,
+			'FINAL' => -120,
+			'OROP' => -120,
+			'INCLUDE' => -120,
+			"(" => -120,
+			'VAR' => -120,
+			'ANDAND' => -120,
+			'RELOP' => -120,
+			'INCOP' => 118,
+			'NOT2' => -120,
+			";" => -120,
+			'FOR' => -120,
+			'FLOWLEFT' => -120,
+			'ADDOP' => -120,
+			"," => -120,
+			'FUNC' => -120,
+			'UNIT' => -120,
+			'RETURN' => -120,
+			'INIT' => -120,
+			'FUNCTION' => -120,
+			'error' => 121,
+			'FLOWRIGHT' => -120,
+			")" => -120,
+			'STR' => -120,
+			'CALC' => -120,
+			"?" => -120,
+			"{" => -120,
+			'DOTDOT' => -120,
+			'MULOP' => -120,
+			'CONST' => -120,
+			"=" => -120,
+			'USE' => -120,
+			'YADAYADA' => -120,
+			'OROR' => -120
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 185
+		ACTIONS => {
+			'WORD' => -123,
+			'' => -123,
+			"}" => -123,
+			":" => -123,
+			'PACKAGE' => -123,
+			'XOROP' => -123,
+			"\@" => -123,
+			'DORDOR' => -123,
+			"<" => 113,
+			'PERL' => -123,
+			'MY' => -123,
+			"%" => 115,
+			'ANDOP' => -123,
+			"\$^" => -123,
+			'UNLESS' => -123,
+			'NUM' => -123,
+			'STEP' => -123,
+			'ASSIGNOP' => -123,
+			'IF' => -123,
+			"\$" => -123,
+			'loopword' => -123,
+			'FOREACH' => -123,
+			"]" => -123,
+			'ACROSS' => -123,
+			'POWOP' => 125,
+			'NOTOP' => -123,
+			'FINAL' => -123,
+			'OROP' => -123,
+			'INCLUDE' => -123,
+			"(" => -123,
+			'VAR' => -123,
+			'ANDAND' => -123,
+			'RELOP' => 119,
+			'INCOP' => 118,
+			'NOT2' => -123,
+			";" => -123,
+			'FOR' => -123,
+			'FLOWLEFT' => -123,
+			'ADDOP' => 120,
+			"," => -123,
+			'FUNC' => -123,
+			'UNIT' => -123,
+			'RETURN' => -123,
+			'INIT' => -123,
+			'FUNCTION' => -123,
+			'error' => 121,
+			'FLOWRIGHT' => -123,
+			")" => -123,
+			'STR' => -123,
+			'CALC' => -123,
+			"?" => -123,
+			"{" => -123,
+			'DOTDOT' => -123,
+			'MULOP' => 123,
+			'CONST' => -123,
+			"=" => -123,
+			'USE' => -123,
+			'YADAYADA' => -123,
+			'OROR' => -123
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 186
 		ACTIONS => {
 			'WORD' => -122,
 			'' => -122,
@@ -3762,557 +3517,674 @@ sub new {
 			'PACKAGE' => -122,
 			'XOROP' => -122,
 			"\@" => -122,
-			'DORDOR' => 120,
-			"<" => 119,
+			'DORDOR' => 114,
+			"<" => 113,
 			'PERL' => -122,
 			'MY' => -122,
-			"%" => 121,
+			"%" => 115,
 			'ANDOP' => -122,
 			"\$^" => -122,
 			'UNLESS' => -122,
 			'NUM' => -122,
 			'STEP' => -122,
-			'ASSIGNOP' => 122,
+			'ASSIGNOP' => -122,
 			'IF' => -122,
 			"\$" => -122,
 			'loopword' => -122,
 			'FOREACH' => -122,
 			"]" => -122,
 			'ACROSS' => -122,
-			'POWOP' => 130,
+			'POWOP' => 125,
 			'NOTOP' => -122,
 			'FINAL' => -122,
 			'OROP' => -122,
-			'default' => -122,
 			'INCLUDE' => -122,
 			"(" => -122,
 			'VAR' => -122,
-			'ANDAND' => 131,
-			'RELOP' => 125,
-			'INCOP' => 124,
+			'ANDAND' => 126,
+			'RELOP' => 119,
+			'INCOP' => 118,
 			'NOT2' => -122,
 			";" => -122,
 			'FOR' => -122,
 			'FLOWLEFT' => -122,
-			'ADDOP' => 126,
+			'ADDOP' => 120,
 			"," => -122,
 			'FUNC' => -122,
 			'UNIT' => -122,
 			'RETURN' => -122,
 			'INIT' => -122,
-			'var' => -122,
 			'FUNCTION' => -122,
+			'error' => 121,
 			'FLOWRIGHT' => -122,
 			")" => -122,
 			'STR' => -122,
 			'CALC' => -122,
-			"?" => 127,
+			"?" => -122,
 			"{" => -122,
-			'DOTDOT' => 132,
-			'MULOP' => 128,
+			'DOTDOT' => undef,
+			'MULOP' => 123,
 			'CONST' => -122,
-			"=" => 133,
+			"=" => -122,
 			'USE' => -122,
 			'YADAYADA' => -122,
-			'OROR' => 129
+			'OROR' => 124
 		},
 		GOTOS => {
-			'unitspec' => 123
+			'unitspec' => 117
+		}
+	},
+	{#State 187
+		ACTIONS => {
+			'WORD' => -116,
+			'' => -116,
+			"}" => -116,
+			":" => -116,
+			'PACKAGE' => -116,
+			'XOROP' => -116,
+			"\@" => -116,
+			'DORDOR' => 114,
+			"<" => 113,
+			'PERL' => -116,
+			'MY' => -116,
+			"%" => 115,
+			'ANDOP' => -116,
+			"\$^" => -116,
+			'UNLESS' => -116,
+			'NUM' => -116,
+			'STEP' => -116,
+			'ASSIGNOP' => 116,
+			'IF' => -116,
+			"\$" => -116,
+			'loopword' => -116,
+			'FOREACH' => -116,
+			"]" => -116,
+			'ACROSS' => -116,
+			'POWOP' => 125,
+			'NOTOP' => -116,
+			'FINAL' => -116,
+			'OROP' => -116,
+			'INCLUDE' => -116,
+			"(" => -116,
+			'VAR' => -116,
+			'ANDAND' => 126,
+			'RELOP' => 119,
+			'INCOP' => 118,
+			'NOT2' => -116,
+			";" => -116,
+			'FOR' => -116,
+			'FLOWLEFT' => -116,
+			'ADDOP' => 120,
+			"," => -116,
+			'FUNC' => -116,
+			'UNIT' => -116,
+			'RETURN' => -116,
+			'INIT' => -116,
+			'FUNCTION' => -116,
+			'error' => 121,
+			'FLOWRIGHT' => -116,
+			")" => -116,
+			'STR' => -116,
+			'CALC' => -116,
+			"?" => 122,
+			"{" => -116,
+			'DOTDOT' => 127,
+			'MULOP' => 123,
+			'CONST' => -116,
+			"=" => 128,
+			'USE' => -116,
+			'YADAYADA' => -116,
+			'OROR' => 124
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 188
+		DEFAULT => -154
+	},
+	{#State 189
+		ACTIONS => {
+			"," => 241,
+			")" => 242
+		}
+	},
+	{#State 190
+		ACTIONS => {
+			":" => 243,
+			"<" => -152,
+			'DORDOR' => -152,
+			'ADDOP' => -152,
+			"," => -152,
+			"%" => -152,
+			'ASSIGNOP' => -152,
+			'error' => -152,
+			")" => -152,
+			'POWOP' => -152,
+			"?" => -152,
+			'DOTDOT' => -152,
+			'MULOP' => -152,
+			"=" => -152,
+			'ANDAND' => -152,
+			'OROR' => -152,
+			'INCOP' => -152,
+			'RELOP' => -152
+		}
+	},
+	{#State 191
+		DEFAULT => -155
+	},
+	{#State 192
+		DEFAULT => -158
+	},
+	{#State 193
+		ACTIONS => {
+			'DORDOR' => 114,
+			"<" => 113,
+			'ADDOP' => 120,
+			"," => -157,
+			"%" => 115,
+			'ASSIGNOP' => 116,
+			'error' => 121,
+			")" => -157,
+			'POWOP' => 125,
+			"?" => 122,
+			'MULOP' => 123,
+			'DOTDOT' => 127,
+			"=" => 128,
+			'OROR' => 124,
+			'ANDAND' => 126,
+			'RELOP' => 119,
+			'INCOP' => 118
+		},
+		GOTOS => {
+			'unitspec' => 117
+		}
+	},
+	{#State 194
+		ACTIONS => {
+			'WORD' => -96,
+			'' => -96,
+			"}" => -96,
+			":" => -96,
+			'PACKAGE' => -96,
+			"\@" => -96,
+			"<" => -96,
+			'DORDOR' => -96,
+			'XOROP' => -96,
+			'PERL' => -96,
+			'MY' => -96,
+			"%" => -96,
+			'ANDOP' => -96,
+			"\$^" => -96,
+			'UNLESS' => -96,
+			'NUM' => -96,
+			'STEP' => -96,
+			'ASSIGNOP' => -96,
+			'IF' => -96,
+			"\$" => -96,
+			'loopword' => -96,
+			'FOREACH' => -96,
+			"]" => -96,
+			'POWOP' => -96,
+			'ACROSS' => -96,
+			'NOTOP' => -96,
+			'FINAL' => -96,
+			'OROP' => -96,
+			'INCLUDE' => -96,
+			"(" => -96,
+			'VAR' => -96,
+			'ANDAND' => -96,
+			'INCOP' => -96,
+			'RELOP' => -96,
+			'NOT2' => -96,
+			";" => -96,
+			'FOR' => -96,
+			'FLOWLEFT' => -96,
+			'ADDOP' => -96,
+			"," => -96,
+			'FUNC' => -96,
+			'UNIT' => -96,
+			'RETURN' => -96,
+			'INIT' => -96,
+			'error' => -96,
+			'FUNCTION' => -96,
+			'FLOWRIGHT' => -96,
+			")" => -96,
+			'STR' => -96,
+			'CALC' => -96,
+			"?" => -96,
+			'DOTDOT' => -96,
+			'MULOP' => -96,
+			"{" => -96,
+			'CONST' => -96,
+			"=" => -96,
+			'USE' => -96,
+			'YADAYADA' => -96,
+			'OROR' => -96
+		}
+	},
+	{#State 195
+		ACTIONS => {
+			'XOROP' => 133,
+			";" => -80,
+			'OROP' => 132,
+			'ANDOP' => 130
+		}
+	},
+	{#State 196
+		ACTIONS => {
+			'WORD' => -97,
+			'' => -97,
+			"}" => -97,
+			":" => -97,
+			'PACKAGE' => -97,
+			"\@" => -97,
+			"<" => -97,
+			'DORDOR' => -97,
+			'XOROP' => -97,
+			'PERL' => -97,
+			'MY' => -97,
+			"%" => -97,
+			'ANDOP' => 130,
+			"\$^" => -97,
+			'UNLESS' => -97,
+			'NUM' => -97,
+			'STEP' => -97,
+			'ASSIGNOP' => -97,
+			'IF' => -97,
+			"\$" => -97,
+			'loopword' => -97,
+			'FOREACH' => -97,
+			"]" => -97,
+			'POWOP' => -97,
+			'ACROSS' => -97,
+			'NOTOP' => -97,
+			'FINAL' => -97,
+			'OROP' => -97,
+			'INCLUDE' => -97,
+			"(" => -97,
+			'VAR' => -97,
+			'ANDAND' => -97,
+			'INCOP' => -97,
+			'RELOP' => -97,
+			'NOT2' => -97,
+			";" => -97,
+			'FOR' => -97,
+			'FLOWLEFT' => -97,
+			'ADDOP' => -97,
+			"," => -97,
+			'FUNC' => -97,
+			'UNIT' => -97,
+			'RETURN' => -97,
+			'INIT' => -97,
+			'error' => -97,
+			'FUNCTION' => -97,
+			'FLOWRIGHT' => -97,
+			")" => -97,
+			'STR' => -97,
+			'CALC' => -97,
+			"?" => -97,
+			'DOTDOT' => -97,
+			'MULOP' => -97,
+			"{" => -97,
+			'CONST' => -97,
+			"=" => -97,
+			'USE' => -97,
+			'YADAYADA' => -97,
+			'OROR' => -97
 		}
 	},
 	{#State 197
 		ACTIONS => {
-			'WORD' => -101,
-			'' => -101,
-			"}" => -101,
-			":" => -101,
-			'PACKAGE' => -101,
-			"\@" => -101,
-			"<" => -101,
-			'DORDOR' => -101,
-			'XOROP' => -101,
-			'PERL' => -101,
-			'MY' => -101,
-			"%" => -101,
-			'ANDOP' => -101,
-			"\$^" => -101,
-			'UNLESS' => -101,
-			'NUM' => -101,
-			'STEP' => -101,
-			'ASSIGNOP' => -101,
-			'IF' => -101,
-			"\$" => -101,
-			'loopword' => -101,
-			'FOREACH' => -101,
-			"]" => -101,
-			'POWOP' => -101,
-			'ACROSS' => -101,
-			'NOTOP' => -101,
-			'FINAL' => -101,
-			'OROP' => -101,
-			'default' => -101,
-			'INCLUDE' => -101,
-			"(" => -101,
-			'VAR' => -101,
-			'ANDAND' => -101,
-			'INCOP' => -101,
-			'RELOP' => -101,
-			'NOT2' => -101,
-			";" => -101,
-			'FOR' => -101,
-			'FLOWLEFT' => -101,
-			'ADDOP' => -101,
-			"," => -101,
-			'FUNC' => -101,
-			'UNIT' => -101,
-			'RETURN' => -101,
-			'INIT' => -101,
-			'FUNCTION' => -101,
-			'var' => -101,
-			'FLOWRIGHT' => -101,
-			")" => -101,
-			'STR' => -101,
-			'CALC' => -101,
-			"?" => -101,
-			'DOTDOT' => -101,
-			'MULOP' => -101,
-			"{" => -101,
-			'CONST' => -101,
-			"=" => -101,
-			'USE' => -101,
-			'YADAYADA' => -101,
-			'OROR' => -101
+			'WORD' => -98,
+			'' => -98,
+			"}" => -98,
+			":" => -98,
+			'PACKAGE' => -98,
+			"\@" => -98,
+			"<" => -98,
+			'DORDOR' => -98,
+			'XOROP' => -98,
+			'PERL' => -98,
+			'MY' => -98,
+			"%" => -98,
+			'ANDOP' => 130,
+			"\$^" => -98,
+			'UNLESS' => -98,
+			'NUM' => -98,
+			'STEP' => -98,
+			'ASSIGNOP' => -98,
+			'IF' => -98,
+			"\$" => -98,
+			'loopword' => -98,
+			'FOREACH' => -98,
+			"]" => -98,
+			'POWOP' => -98,
+			'ACROSS' => -98,
+			'NOTOP' => -98,
+			'FINAL' => -98,
+			'OROP' => -98,
+			'INCLUDE' => -98,
+			"(" => -98,
+			'VAR' => -98,
+			'ANDAND' => -98,
+			'INCOP' => -98,
+			'RELOP' => -98,
+			'NOT2' => -98,
+			";" => -98,
+			'FOR' => -98,
+			'FLOWLEFT' => -98,
+			'ADDOP' => -98,
+			"," => -98,
+			'FUNC' => -98,
+			'UNIT' => -98,
+			'RETURN' => -98,
+			'INIT' => -98,
+			'error' => -98,
+			'FUNCTION' => -98,
+			'FLOWRIGHT' => -98,
+			")" => -98,
+			'STR' => -98,
+			'CALC' => -98,
+			"?" => -98,
+			'DOTDOT' => -98,
+			'MULOP' => -98,
+			"{" => -98,
+			'CONST' => -98,
+			"=" => -98,
+			'USE' => -98,
+			'YADAYADA' => -98,
+			'OROR' => -98
 		}
 	},
 	{#State 198
 		ACTIONS => {
-			'XOROP' => 137,
-			";" => -81,
-			'OROP' => 136,
-			'ANDOP' => 134
+			'XOROP' => 133,
+			";" => -79,
+			'OROP' => 132,
+			'ANDOP' => 130
 		}
 	},
 	{#State 199
 		ACTIONS => {
-			'WORD' => -102,
-			'' => -102,
-			"}" => -102,
-			":" => -102,
-			'PACKAGE' => -102,
-			"\@" => -102,
-			"<" => -102,
-			'DORDOR' => -102,
-			'XOROP' => -102,
-			'PERL' => -102,
-			'MY' => -102,
-			"%" => -102,
-			'ANDOP' => 134,
-			"\$^" => -102,
-			'UNLESS' => -102,
-			'NUM' => -102,
-			'STEP' => -102,
-			'ASSIGNOP' => -102,
-			'IF' => -102,
-			"\$" => -102,
-			'loopword' => -102,
-			'FOREACH' => -102,
-			"]" => -102,
-			'POWOP' => -102,
-			'ACROSS' => -102,
-			'NOTOP' => -102,
-			'FINAL' => -102,
-			'OROP' => -102,
-			'default' => -102,
-			'INCLUDE' => -102,
-			"(" => -102,
-			'VAR' => -102,
-			'ANDAND' => -102,
-			'INCOP' => -102,
-			'RELOP' => -102,
-			'NOT2' => -102,
-			";" => -102,
-			'FOR' => -102,
-			'FLOWLEFT' => -102,
-			'ADDOP' => -102,
-			"," => -102,
-			'FUNC' => -102,
-			'UNIT' => -102,
-			'RETURN' => -102,
-			'INIT' => -102,
-			'FUNCTION' => -102,
-			'var' => -102,
-			'FLOWRIGHT' => -102,
-			")" => -102,
-			'STR' => -102,
-			'CALC' => -102,
-			"?" => -102,
-			'DOTDOT' => -102,
-			'MULOP' => -102,
-			"{" => -102,
-			'CONST' => -102,
-			"=" => -102,
-			'USE' => -102,
-			'YADAYADA' => -102,
-			'OROR' => -102
-		}
-	},
-	{#State 200
-		ACTIONS => {
-			'WORD' => -103,
-			'' => -103,
-			"}" => -103,
-			":" => -103,
-			'PACKAGE' => -103,
-			"\@" => -103,
-			"<" => -103,
-			'DORDOR' => -103,
-			'XOROP' => -103,
-			'PERL' => -103,
-			'MY' => -103,
-			"%" => -103,
-			'ANDOP' => 134,
-			"\$^" => -103,
-			'UNLESS' => -103,
-			'NUM' => -103,
-			'STEP' => -103,
-			'ASSIGNOP' => -103,
-			'IF' => -103,
-			"\$" => -103,
-			'loopword' => -103,
-			'FOREACH' => -103,
-			"]" => -103,
-			'POWOP' => -103,
-			'ACROSS' => -103,
-			'NOTOP' => -103,
-			'FINAL' => -103,
-			'OROP' => -103,
-			'default' => -103,
-			'INCLUDE' => -103,
-			"(" => -103,
-			'VAR' => -103,
-			'ANDAND' => -103,
-			'INCOP' => -103,
-			'RELOP' => -103,
-			'NOT2' => -103,
-			";" => -103,
-			'FOR' => -103,
-			'FLOWLEFT' => -103,
-			'ADDOP' => -103,
-			"," => -103,
-			'FUNC' => -103,
-			'UNIT' => -103,
-			'RETURN' => -103,
-			'INIT' => -103,
-			'FUNCTION' => -103,
-			'var' => -103,
-			'FLOWRIGHT' => -103,
-			")" => -103,
-			'STR' => -103,
-			'CALC' => -103,
-			"?" => -103,
-			'DOTDOT' => -103,
-			'MULOP' => -103,
-			"{" => -103,
-			'CONST' => -103,
-			"=" => -103,
-			'USE' => -103,
-			'YADAYADA' => -103,
-			'OROR' => -103
-		}
-	},
-	{#State 201
-		ACTIONS => {
-			'XOROP' => 137,
-			";" => -80,
-			'OROP' => 136,
-			'ANDOP' => 134
-		}
-	},
-	{#State 202
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
+			'WORD' => 44,
+			'NOT2' => 59,
 			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
+			'ADDOP' => 29,
+			'MY' => 48,
 			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
 			'INCOP' => 25
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
+			'scalar' => 88,
+			'dynvar' => 56,
 			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 249,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 244,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
 			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'set' => 34
 		}
 	},
+	{#State 200
+		DEFAULT => -148
+	},
+	{#State 201
+		ACTIONS => {
+			'XOROP' => 133,
+			'OROP' => 132,
+			"]" => 245,
+			'ANDOP' => 130
+		}
+	},
+	{#State 202
+		DEFAULT => -147
+	},
 	{#State 203
-		DEFAULT => -154
+		DEFAULT => -50
 	},
 	{#State 204
 		ACTIONS => {
-			'XOROP' => 137,
-			'OROP' => 136,
-			"]" => 250,
-			'ANDOP' => 134
+			"}" => 246
 		}
 	},
 	{#State 205
-		DEFAULT => -153
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 247,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
 	},
 	{#State 206
-		DEFAULT => -54
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 248,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
 	},
 	{#State 207
 		ACTIONS => {
-			"}" => 251
+			"\$" => 52
+		},
+		GOTOS => {
+			'scalar' => 249
 		}
 	},
 	{#State 208
 		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
+			"\$" => 52
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 252,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'scalar' => 250
 		}
 	},
 	{#State 209
 		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 253,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'FLOWLEFT' => 251,
+			'FLOWRIGHT' => 252
 		}
 	},
 	{#State 210
 		ACTIONS => {
-			"\$" => 54
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
 		},
 		GOTOS => {
-			'scalar' => 254
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 253,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
 		}
 	},
 	{#State 211
 		ACTIONS => {
-			"\$" => 54
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
 		},
 		GOTOS => {
-			'scalar' => 255
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 254,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
 		}
 	},
 	{#State 212
 		ACTIONS => {
-			'FLOWLEFT' => 256,
-			'FLOWRIGHT' => 257
+			'XOROP' => 133,
+			'OROP' => 132,
+			")" => 255,
+			'ANDOP' => 130
 		}
 	},
 	{#State 213
-		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 258,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
-		}
+		DEFAULT => -139
 	},
 	{#State 214
 		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
+			'WORD' => 44,
+			'NOT2' => 59,
 			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
+			'ADDOP' => 29,
+			'MY' => 48,
 			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
 			'INCOP' => 25
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
+			'scalar' => 88,
+			'dynvar' => 56,
 			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 259,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 256,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
 			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'set' => 34
 		}
 	},
 	{#State 215
-		ACTIONS => {
-			'XOROP' => 137,
-			'OROP' => 136,
-			")" => 260,
-			'ANDOP' => 134
-		}
+		DEFAULT => -77
 	},
 	{#State 216
-		DEFAULT => -145
+		ACTIONS => {
+			"]" => 257
+		}
 	},
 	{#State 217
 		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 261,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			"]" => 258
 		}
 	},
 	{#State 218
-		DEFAULT => -78
-	},
-	{#State 219
-		ACTIONS => {
-			"]" => 262
-		}
-	},
-	{#State 220
-		ACTIONS => {
-			"]" => 263
-		}
-	},
-	{#State 221
 		ACTIONS => {
 			'WORD' => -2,
 			"}" => -2,
@@ -4332,7 +4204,6 @@ sub new {
 			'ACROSS' => -2,
 			'NOTOP' => -2,
 			'FINAL' => -2,
-			'default' => -2,
 			'INCLUDE' => -2,
 			"(" => -2,
 			'VAR' => -2,
@@ -4345,7 +4216,6 @@ sub new {
 			'RETURN' => -2,
 			'INIT' => -2,
 			'FUNCTION' => -2,
-			'var' => -2,
 			'STR' => -2,
 			'CALC' => -2,
 			"{" => -2,
@@ -4355,3100 +4225,3011 @@ sub new {
 			'progseg' => 3
 		},
 		GOTOS => {
-			'progseq' => 264
+			'progseq' => 259
+		}
+	},
+	{#State 219
+		ACTIONS => {
+			'XOROP' => 133,
+			";" => 260,
+			'OROP' => 132,
+			'ANDOP' => 130
+		}
+	},
+	{#State 220
+		DEFAULT => -20
+	},
+	{#State 221
+		ACTIONS => {
+			"%{" => 6,
+			'WORD' => 44,
+			"}" => 261,
+			'PACKAGE' => 45,
+			"\@" => 10,
+			'PERL' => 8,
+			'MY' => 48,
+			"%" => 12,
+			"\$^" => 49,
+			'UNLESS' => 13,
+			'NUM' => 50,
+			'STEP' => 15,
+			'IF' => 51,
+			"\$" => 52,
+			'loopword' => 16,
+			'FOREACH' => 18,
+			'ACROSS' => 228,
+			'NOTOP' => 54,
+			'FINAL' => 23,
+			"(" => 57,
+			'VAR' => 58,
+			'INCOP' => 25,
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'YADAYADA' => 69
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'sideff' => 27,
+			'objname' => 11,
+			'term' => 61,
+			'loop' => 14,
+			'array' => 30,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
+			'set' => 34,
+			'termunop' => 19,
+			'line' => 229,
+			'cond' => 22,
+			'dynvar' => 56,
+			'phaseblock' => 230,
+			'perlblock' => 231,
+			'condword' => 67,
+			'funcall' => 36,
+			'across' => 232,
+			'package' => 40,
+			'varexpr' => 41,
+			'block' => 233,
+			'indexvar' => 71,
+			'simplevar' => 72
 		}
 	},
 	{#State 222
-		ACTIONS => {
-			'XOROP' => 137,
-			";" => 265,
-			'OROP' => 136,
-			'ANDOP' => 134
-		}
+		DEFAULT => -58
 	},
 	{#State 223
-		DEFAULT => -25
+		DEFAULT => -31
 	},
 	{#State 224
 		ACTIONS => {
-			"%{" => 6,
-			'WORD' => 46,
-			"}" => 266,
-			'PACKAGE' => 47,
-			"\@" => 10,
-			'PERL' => 8,
-			'MY' => 50,
-			"%" => 12,
-			"\$^" => 51,
-			'UNLESS' => 13,
-			'NUM' => 52,
-			'STEP' => 15,
-			'IF' => 53,
-			"\$" => 54,
-			'loopword' => 16,
-			'FOREACH' => 18,
-			'ACROSS' => 231,
-			'NOTOP' => 56,
-			'FINAL' => 23,
-			"(" => 60,
-			'VAR' => 61,
-			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'YADAYADA' => 72
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'sideff' => 28,
-			'objname' => 11,
-			'term' => 65,
-			'loop' => 14,
-			'array' => 31,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
-			'set' => 36,
-			'termunop' => 19,
-			'line' => 232,
-			'cond' => 22,
-			'dynvar' => 58,
-			'phaseblock' => 233,
-			'perlblock' => 234,
-			'condword' => 71,
-			'funcall' => 38,
-			'across' => 235,
-			'package' => 42,
-			'varexpr' => 43,
-			'block' => 236,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
+			"," => 262,
+			")" => -28
 		}
 	},
 	{#State 225
-		DEFAULT => -62
+		DEFAULT => -29
 	},
 	{#State 226
-		DEFAULT => -36
+		ACTIONS => {
+			")" => 263
+		}
 	},
 	{#State 227
-		ACTIONS => {
-			"," => 267,
-			")" => -33
-		}
+		DEFAULT => -46
 	},
 	{#State 228
-		DEFAULT => -34
-	},
-	{#State 229
 		ACTIONS => {
-			")" => 268
-		}
-	},
-	{#State 230
-		DEFAULT => -50
-	},
-	{#State 231
-		ACTIONS => {
-			"[" => 86
+			"[" => 83
 		},
 		GOTOS => {
-			'dimlist' => 269,
-			'dimspec' => 87
+			'dimlist' => 264,
+			'dimspec' => 84
 		}
 	},
-	{#State 232
-		DEFAULT => -49
-	},
-	{#State 233
-		DEFAULT => -48
-	},
-	{#State 234
-		DEFAULT => -47
-	},
-	{#State 235
+	{#State 229
 		DEFAULT => -45
 	},
+	{#State 230
+		DEFAULT => -44
+	},
+	{#State 231
+		DEFAULT => -43
+	},
+	{#State 232
+		DEFAULT => -41
+	},
+	{#State 233
+		DEFAULT => -42
+	},
+	{#State 234
+		ACTIONS => {
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 265,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
+		}
+	},
+	{#State 235
+		DEFAULT => -68
+	},
 	{#State 236
-		DEFAULT => -46
+		ACTIONS => {
+			'WORD' => 190,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			"," => -153,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			")" => -153,
+			'STR' => 35,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'objname' => 11,
+			'arg' => 191,
+			'term' => 193,
+			'array' => 30,
+			'pair' => 192,
+			'termbinop' => 53,
+			'termunop' => 19,
+			'set' => 34,
+			'dynvar' => 56,
+			'funcall' => 36,
+			'arglist' => 188,
+			'varexpr' => 41,
+			'argexpr' => 266,
+			'indexvar' => 71,
+			'simplevar' => 72
+		}
 	},
 	{#State 237
 		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
+			"\$" => 52,
+			")" => -27
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 270,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'params' => 267,
+			'scalar' => 223,
+			'paramlist' => 224,
+			'param' => 225
 		}
 	},
 	{#State 238
-		DEFAULT => -18
+		DEFAULT => -37
 	},
 	{#State 239
+		DEFAULT => -34
+	},
+	{#State 240
 		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
+			'WORD' => 44,
+			'STR' => 35,
+			'NOT2' => 59,
 			"\@" => 10,
-			'ADDOP' => 30,
-			"," => -97,
-			'MY' => 50,
+			'ADDOP' => 29,
+			'MY' => 48,
 			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			")" => -97,
-			'STR' => 37,
-			"(" => 60,
-			'YADAYADA' => 72,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
 			'INCOP' => 25
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
+			'scalar' => 88,
+			'dynvar' => 56,
 			'objname' => 11,
-			'funcall' => 38,
-			'term' => 183,
-			'array' => 31,
-			'arglist' => 181,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'argexpr' => 271,
-			'simplevar' => 75,
+			'funcall' => 36,
+			'term' => 268,
+			'array' => 30,
+			'varexpr' => 41,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
 			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'set' => 34
 		}
-	},
-	{#State 240
-		DEFAULT => -160
 	},
 	{#State 241
 		ACTIONS => {
-			'WORD' => 175,
-			"}" => 272
+			'WORD' => 190,
+			'STR' => 35,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'RETURN' => 65,
+			"\$" => 52,
+			'INCOP' => 25
 		},
 		GOTOS => {
-			'pair' => 273
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'arg' => 269,
+			'funcall' => 36,
+			'term' => 193,
+			'array' => 30,
+			'varexpr' => 41,
+			'pair' => 192,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
 		}
 	},
 	{#State 242
 		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 274,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'WORD' => -150,
+			'' => -150,
+			"}" => -150,
+			":" => -150,
+			'PACKAGE' => -150,
+			'XOROP' => -150,
+			"\@" => -150,
+			"<" => -150,
+			'DORDOR' => -150,
+			'PERL' => -150,
+			'MY' => -150,
+			"%" => -150,
+			'ANDOP' => -150,
+			"\$^" => -150,
+			'UNLESS' => -150,
+			'NUM' => -150,
+			'STEP' => -150,
+			'ASSIGNOP' => -150,
+			'IF' => -150,
+			"\$" => -150,
+			'loopword' => -150,
+			'FOREACH' => -150,
+			"]" => -150,
+			'POWOP' => -150,
+			'ACROSS' => -150,
+			'NOTOP' => -150,
+			'FINAL' => -150,
+			'DOT' => 270,
+			'OROP' => -150,
+			'INCLUDE' => -150,
+			"(" => -150,
+			'VAR' => -150,
+			'ANDAND' => -150,
+			'INCOP' => -150,
+			'RELOP' => -150,
+			'NOT2' => -150,
+			";" => -150,
+			'FOR' => -150,
+			'FLOWLEFT' => -150,
+			'ADDOP' => -150,
+			"," => -150,
+			'FUNC' => -150,
+			'UNIT' => -150,
+			'RETURN' => -150,
+			'INIT' => -150,
+			'error' => -150,
+			'FUNCTION' => -150,
+			'FLOWRIGHT' => -150,
+			")" => -150,
+			'STR' => -150,
+			'CALC' => -150,
+			"?" => -150,
+			'DOTDOT' => -150,
+			'MULOP' => -150,
+			"{" => -150,
+			'CONST' => -150,
+			"=" => -150,
+			'USE' => -150,
+			'YADAYADA' => -150,
+			'OROR' => -150
 		}
 	},
 	{#State 243
 		ACTIONS => {
-			"\$" => 54,
-			")" => -32
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
 		},
 		GOTOS => {
-			'params' => 275,
-			'scalar' => 226,
-			'paramlist' => 227,
-			'param' => 228
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 271,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
 		}
 	},
 	{#State 244
 		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 276,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'XOROP' => 133,
+			'OROP' => 132,
+			")" => 272,
+			'ANDOP' => 130
 		}
 	},
 	{#State 245
-		ACTIONS => {
-			'WORD' => -156,
-			'' => -156,
-			"}" => -156,
-			":" => -156,
-			'PACKAGE' => -156,
-			'XOROP' => -156,
-			"\@" => -156,
-			"<" => -156,
-			'DORDOR' => -156,
-			'PERL' => -156,
-			'MY' => -156,
-			"%" => -156,
-			'ANDOP' => -156,
-			"\$^" => -156,
-			'UNLESS' => -156,
-			'NUM' => -156,
-			'STEP' => -156,
-			'ASSIGNOP' => -156,
-			'IF' => -156,
-			"\$" => -156,
-			'loopword' => -156,
-			'FOREACH' => -156,
-			"]" => -156,
-			'POWOP' => -156,
-			'ACROSS' => -156,
-			'NOTOP' => -156,
-			'FINAL' => -156,
-			'DOT' => 277,
-			'OROP' => -156,
-			'default' => -156,
-			'INCLUDE' => -156,
-			"(" => -156,
-			'VAR' => -156,
-			'ANDAND' => -156,
-			'INCOP' => -156,
-			'RELOP' => -156,
-			'NOT2' => -156,
-			";" => -156,
-			'FOR' => -156,
-			'FLOWLEFT' => -156,
-			'ADDOP' => -156,
-			"," => -156,
-			'FUNC' => -156,
-			'UNIT' => -156,
-			'RETURN' => -156,
-			'INIT' => -156,
-			'FUNCTION' => -156,
-			'var' => -156,
-			'FLOWRIGHT' => -156,
-			")" => -156,
-			'STR' => -156,
-			'CALC' => -156,
-			"?" => -156,
-			'DOTDOT' => -156,
-			'MULOP' => -156,
-			"{" => -156,
-			'CONST' => -156,
-			"=" => -156,
-			'USE' => -156,
-			'YADAYADA' => -156,
-			'OROR' => -156
-		}
+		DEFAULT => -149
 	},
 	{#State 246
-		DEFAULT => -41
+		DEFAULT => -48
 	},
 	{#State 247
-		DEFAULT => -39
+		ACTIONS => {
+			'WORD' => -163,
+			'' => -163,
+			"}" => -163,
+			'PACKAGE' => -163,
+			"\@" => -163,
+			'XOROP' => 133,
+			'PERL' => -163,
+			'MY' => -163,
+			"%" => -163,
+			'ANDOP' => 130,
+			"\$^" => -163,
+			'UNLESS' => -163,
+			'NUM' => -163,
+			'STEP' => -163,
+			'IF' => -163,
+			"\$" => -163,
+			'loopword' => -163,
+			'FOREACH' => -163,
+			'ACROSS' => -163,
+			'NOTOP' => -163,
+			'FINAL' => -163,
+			'OROP' => 132,
+			'INCLUDE' => -163,
+			"(" => -163,
+			'VAR' => -163,
+			'INCOP' => -163,
+			'NOT2' => -163,
+			'FOR' => -163,
+			'ADDOP' => -163,
+			'FUNC' => -163,
+			'UNIT' => -163,
+			'RETURN' => -163,
+			'INIT' => -163,
+			'FUNCTION' => -163,
+			'STR' => -163,
+			'CALC' => -163,
+			"{" => -163,
+			'CONST' => -163,
+			'USE' => -163,
+			'YADAYADA' => -163
+		}
 	},
 	{#State 248
 		ACTIONS => {
-			'WORD' => 46,
-			'STR' => 37,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'RETURN' => 68,
-			"\$" => 54,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 278,
-			'array' => 31,
-			'varexpr' => 43,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'XOROP' => 133,
+			'OROP' => 132,
+			")" => 273,
+			'ANDOP' => 130
 		}
 	},
 	{#State 249
-		ACTIONS => {
-			'XOROP' => 137,
-			'OROP' => 136,
-			")" => 279,
-			'ANDOP' => 134
-		}
+		DEFAULT => -161
 	},
 	{#State 250
-		DEFAULT => -155
+		DEFAULT => -160
 	},
 	{#State 251
-		DEFAULT => -52
+		ACTIONS => {
+			"\$" => 52
+		},
+		GOTOS => {
+			'scalar' => 274
+		}
 	},
 	{#State 252
 		ACTIONS => {
-			'WORD' => -168,
-			'' => -168,
-			"}" => -168,
-			'PACKAGE' => -168,
-			"\@" => -168,
-			'XOROP' => 137,
-			'PERL' => -168,
-			'MY' => -168,
-			"%" => -168,
-			'ANDOP' => 134,
-			"\$^" => -168,
-			'UNLESS' => -168,
-			'NUM' => -168,
-			'STEP' => -168,
-			'IF' => -168,
-			"\$" => -168,
-			'loopword' => -168,
-			'FOREACH' => -168,
-			'ACROSS' => -168,
-			'NOTOP' => -168,
-			'FINAL' => -168,
-			'OROP' => 136,
-			'default' => -168,
-			'INCLUDE' => -168,
-			"(" => -168,
-			'VAR' => -168,
-			'INCOP' => -168,
-			'NOT2' => -168,
-			'FOR' => -168,
-			'ADDOP' => -168,
-			'FUNC' => -168,
-			'UNIT' => -168,
-			'RETURN' => -168,
-			'INIT' => -168,
-			'FUNCTION' => -168,
-			'var' => -168,
-			'STR' => -168,
-			'CALC' => -168,
-			"{" => -168,
-			'CONST' => -168,
-			'USE' => -168,
-			'YADAYADA' => -168
+			"\$" => 52
+		},
+		GOTOS => {
+			'scalar' => 275
 		}
 	},
 	{#State 253
 		ACTIONS => {
-			'XOROP' => 137,
-			'OROP' => 136,
-			")" => 280,
-			'ANDOP' => 134
+			'WORD' => -162,
+			'' => -162,
+			"}" => -162,
+			'PACKAGE' => -162,
+			"\@" => -162,
+			'XOROP' => 133,
+			'PERL' => -162,
+			'MY' => -162,
+			"%" => -162,
+			'ANDOP' => 130,
+			"\$^" => -162,
+			'UNLESS' => -162,
+			'NUM' => -162,
+			'STEP' => -162,
+			'IF' => -162,
+			"\$" => -162,
+			'loopword' => -162,
+			'FOREACH' => -162,
+			'ACROSS' => -162,
+			'NOTOP' => -162,
+			'FINAL' => -162,
+			'OROP' => 132,
+			'INCLUDE' => -162,
+			"(" => -162,
+			'VAR' => -162,
+			'INCOP' => -162,
+			'NOT2' => -162,
+			'FOR' => -162,
+			'ADDOP' => -162,
+			'FUNC' => -162,
+			'UNIT' => -162,
+			'RETURN' => -162,
+			'INIT' => -162,
+			'FUNCTION' => -162,
+			'STR' => -162,
+			'CALC' => -162,
+			"{" => -162,
+			'CONST' => -162,
+			'USE' => -162,
+			'YADAYADA' => -162
 		}
 	},
 	{#State 254
-		DEFAULT => -166
+		ACTIONS => {
+			'XOROP' => 133,
+			'OROP' => 132,
+			")" => 276,
+			'ANDOP' => 130
+		}
 	},
 	{#State 255
-		DEFAULT => -165
+		ACTIONS => {
+			"{" => 277
+		}
 	},
 	{#State 256
 		ACTIONS => {
-			"\$" => 54
-		},
-		GOTOS => {
-			'scalar' => 281
+			'XOROP' => 133,
+			'OROP' => 132,
+			")" => 278,
+			'ANDOP' => 130
 		}
 	},
 	{#State 257
-		ACTIONS => {
-			"\$" => 54
-		},
-		GOTOS => {
-			'scalar' => 282
-		}
+		DEFAULT => -74
 	},
 	{#State 258
-		ACTIONS => {
-			'WORD' => -167,
-			'' => -167,
-			"}" => -167,
-			'PACKAGE' => -167,
-			"\@" => -167,
-			'XOROP' => 137,
-			'PERL' => -167,
-			'MY' => -167,
-			"%" => -167,
-			'ANDOP' => 134,
-			"\$^" => -167,
-			'UNLESS' => -167,
-			'NUM' => -167,
-			'STEP' => -167,
-			'IF' => -167,
-			"\$" => -167,
-			'loopword' => -167,
-			'FOREACH' => -167,
-			'ACROSS' => -167,
-			'NOTOP' => -167,
-			'FINAL' => -167,
-			'OROP' => 136,
-			'default' => -167,
-			'INCLUDE' => -167,
-			"(" => -167,
-			'VAR' => -167,
-			'INCOP' => -167,
-			'NOT2' => -167,
-			'FOR' => -167,
-			'ADDOP' => -167,
-			'FUNC' => -167,
-			'UNIT' => -167,
-			'RETURN' => -167,
-			'INIT' => -167,
-			'FUNCTION' => -167,
-			'var' => -167,
-			'STR' => -167,
-			'CALC' => -167,
-			"{" => -167,
-			'CONST' => -167,
-			'USE' => -167,
-			'YADAYADA' => -167
-		}
+		DEFAULT => -75
 	},
 	{#State 259
 		ACTIONS => {
-			'XOROP' => 137,
-			'OROP' => 136,
-			")" => 283,
-			'ANDOP' => 134
+			'WORD' => 44,
+			"}" => 279,
+			'PACKAGE' => 45,
+			"\@" => 10,
+			'PERL' => 47,
+			'MY' => 48,
+			"%" => 12,
+			"\$^" => 49,
+			'UNLESS' => 13,
+			'NUM' => 50,
+			'STEP' => 15,
+			'IF' => 51,
+			"\$" => 52,
+			'loopword' => 16,
+			'FOREACH' => 18,
+			'ACROSS' => 20,
+			'NOTOP' => 54,
+			'FINAL' => 23,
+			'INCLUDE' => 24,
+			"(" => 57,
+			'VAR' => 58,
+			'INCOP' => 25,
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'UNIT' => 31,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'FUNCTION' => 33,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'USE' => 42,
+			'YADAYADA' => 69
+		},
+		GOTOS => {
+			'scalar' => 9,
+			'function' => 26,
+			'sideff' => 27,
+			'objname' => 11,
+			'include' => 60,
+			'tl_across' => 46,
+			'term' => 61,
+			'loop' => 14,
+			'array' => 30,
+			'use' => 64,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
+			'flow' => 17,
+			'set' => 34,
+			'termunop' => 19,
+			'line' => 21,
+			'cond' => 22,
+			'phaseblock' => 55,
+			'dynvar' => 56,
+			'condword' => 67,
+			'funcall' => 36,
+			'tl_decl' => 39,
+			'package' => 40,
+			'varexpr' => 41,
+			'unit' => 43,
+			'block' => 70,
+			'indexvar' => 71,
+			'simplevar' => 72
 		}
 	},
 	{#State 260
 		ACTIONS => {
-			"{" => 284
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 280,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
 		}
 	},
 	{#State 261
-		ACTIONS => {
-			'XOROP' => 137,
-			'OROP' => 136,
-			")" => 285,
-			'ANDOP' => 134
-		}
+		DEFAULT => -52
 	},
 	{#State 262
-		DEFAULT => -75
+		ACTIONS => {
+			"\$" => 52
+		},
+		GOTOS => {
+			'scalar' => 223,
+			'param' => 281
+		}
 	},
 	{#State 263
-		DEFAULT => -76
+		ACTIONS => {
+			"<" => 113,
+			";" => -32,
+			"{" => -32,
+			'error' => 121
+		},
+		GOTOS => {
+			'unitspec' => 165,
+			'unitopt' => 282
+		}
 	},
 	{#State 264
 		ACTIONS => {
-			'WORD' => 46,
-			"}" => 286,
-			'PACKAGE' => 47,
-			"\@" => 10,
-			'PERL' => 49,
-			'MY' => 50,
-			"%" => 12,
-			"\$^" => 51,
-			'UNLESS' => 13,
-			'NUM' => 52,
-			'STEP' => 15,
-			'IF' => 53,
-			"\$" => 54,
-			'loopword' => 16,
-			'FOREACH' => 18,
-			'ACROSS' => 20,
-			'NOTOP' => 56,
-			'FINAL' => 23,
-			'default' => 59,
-			'INCLUDE' => 24,
-			"(" => 60,
-			'VAR' => 61,
-			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'UNIT' => 32,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'FUNCTION' => 35,
-			'var' => 34,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'USE' => 44,
-			'YADAYADA' => 72
+			"{" => 283,
+			"[" => 83
 		},
 		GOTOS => {
-			'scalar' => 9,
-			'function' => 27,
-			'sideff' => 28,
-			'objname' => 11,
-			'include' => 63,
-			'tl_across' => 48,
-			'term' => 65,
-			'loop' => 14,
-			'array' => 31,
-			'use' => 67,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
-			'flow' => 17,
-			'set' => 36,
-			'termunop' => 19,
-			'line' => 21,
-			'cond' => 22,
-			'phaseblock' => 57,
-			'dynvar' => 58,
-			'condword' => 71,
-			'funcall' => 38,
-			'tl_decl' => 41,
-			'package' => 42,
-			'unit' => 45,
-			'varexpr' => 43,
-			'block' => 73,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
+			'dimspec' => 153
 		}
 	},
 	{#State 265
 		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
-			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
-			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
-			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 287,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'XOROP' => 133,
+			";" => 284,
+			'OROP' => 132,
+			'ANDOP' => 130
 		}
 	},
 	{#State 266
-		DEFAULT => -56
+		ACTIONS => {
+			"," => 241,
+			")" => 285
+		}
 	},
 	{#State 267
 		ACTIONS => {
-			"\$" => 54
-		},
-		GOTOS => {
-			'scalar' => 226,
-			'param' => 288
+			")" => 286
 		}
 	},
 	{#State 268
 		ACTIONS => {
-			"<" => 119,
-			";" => -37,
-			"{" => -37
+			'WORD' => -103,
+			'' => -103,
+			"}" => -103,
+			":" => -103,
+			'PACKAGE' => -103,
+			'XOROP' => -103,
+			"\@" => -103,
+			'DORDOR' => 114,
+			"<" => 113,
+			'PERL' => -103,
+			'MY' => -103,
+			"%" => 115,
+			'ANDOP' => -103,
+			"\$^" => -103,
+			'UNLESS' => -103,
+			'NUM' => -103,
+			'STEP' => -103,
+			'ASSIGNOP' => -103,
+			'IF' => -103,
+			"\$" => -103,
+			'loopword' => -103,
+			'FOREACH' => -103,
+			"]" => -103,
+			'ACROSS' => -103,
+			'POWOP' => 125,
+			'NOTOP' => -103,
+			'FINAL' => -103,
+			'OROP' => -103,
+			'INCLUDE' => -103,
+			"(" => -103,
+			'VAR' => -103,
+			'ANDAND' => 126,
+			'RELOP' => 119,
+			'INCOP' => 118,
+			'NOT2' => -103,
+			";" => -103,
+			'FOR' => -103,
+			'FLOWLEFT' => -103,
+			'ADDOP' => 120,
+			"," => -103,
+			'FUNC' => -103,
+			'UNIT' => -103,
+			'RETURN' => -103,
+			'INIT' => -103,
+			'FUNCTION' => -103,
+			'error' => 121,
+			'FLOWRIGHT' => -103,
+			")" => -103,
+			'STR' => -103,
+			'CALC' => -103,
+			"?" => 122,
+			"{" => -103,
+			'DOTDOT' => 127,
+			'MULOP' => 123,
+			'CONST' => -103,
+			"=" => -103,
+			'USE' => -103,
+			'YADAYADA' => -103,
+			'OROR' => 124
 		},
 		GOTOS => {
-			'unitspec' => 169,
-			'unitopt' => 289
+			'unitspec' => 117
 		}
 	},
 	{#State 269
-		ACTIONS => {
-			"{" => 290,
-			"[" => 86
-		},
-		GOTOS => {
-			'dimspec' => 157
-		}
+		DEFAULT => -156
 	},
 	{#State 270
 		ACTIONS => {
-			'XOROP' => 137,
-			";" => 291,
-			'OROP' => 136,
-			'ANDOP' => 134
+			'WORD' => 287
 		}
 	},
 	{#State 271
 		ACTIONS => {
-			"," => 244,
-			")" => 292
+			'XOROP' => 133,
+			'OROP' => 132,
+			"," => -159,
+			")" => -159,
+			'ANDOP' => 130
 		}
 	},
 	{#State 272
-		DEFAULT => -161
+		ACTIONS => {
+			"{" => 288
+		}
 	},
 	{#State 273
-		DEFAULT => -163
+		DEFAULT => -167
 	},
 	{#State 274
-		ACTIONS => {
-			"}" => -164,
-			'XOROP' => 137,
-			'OROP' => 136,
-			"," => -164,
-			'ANDOP' => 134
-		}
+		DEFAULT => -165
 	},
 	{#State 275
-		ACTIONS => {
-			")" => 293
-		}
+		DEFAULT => -164
 	},
 	{#State 276
-		ACTIONS => {
-			'DORDOR' => 120,
-			"<" => 119,
-			'ADDOP' => 126,
-			"," => -100,
-			"%" => 121,
-			'ASSIGNOP' => 122,
-			")" => -100,
-			'POWOP' => 130,
-			"?" => 127,
-			'MULOP' => 128,
-			'DOTDOT' => 132,
-			"=" => 133,
-			'OROR' => 129,
-			'ANDAND' => 131,
-			'RELOP' => 125,
-			'INCOP' => 124
-		},
-		GOTOS => {
-			'unitspec' => 123
-		}
+		DEFAULT => -166
 	},
 	{#State 277
-		ACTIONS => {
-			'WORD' => 294
+		DEFAULT => -40,
+		GOTOS => {
+			'stmtseq' => 289
 		}
 	},
 	{#State 278
 		ACTIONS => {
-			'WORD' => -108,
-			'' => -108,
-			"}" => -108,
-			":" => -108,
-			'PACKAGE' => -108,
-			'XOROP' => -108,
-			"\@" => -108,
-			'DORDOR' => 120,
-			"<" => 119,
-			'PERL' => -108,
-			'MY' => -108,
-			"%" => 121,
-			'ANDOP' => -108,
-			"\$^" => -108,
-			'UNLESS' => -108,
-			'NUM' => -108,
-			'STEP' => -108,
-			'ASSIGNOP' => -108,
-			'IF' => -108,
-			"\$" => -108,
-			'loopword' => -108,
-			'FOREACH' => -108,
-			"]" => -108,
-			'ACROSS' => -108,
-			'POWOP' => 130,
-			'NOTOP' => -108,
-			'FINAL' => -108,
-			'OROP' => -108,
-			'default' => -108,
-			'INCLUDE' => -108,
-			"(" => -108,
-			'VAR' => -108,
-			'ANDAND' => 131,
-			'RELOP' => 125,
-			'INCOP' => 124,
-			'NOT2' => -108,
-			";" => -108,
-			'FOR' => -108,
-			'FLOWLEFT' => -108,
-			'ADDOP' => 126,
-			"," => -108,
-			'FUNC' => -108,
-			'UNIT' => -108,
-			'RETURN' => -108,
-			'INIT' => -108,
-			'var' => -108,
-			'FUNCTION' => -108,
-			'FLOWRIGHT' => -108,
-			")" => -108,
-			'STR' => -108,
-			'CALC' => -108,
-			"?" => 127,
-			"{" => -108,
-			'DOTDOT' => 132,
-			'MULOP' => 128,
-			'CONST' => -108,
-			"=" => -108,
-			'USE' => -108,
-			'YADAYADA' => -108,
-			'OROR' => 129
-		},
-		GOTOS => {
-			'unitspec' => 123
+			"{" => 290
 		}
 	},
 	{#State 279
-		ACTIONS => {
-			"{" => 295
-		}
+		DEFAULT => -38
 	},
 	{#State 280
-		DEFAULT => -172
+		ACTIONS => {
+			'XOROP' => 133,
+			";" => 291,
+			'OROP' => 132,
+			'ANDOP' => 130
+		}
 	},
 	{#State 281
-		DEFAULT => -170
+		DEFAULT => -30
 	},
 	{#State 282
-		DEFAULT => -169
+		ACTIONS => {
+			";" => 293,
+			"{" => 292
+		}
 	},
 	{#State 283
-		DEFAULT => -171
+		DEFAULT => -71,
+		GOTOS => {
+			'@70-3' => 294
+		}
 	},
 	{#State 284
-		DEFAULT => -44,
+		DEFAULT => -65
+	},
+	{#State 285
+		DEFAULT => -133
+	},
+	{#State 286
+		ACTIONS => {
+			"<" => 113,
+			";" => -32,
+			"{" => -32,
+			'error' => 121
+		},
+		GOTOS => {
+			'unitspec' => 165,
+			'unitopt' => 295
+		}
+	},
+	{#State 287
+		DEFAULT => -151
+	},
+	{#State 288
+		DEFAULT => -40,
 		GOTOS => {
 			'stmtseq' => 296
 		}
 	},
-	{#State 285
-		ACTIONS => {
-			"{" => 297
-		}
-	},
-	{#State 286
-		DEFAULT => -42
-	},
-	{#State 287
-		ACTIONS => {
-			'XOROP' => 137,
-			";" => 298,
-			'OROP' => 136,
-			'ANDOP' => 134
-		}
-	},
-	{#State 288
-		DEFAULT => -35
-	},
 	{#State 289
 		ACTIONS => {
-			";" => 300,
-			"{" => 299
+			"%{" => 6,
+			'WORD' => 44,
+			"}" => 297,
+			'PACKAGE' => 45,
+			"\@" => 10,
+			'PERL' => 8,
+			'MY' => 48,
+			"%" => 12,
+			"\$^" => 49,
+			'UNLESS' => 13,
+			'NUM' => 50,
+			'STEP' => 15,
+			'IF' => 51,
+			"\$" => 52,
+			'loopword' => 16,
+			'FOREACH' => 18,
+			'ACROSS' => 228,
+			'NOTOP' => 54,
+			'FINAL' => 23,
+			"(" => 57,
+			'VAR' => 58,
+			'INCOP' => 25,
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'YADAYADA' => 69
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'sideff' => 27,
+			'objname' => 11,
+			'term' => 61,
+			'loop' => 14,
+			'array' => 30,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
+			'set' => 34,
+			'termunop' => 19,
+			'line' => 229,
+			'cond' => 22,
+			'dynvar' => 56,
+			'phaseblock' => 230,
+			'perlblock' => 231,
+			'condword' => 67,
+			'funcall' => 36,
+			'across' => 232,
+			'package' => 40,
+			'varexpr' => 41,
+			'block' => 233,
+			'indexvar' => 71,
+			'simplevar' => 72
 		}
 	},
 	{#State 290
-		DEFAULT => -72,
+		DEFAULT => -40,
 		GOTOS => {
-			'@71-3' => 301
+			'stmtseq' => 298
 		}
 	},
 	{#State 291
-		DEFAULT => -69
-	},
-	{#State 292
-		DEFAULT => -139
-	},
-	{#State 293
 		ACTIONS => {
-			"<" => 119,
-			";" => -37,
-			"{" => -37
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
 		},
 		GOTOS => {
-			'unitspec' => 169,
-			'unitopt' => 302
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 299,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
 		}
 	},
+	{#State 292
+		DEFAULT => -23,
+		GOTOS => {
+			'@22-7' => 300
+		}
+	},
+	{#State 293
+		DEFAULT => -21
+	},
 	{#State 294
-		DEFAULT => -157
+		DEFAULT => -40,
+		GOTOS => {
+			'stmtseq' => 301
+		}
 	},
 	{#State 295
-		DEFAULT => -44,
-		GOTOS => {
-			'stmtseq' => 303
+		ACTIONS => {
+			";" => 303,
+			"{" => 302
 		}
 	},
 	{#State 296
 		ACTIONS => {
 			"%{" => 6,
-			'WORD' => 46,
+			'WORD' => 44,
 			"}" => 304,
-			'PACKAGE' => 47,
+			'PACKAGE' => 45,
 			"\@" => 10,
 			'PERL' => 8,
-			'MY' => 50,
+			'MY' => 48,
 			"%" => 12,
-			"\$^" => 51,
+			"\$^" => 49,
 			'UNLESS' => 13,
-			'NUM' => 52,
+			'NUM' => 50,
 			'STEP' => 15,
-			'IF' => 53,
-			"\$" => 54,
+			'IF' => 51,
+			"\$" => 52,
 			'loopword' => 16,
 			'FOREACH' => 18,
-			'ACROSS' => 231,
-			'NOTOP' => 56,
+			'ACROSS' => 228,
+			'NOTOP' => 54,
 			'FINAL' => 23,
-			"(" => 60,
-			'VAR' => 61,
+			"(" => 57,
+			'VAR' => 58,
 			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'YADAYADA' => 72
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'YADAYADA' => 69
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'sideff' => 28,
+			'scalar' => 88,
+			'sideff' => 27,
 			'objname' => 11,
-			'term' => 65,
+			'term' => 61,
 			'loop' => 14,
-			'array' => 31,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
-			'set' => 36,
+			'array' => 30,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
+			'set' => 34,
 			'termunop' => 19,
-			'line' => 232,
+			'line' => 229,
 			'cond' => 22,
-			'dynvar' => 58,
-			'phaseblock' => 233,
-			'perlblock' => 234,
-			'condword' => 71,
-			'funcall' => 38,
-			'across' => 235,
-			'package' => 42,
-			'varexpr' => 43,
-			'block' => 236,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
+			'dynvar' => 56,
+			'phaseblock' => 230,
+			'perlblock' => 231,
+			'condword' => 67,
+			'funcall' => 36,
+			'across' => 232,
+			'package' => 40,
+			'varexpr' => 41,
+			'block' => 233,
+			'indexvar' => 71,
+			'simplevar' => 72
 		}
 	},
 	{#State 297
-		DEFAULT => -44,
-		GOTOS => {
-			'stmtseq' => 305
-		}
+		DEFAULT => -90
 	},
 	{#State 298
 		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
+			"%{" => 6,
+			'WORD' => 44,
+			"}" => 305,
+			'PACKAGE' => 45,
 			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
+			'PERL' => 8,
+			'MY' => 48,
 			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
+			"\$^" => 49,
+			'UNLESS' => 13,
+			'NUM' => 50,
+			'STEP' => 15,
+			'IF' => 51,
+			"\$" => 52,
+			'loopword' => 16,
+			'FOREACH' => 18,
+			'ACROSS' => 228,
+			'NOTOP' => 54,
+			'FINAL' => 23,
+			"(" => 57,
+			'VAR' => 58,
+			'INCOP' => 25,
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'YADAYADA' => 69
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
+			'scalar' => 88,
+			'sideff' => 27,
 			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 306,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
+			'term' => 61,
+			'loop' => 14,
+			'array' => 30,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
+			'set' => 34,
 			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'line' => 229,
+			'cond' => 22,
+			'dynvar' => 56,
+			'phaseblock' => 230,
+			'perlblock' => 231,
+			'condword' => 67,
+			'funcall' => 36,
+			'across' => 232,
+			'package' => 40,
+			'varexpr' => 41,
+			'block' => 233,
+			'indexvar' => 71,
+			'simplevar' => 72
 		}
 	},
 	{#State 299
-		DEFAULT => -28,
-		GOTOS => {
-			'@27-7' => 307
+		ACTIONS => {
+			'XOROP' => 133,
+			'OROP' => 132,
+			")" => 306,
+			'ANDOP' => 130
 		}
 	},
 	{#State 300
-		DEFAULT => -26
+		DEFAULT => -40,
+		GOTOS => {
+			'stmtseq' => 307
+		}
 	},
 	{#State 301
-		DEFAULT => -44,
+		ACTIONS => {
+			"%{" => 6,
+			'WORD' => 44,
+			"}" => 308,
+			'PACKAGE' => 45,
+			"\@" => 10,
+			'PERL' => 8,
+			'MY' => 48,
+			"%" => 12,
+			"\$^" => 49,
+			'UNLESS' => 13,
+			'NUM' => 50,
+			'STEP' => 15,
+			'IF' => 51,
+			"\$" => 52,
+			'loopword' => 16,
+			'FOREACH' => 18,
+			'ACROSS' => 228,
+			'NOTOP' => 54,
+			'FINAL' => 23,
+			"(" => 57,
+			'VAR' => 58,
+			'INCOP' => 25,
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'YADAYADA' => 69
+		},
 		GOTOS => {
-			'stmtseq' => 308
+			'scalar' => 88,
+			'sideff' => 27,
+			'objname' => 11,
+			'term' => 61,
+			'loop' => 14,
+			'array' => 30,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
+			'set' => 34,
+			'termunop' => 19,
+			'line' => 229,
+			'cond' => 22,
+			'dynvar' => 56,
+			'phaseblock' => 230,
+			'perlblock' => 231,
+			'condword' => 67,
+			'funcall' => 36,
+			'across' => 232,
+			'package' => 40,
+			'varexpr' => 41,
+			'block' => 233,
+			'indexvar' => 71,
+			'simplevar' => 72
 		}
 	},
 	{#State 302
-		ACTIONS => {
-			";" => 310,
-			"{" => 309
+		DEFAULT => -26,
+		GOTOS => {
+			'@25-8' => 309
 		}
 	},
 	{#State 303
-		ACTIONS => {
-			"%{" => 6,
-			'WORD' => 46,
-			"}" => 311,
-			'PACKAGE' => 47,
-			"\@" => 10,
-			'PERL' => 8,
-			'MY' => 50,
-			"%" => 12,
-			"\$^" => 51,
-			'UNLESS' => 13,
-			'NUM' => 52,
-			'STEP' => 15,
-			'IF' => 53,
-			"\$" => 54,
-			'loopword' => 16,
-			'FOREACH' => 18,
-			'ACROSS' => 231,
-			'NOTOP' => 56,
-			'FINAL' => 23,
-			"(" => 60,
-			'VAR' => 61,
-			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'YADAYADA' => 72
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'sideff' => 28,
-			'objname' => 11,
-			'term' => 65,
-			'loop' => 14,
-			'array' => 31,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
-			'set' => 36,
-			'termunop' => 19,
-			'line' => 232,
-			'cond' => 22,
-			'dynvar' => 58,
-			'phaseblock' => 233,
-			'perlblock' => 234,
-			'condword' => 71,
-			'funcall' => 38,
-			'across' => 235,
-			'package' => 42,
-			'varexpr' => 43,
-			'block' => 236,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
-		}
+		DEFAULT => -24
 	},
 	{#State 304
-		DEFAULT => -91
-	},
-	{#State 305
 		ACTIONS => {
-			"%{" => 6,
-			'WORD' => 46,
-			"}" => 312,
-			'PACKAGE' => 47,
-			"\@" => 10,
-			'PERL' => 8,
-			'MY' => 50,
-			"%" => 12,
-			"\$^" => 51,
-			'UNLESS' => 13,
-			'NUM' => 52,
-			'STEP' => 15,
-			'IF' => 53,
-			"\$" => 54,
-			'loopword' => 16,
-			'FOREACH' => 18,
-			'ACROSS' => 231,
-			'NOTOP' => 56,
-			'FINAL' => 23,
-			"(" => 60,
-			'VAR' => 61,
-			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'YADAYADA' => 72
+			"%{" => -85,
+			'WORD' => -85,
+			'' => -85,
+			"}" => -85,
+			'PACKAGE' => -85,
+			"\@" => -85,
+			'PERL' => -85,
+			'MY' => -85,
+			"%" => -85,
+			"\$^" => -85,
+			'UNLESS' => -85,
+			'NUM' => -85,
+			'STEP' => -85,
+			'IF' => -85,
+			"\$" => -85,
+			'loopword' => -85,
+			'FOREACH' => -85,
+			'ACROSS' => -85,
+			'NOTOP' => -85,
+			'FINAL' => -85,
+			'ELSE' => 310,
+			'INCLUDE' => -85,
+			"(" => -85,
+			'VAR' => -85,
+			'INCOP' => -85,
+			'NOT2' => -85,
+			'FOR' => -85,
+			'ADDOP' => -85,
+			'FUNC' => -85,
+			'UNIT' => -85,
+			'RETURN' => -85,
+			'INIT' => -85,
+			'FUNCTION' => -85,
+			'STR' => -85,
+			'CALC' => -85,
+			'ELSIF' => 312,
+			"{" => -85,
+			'CONST' => -85,
+			'USE' => -85,
+			'YADAYADA' => -85
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'sideff' => 28,
-			'objname' => 11,
-			'term' => 65,
-			'loop' => 14,
-			'array' => 31,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
-			'set' => 36,
-			'termunop' => 19,
-			'line' => 232,
-			'cond' => 22,
-			'dynvar' => 58,
-			'phaseblock' => 233,
-			'perlblock' => 234,
-			'condword' => 71,
-			'funcall' => 38,
-			'across' => 235,
-			'package' => 42,
-			'varexpr' => 43,
-			'block' => 236,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
+			'else' => 311
 		}
+	},
+	{#State 305
+		DEFAULT => -92
 	},
 	{#State 306
 		ACTIONS => {
-			'XOROP' => 137,
-			'OROP' => 136,
-			")" => 313,
-			'ANDOP' => 134
+			"{" => 313
 		}
 	},
 	{#State 307
-		DEFAULT => -44,
+		ACTIONS => {
+			"%{" => 6,
+			'WORD' => 44,
+			"}" => 314,
+			'PACKAGE' => 45,
+			"\@" => 10,
+			'PERL' => 8,
+			'MY' => 48,
+			"%" => 12,
+			"\$^" => 49,
+			'UNLESS' => 13,
+			'NUM' => 50,
+			'STEP' => 15,
+			'IF' => 51,
+			"\$" => 52,
+			'loopword' => 16,
+			'FOREACH' => 18,
+			'ACROSS' => 228,
+			'NOTOP' => 54,
+			'FINAL' => 23,
+			"(" => 57,
+			'VAR' => 58,
+			'INCOP' => 25,
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'YADAYADA' => 69
+		},
 		GOTOS => {
-			'stmtseq' => 314
+			'scalar' => 88,
+			'sideff' => 27,
+			'objname' => 11,
+			'term' => 61,
+			'loop' => 14,
+			'array' => 30,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
+			'set' => 34,
+			'termunop' => 19,
+			'line' => 229,
+			'cond' => 22,
+			'dynvar' => 56,
+			'phaseblock' => 230,
+			'perlblock' => 231,
+			'condword' => 67,
+			'funcall' => 36,
+			'across' => 232,
+			'package' => 40,
+			'varexpr' => 41,
+			'block' => 233,
+			'indexvar' => 71,
+			'simplevar' => 72
 		}
 	},
 	{#State 308
-		ACTIONS => {
-			"%{" => 6,
-			'WORD' => 46,
-			"}" => 315,
-			'PACKAGE' => 47,
-			"\@" => 10,
-			'PERL' => 8,
-			'MY' => 50,
-			"%" => 12,
-			"\$^" => 51,
-			'UNLESS' => 13,
-			'NUM' => 52,
-			'STEP' => 15,
-			'IF' => 53,
-			"\$" => 54,
-			'loopword' => 16,
-			'FOREACH' => 18,
-			'ACROSS' => 231,
-			'NOTOP' => 56,
-			'FINAL' => 23,
-			"(" => 60,
-			'VAR' => 61,
-			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'YADAYADA' => 72
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'sideff' => 28,
-			'objname' => 11,
-			'term' => 65,
-			'loop' => 14,
-			'array' => 31,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
-			'set' => 36,
-			'termunop' => 19,
-			'line' => 232,
-			'cond' => 22,
-			'dynvar' => 58,
-			'phaseblock' => 233,
-			'perlblock' => 234,
-			'condword' => 71,
-			'funcall' => 38,
-			'across' => 235,
-			'package' => 42,
-			'varexpr' => 43,
-			'block' => 236,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
-		}
+		DEFAULT => -70
 	},
 	{#State 309
-		DEFAULT => -31,
-		GOTOS => {
-			'@30-8' => 316
+		ACTIONS => {
+			'perlseq' => 315
 		}
 	},
 	{#State 310
-		DEFAULT => -29
-	},
-	{#State 311
 		ACTIONS => {
-			"%{" => -86,
-			'WORD' => -86,
-			'' => -86,
-			"}" => -86,
-			'PACKAGE' => -86,
-			"\@" => -86,
-			'PERL' => -86,
-			'MY' => -86,
-			"%" => -86,
-			"\$^" => -86,
-			'UNLESS' => -86,
-			'NUM' => -86,
-			'STEP' => -86,
-			'IF' => -86,
-			"\$" => -86,
-			'loopword' => -86,
-			'FOREACH' => -86,
-			'ACROSS' => -86,
-			'NOTOP' => -86,
-			'FINAL' => -86,
-			'ELSE' => 317,
-			'default' => -86,
-			'INCLUDE' => -86,
-			"(" => -86,
-			'VAR' => -86,
-			'INCOP' => -86,
-			'NOT2' => -86,
-			'FOR' => -86,
-			'ADDOP' => -86,
-			'FUNC' => -86,
-			'UNIT' => -86,
-			'RETURN' => -86,
-			'INIT' => -86,
-			'FUNCTION' => -86,
-			'var' => -86,
-			'STR' => -86,
-			'CALC' => -86,
-			'ELSIF' => 319,
-			"{" => -86,
-			'CONST' => -86,
-			'USE' => -86,
-			'YADAYADA' => -86
-		},
-		GOTOS => {
-			'else' => 318
+			"{" => 316
 		}
 	},
+	{#State 311
+		DEFAULT => -81
+	},
 	{#State 312
-		DEFAULT => -93
+		ACTIONS => {
+			"(" => 317
+		}
 	},
 	{#State 313
-		ACTIONS => {
-			"{" => 320
+		DEFAULT => -40,
+		GOTOS => {
+			'stmtseq' => 318
 		}
 	},
 	{#State 314
-		ACTIONS => {
-			"%{" => 6,
-			'WORD' => 46,
-			"}" => 321,
-			'PACKAGE' => 47,
-			"\@" => 10,
-			'PERL' => 8,
-			'MY' => 50,
-			"%" => 12,
-			"\$^" => 51,
-			'UNLESS' => 13,
-			'NUM' => 52,
-			'STEP' => 15,
-			'IF' => 53,
-			"\$" => 54,
-			'loopword' => 16,
-			'FOREACH' => 18,
-			'ACROSS' => 231,
-			'NOTOP' => 56,
-			'FINAL' => 23,
-			"(" => 60,
-			'VAR' => 61,
-			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'YADAYADA' => 72
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'sideff' => 28,
-			'objname' => 11,
-			'term' => 65,
-			'loop' => 14,
-			'array' => 31,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
-			'set' => 36,
-			'termunop' => 19,
-			'line' => 232,
-			'cond' => 22,
-			'dynvar' => 58,
-			'phaseblock' => 233,
-			'perlblock' => 234,
-			'condword' => 71,
-			'funcall' => 38,
-			'across' => 235,
-			'package' => 42,
-			'varexpr' => 43,
-			'block' => 236,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
-		}
+		DEFAULT => -22
 	},
 	{#State 315
-		DEFAULT => -71
+		ACTIONS => {
+			"}" => 319
+		}
 	},
 	{#State 316
-		ACTIONS => {
-			'perlseq' => 322
+		DEFAULT => -87,
+		GOTOS => {
+			'@86-2' => 320
 		}
 	},
 	{#State 317
-		ACTIONS => {
-			"{" => 323
+		DEFAULT => -89,
+		GOTOS => {
+			'@88-2' => 321
 		}
 	},
 	{#State 318
-		DEFAULT => -82
-	},
-	{#State 319
 		ACTIONS => {
-			"(" => 324
+			"%{" => 6,
+			'WORD' => 44,
+			"}" => 322,
+			'PACKAGE' => 45,
+			"\@" => 10,
+			'PERL' => 8,
+			'MY' => 48,
+			"%" => 12,
+			"\$^" => 49,
+			'UNLESS' => 13,
+			'NUM' => 50,
+			'STEP' => 15,
+			'IF' => 51,
+			"\$" => 52,
+			'loopword' => 16,
+			'FOREACH' => 18,
+			'ACROSS' => 228,
+			'NOTOP' => 54,
+			'FINAL' => 23,
+			"(" => 57,
+			'VAR' => 58,
+			'INCOP' => 25,
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'YADAYADA' => 69
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'sideff' => 27,
+			'objname' => 11,
+			'term' => 61,
+			'loop' => 14,
+			'array' => 30,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
+			'set' => 34,
+			'termunop' => 19,
+			'line' => 229,
+			'cond' => 22,
+			'dynvar' => 56,
+			'phaseblock' => 230,
+			'perlblock' => 231,
+			'condword' => 67,
+			'funcall' => 36,
+			'across' => 232,
+			'package' => 40,
+			'varexpr' => 41,
+			'block' => 233,
+			'indexvar' => 71,
+			'simplevar' => 72
 		}
 	},
+	{#State 319
+		DEFAULT => -25
+	},
 	{#State 320
-		DEFAULT => -44,
+		DEFAULT => -40,
 		GOTOS => {
-			'stmtseq' => 325
+			'stmtseq' => 323
 		}
 	},
 	{#State 321
-		DEFAULT => -27
-	},
-	{#State 322
 		ACTIONS => {
-			"}" => 326
+			'WORD' => 44,
+			'NOT2' => 59,
+			"\@" => 10,
+			'ADDOP' => 29,
+			'MY' => 48,
+			"%" => 12,
+			'FUNC' => 62,
+			"\$^" => 49,
+			'NUM' => 50,
+			'RETURN' => 65,
+			"\$" => 52,
+			'STR' => 35,
+			'NOTOP' => 54,
+			"(" => 57,
+			'YADAYADA' => 69,
+			'INCOP' => 25
+		},
+		GOTOS => {
+			'scalar' => 88,
+			'dynvar' => 56,
+			'objname' => 11,
+			'funcall' => 36,
+			'term' => 61,
+			'array' => 30,
+			'varexpr' => 41,
+			'expr' => 324,
+			'termbinop' => 53,
+			'indexvar' => 71,
+			'simplevar' => 72,
+			'termunop' => 19,
+			'set' => 34
 		}
 	},
+	{#State 322
+		DEFAULT => -94
+	},
 	{#State 323
-		DEFAULT => -88,
+		ACTIONS => {
+			"%{" => 6,
+			'WORD' => 44,
+			"}" => 325,
+			'PACKAGE' => 45,
+			"\@" => 10,
+			'PERL' => 8,
+			'MY' => 48,
+			"%" => 12,
+			"\$^" => 49,
+			'UNLESS' => 13,
+			'NUM' => 50,
+			'STEP' => 15,
+			'IF' => 51,
+			"\$" => 52,
+			'loopword' => 16,
+			'FOREACH' => 18,
+			'ACROSS' => 228,
+			'NOTOP' => 54,
+			'FINAL' => 23,
+			"(" => 57,
+			'VAR' => 58,
+			'INCOP' => 25,
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'YADAYADA' => 69
+		},
 		GOTOS => {
-			'@87-2' => 327
+			'scalar' => 88,
+			'sideff' => 27,
+			'objname' => 11,
+			'term' => 61,
+			'loop' => 14,
+			'array' => 30,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
+			'set' => 34,
+			'termunop' => 19,
+			'line' => 229,
+			'cond' => 22,
+			'dynvar' => 56,
+			'phaseblock' => 230,
+			'perlblock' => 231,
+			'condword' => 67,
+			'funcall' => 36,
+			'across' => 232,
+			'package' => 40,
+			'varexpr' => 41,
+			'block' => 233,
+			'indexvar' => 71,
+			'simplevar' => 72
 		}
 	},
 	{#State 324
-		DEFAULT => -90,
-		GOTOS => {
-			'@89-2' => 328
+		ACTIONS => {
+			'XOROP' => 133,
+			'OROP' => 132,
+			")" => 326,
+			'ANDOP' => 130
 		}
 	},
 	{#State 325
-		ACTIONS => {
-			"%{" => 6,
-			'WORD' => 46,
-			"}" => 329,
-			'PACKAGE' => 47,
-			"\@" => 10,
-			'PERL' => 8,
-			'MY' => 50,
-			"%" => 12,
-			"\$^" => 51,
-			'UNLESS' => 13,
-			'NUM' => 52,
-			'STEP' => 15,
-			'IF' => 53,
-			"\$" => 54,
-			'loopword' => 16,
-			'FOREACH' => 18,
-			'ACROSS' => 231,
-			'NOTOP' => 56,
-			'FINAL' => 23,
-			"(" => 60,
-			'VAR' => 61,
-			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'YADAYADA' => 72
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'sideff' => 28,
-			'objname' => 11,
-			'term' => 65,
-			'loop' => 14,
-			'array' => 31,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
-			'set' => 36,
-			'termunop' => 19,
-			'line' => 232,
-			'cond' => 22,
-			'dynvar' => 58,
-			'phaseblock' => 233,
-			'perlblock' => 234,
-			'condword' => 71,
-			'funcall' => 38,
-			'across' => 235,
-			'package' => 42,
-			'varexpr' => 43,
-			'block' => 236,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
-		}
+		DEFAULT => -86
 	},
 	{#State 326
-		DEFAULT => -30
+		ACTIONS => {
+			"{" => 327
+		}
 	},
 	{#State 327
-		DEFAULT => -44,
+		DEFAULT => -40,
 		GOTOS => {
-			'stmtseq' => 330
+			'stmtseq' => 328
 		}
 	},
 	{#State 328
 		ACTIONS => {
-			'WORD' => 46,
-			'NOT2' => 62,
+			"%{" => 6,
+			'WORD' => 44,
+			"}" => 329,
+			'PACKAGE' => 45,
 			"\@" => 10,
-			'ADDOP' => 30,
-			'MY' => 50,
+			'PERL' => 8,
+			'MY' => 48,
 			"%" => 12,
-			'FUNC' => 64,
-			"\$^" => 51,
-			'NUM' => 52,
-			'RETURN' => 68,
-			"\$" => 54,
-			'STR' => 37,
-			'NOTOP' => 56,
-			"(" => 60,
-			'YADAYADA' => 72,
-			'INCOP' => 25
+			"\$^" => 49,
+			'UNLESS' => 13,
+			'NUM' => 50,
+			'STEP' => 15,
+			'IF' => 51,
+			"\$" => 52,
+			'loopword' => 16,
+			'FOREACH' => 18,
+			'ACROSS' => 228,
+			'NOTOP' => 54,
+			'FINAL' => 23,
+			"(" => 57,
+			'VAR' => 58,
+			'INCOP' => 25,
+			'NOT2' => 59,
+			'FOR' => 28,
+			'ADDOP' => 29,
+			'FUNC' => 62,
+			'RETURN' => 65,
+			'INIT' => 66,
+			'STR' => 35,
+			'CALC' => 68,
+			"{" => 37,
+			'CONST' => 38,
+			'YADAYADA' => 69
 		},
 		GOTOS => {
-			'scalar' => 91,
-			'dynvar' => 58,
+			'scalar' => 88,
+			'sideff' => 27,
 			'objname' => 11,
-			'funcall' => 38,
-			'term' => 65,
-			'array' => 31,
-			'varexpr' => 43,
-			'expr' => 331,
-			'termbinop' => 55,
-			'indexvar' => 74,
-			'simplevar' => 75,
+			'term' => 61,
+			'loop' => 14,
+			'array' => 30,
+			'expr' => 63,
+			'phase' => 32,
+			'termbinop' => 53,
+			'set' => 34,
 			'termunop' => 19,
-			'objblock' => 26,
-			'set' => 36
+			'line' => 229,
+			'cond' => 22,
+			'dynvar' => 56,
+			'phaseblock' => 230,
+			'perlblock' => 231,
+			'condword' => 67,
+			'funcall' => 36,
+			'across' => 232,
+			'package' => 40,
+			'varexpr' => 41,
+			'block' => 233,
+			'indexvar' => 71,
+			'simplevar' => 72
 		}
 	},
 	{#State 329
-		DEFAULT => -95
+		ACTIONS => {
+			"%{" => -85,
+			'WORD' => -85,
+			'' => -85,
+			"}" => -85,
+			'PACKAGE' => -85,
+			"\@" => -85,
+			'PERL' => -85,
+			'MY' => -85,
+			"%" => -85,
+			"\$^" => -85,
+			'UNLESS' => -85,
+			'NUM' => -85,
+			'STEP' => -85,
+			'IF' => -85,
+			"\$" => -85,
+			'loopword' => -85,
+			'FOREACH' => -85,
+			'ACROSS' => -85,
+			'NOTOP' => -85,
+			'FINAL' => -85,
+			'ELSE' => 310,
+			'INCLUDE' => -85,
+			"(" => -85,
+			'VAR' => -85,
+			'INCOP' => -85,
+			'NOT2' => -85,
+			'FOR' => -85,
+			'ADDOP' => -85,
+			'FUNC' => -85,
+			'UNIT' => -85,
+			'RETURN' => -85,
+			'INIT' => -85,
+			'FUNCTION' => -85,
+			'STR' => -85,
+			'CALC' => -85,
+			'ELSIF' => 312,
+			"{" => -85,
+			'CONST' => -85,
+			'USE' => -85,
+			'YADAYADA' => -85
+		},
+		GOTOS => {
+			'else' => 330
+		}
 	},
 	{#State 330
-		ACTIONS => {
-			"%{" => 6,
-			'WORD' => 46,
-			"}" => 332,
-			'PACKAGE' => 47,
-			"\@" => 10,
-			'PERL' => 8,
-			'MY' => 50,
-			"%" => 12,
-			"\$^" => 51,
-			'UNLESS' => 13,
-			'NUM' => 52,
-			'STEP' => 15,
-			'IF' => 53,
-			"\$" => 54,
-			'loopword' => 16,
-			'FOREACH' => 18,
-			'ACROSS' => 231,
-			'NOTOP' => 56,
-			'FINAL' => 23,
-			"(" => 60,
-			'VAR' => 61,
-			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'YADAYADA' => 72
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'sideff' => 28,
-			'objname' => 11,
-			'term' => 65,
-			'loop' => 14,
-			'array' => 31,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
-			'set' => 36,
-			'termunop' => 19,
-			'line' => 232,
-			'cond' => 22,
-			'dynvar' => 58,
-			'phaseblock' => 233,
-			'perlblock' => 234,
-			'condword' => 71,
-			'funcall' => 38,
-			'across' => 235,
-			'package' => 42,
-			'varexpr' => 43,
-			'block' => 236,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
-		}
-	},
-	{#State 331
-		ACTIONS => {
-			'XOROP' => 137,
-			'OROP' => 136,
-			")" => 333,
-			'ANDOP' => 134
-		}
-	},
-	{#State 332
-		DEFAULT => -87
-	},
-	{#State 333
-		ACTIONS => {
-			"{" => 334
-		}
-	},
-	{#State 334
-		DEFAULT => -44,
-		GOTOS => {
-			'stmtseq' => 335
-		}
-	},
-	{#State 335
-		ACTIONS => {
-			"%{" => 6,
-			'WORD' => 46,
-			"}" => 336,
-			'PACKAGE' => 47,
-			"\@" => 10,
-			'PERL' => 8,
-			'MY' => 50,
-			"%" => 12,
-			"\$^" => 51,
-			'UNLESS' => 13,
-			'NUM' => 52,
-			'STEP' => 15,
-			'IF' => 53,
-			"\$" => 54,
-			'loopword' => 16,
-			'FOREACH' => 18,
-			'ACROSS' => 231,
-			'NOTOP' => 56,
-			'FINAL' => 23,
-			"(" => 60,
-			'VAR' => 61,
-			'INCOP' => 25,
-			'NOT2' => 62,
-			'FOR' => 29,
-			'ADDOP' => 30,
-			'FUNC' => 64,
-			'RETURN' => 68,
-			'INIT' => 69,
-			'STR' => 37,
-			'CALC' => 70,
-			"{" => 39,
-			'CONST' => 40,
-			'YADAYADA' => 72
-		},
-		GOTOS => {
-			'scalar' => 91,
-			'sideff' => 28,
-			'objname' => 11,
-			'term' => 65,
-			'loop' => 14,
-			'array' => 31,
-			'expr' => 66,
-			'phase' => 33,
-			'termbinop' => 55,
-			'set' => 36,
-			'termunop' => 19,
-			'line' => 232,
-			'cond' => 22,
-			'dynvar' => 58,
-			'phaseblock' => 233,
-			'perlblock' => 234,
-			'condword' => 71,
-			'funcall' => 38,
-			'across' => 235,
-			'package' => 42,
-			'varexpr' => 43,
-			'block' => 236,
-			'indexvar' => 74,
-			'simplevar' => 75,
-			'objblock' => 26
-		}
-	},
-	{#State 336
-		ACTIONS => {
-			"%{" => -86,
-			'WORD' => -86,
-			'' => -86,
-			"}" => -86,
-			'PACKAGE' => -86,
-			"\@" => -86,
-			'PERL' => -86,
-			'MY' => -86,
-			"%" => -86,
-			"\$^" => -86,
-			'UNLESS' => -86,
-			'NUM' => -86,
-			'STEP' => -86,
-			'IF' => -86,
-			"\$" => -86,
-			'loopword' => -86,
-			'FOREACH' => -86,
-			'ACROSS' => -86,
-			'NOTOP' => -86,
-			'FINAL' => -86,
-			'ELSE' => 317,
-			'default' => -86,
-			'INCLUDE' => -86,
-			"(" => -86,
-			'VAR' => -86,
-			'INCOP' => -86,
-			'NOT2' => -86,
-			'FOR' => -86,
-			'ADDOP' => -86,
-			'FUNC' => -86,
-			'UNIT' => -86,
-			'RETURN' => -86,
-			'INIT' => -86,
-			'FUNCTION' => -86,
-			'var' => -86,
-			'STR' => -86,
-			'CALC' => -86,
-			'ELSIF' => 319,
-			"{" => -86,
-			'CONST' => -86,
-			'USE' => -86,
-			'YADAYADA' => -86
-		},
-		GOTOS => {
-			'else' => 337
-		}
-	},
-	{#State 337
-		DEFAULT => -89
+		DEFAULT => -88
 	}
 ],
     yyrules  =>
 [
 	[#Rule _SUPERSTART
 		 '$start', 2, undef
-#line 6105 Parser.pm
+#line 5913 Parser.pm
 	],
 	[#Rule program_1
 		 'program', 2,
 sub {
 #line 34 "Parser.eyp"
  $_[0]->new_dnode('PROGRAM', $_[2]) }
-#line 6112 Parser.pm
+#line 5920 Parser.pm
 	],
 	[#Rule progseq_2
 		 'progseq', 0,
 sub {
 #line 38 "Parser.eyp"
  $_[0]->new_node('PROGSEQ') }
-#line 6119 Parser.pm
+#line 5927 Parser.pm
 	],
 	[#Rule progseq_3
 		 'progseq', 2,
 sub {
 #line 41 "Parser.eyp"
  add_child($_[1], $_[2]) }
-#line 6126 Parser.pm
+#line 5934 Parser.pm
 	],
 	[#Rule progseq_4
 		 'progseq', 2,
 sub {
 #line 44 "Parser.eyp"
  add_child($_[1], $_[2]) }
-#line 6133 Parser.pm
+#line 5941 Parser.pm
 	],
 	[#Rule progseq_5
 		 'progseq', 2,
 sub {
 #line 47 "Parser.eyp"
  add_child($_[1], $_[2]) }
-#line 6140 Parser.pm
+#line 5948 Parser.pm
 	],
 	[#Rule progseq_6
 		 'progseq', 2,
 sub {
 #line 50 "Parser.eyp"
  add_child($_[1], $_[2]) }
-#line 6147 Parser.pm
+#line 5955 Parser.pm
 	],
 	[#Rule progseq_7
 		 'progseq', 2,
 sub {
 #line 53 "Parser.eyp"
  add_child($_[1], $_[2]) }
-#line 6154 Parser.pm
+#line 5962 Parser.pm
 	],
 	[#Rule progseq_8
 		 'progseq', 2,
 sub {
 #line 56 "Parser.eyp"
  add_child($_[1], $_[2]) }
-#line 6161 Parser.pm
+#line 5969 Parser.pm
 	],
 	[#Rule progseq_9
 		 'progseq', 2,
 sub {
 #line 59 "Parser.eyp"
  add_child($_[1], $_[2]) }
-#line 6168 Parser.pm
+#line 5976 Parser.pm
 	],
 	[#Rule progstart_10
 		 'progstart', 0, undef
-#line 6172 Parser.pm
+#line 5980 Parser.pm
 	],
 	[#Rule tl_decl_11
 		 'tl_decl', 1,
 sub {
 #line 66 "Parser.eyp"
  $_[1] }
-#line 6179 Parser.pm
+#line 5987 Parser.pm
 	],
 	[#Rule tl_decl_12
 		 'tl_decl', 1,
 sub {
 #line 69 "Parser.eyp"
  $_[1] }
-#line 6186 Parser.pm
+#line 5994 Parser.pm
 	],
 	[#Rule tl_decl_13
 		 'tl_decl', 1,
 sub {
 #line 72 "Parser.eyp"
  $_[1] }
-#line 6193 Parser.pm
+#line 6001 Parser.pm
 	],
 	[#Rule tl_decl_14
 		 'tl_decl', 1,
 sub {
 #line 75 "Parser.eyp"
  $_[1] }
-#line 6200 Parser.pm
+#line 6008 Parser.pm
 	],
-	[#Rule tl_decl_15
-		 'tl_decl', 1,
-sub {
-#line 78 "Parser.eyp"
- $_[1] }
-#line 6207 Parser.pm
-	],
-	[#Rule tl_decl_16
-		 'tl_decl', 1,
-sub {
-#line 81 "Parser.eyp"
- $_[1] }
-#line 6214 Parser.pm
-	],
-	[#Rule vardecl_17
-		 'vardecl', 2,
-sub {
-#line 85 "Parser.eyp"
-my $u = $_[2]; my $v = $_[1];  merge_units($v, $u) }
-#line 6221 Parser.pm
-	],
-	[#Rule vardecl_18
-		 'vardecl', 3,
-sub {
-#line 88 "Parser.eyp"
-my $u = $_[3]; my $d = $_[2]; my $v = $_[1];  merge_units(add_child($v, $d), $u) }
-#line 6228 Parser.pm
-	],
-	[#Rule package_19
-		 'package', 3,
-sub {
-#line 92 "Parser.eyp"
-my $w = $_[2];  $_[0]->set_package($w); $_[0]->new_anode('DUMMY', "package $w"); }
-#line 6235 Parser.pm
-	],
-	[#Rule include_20
+	[#Rule include_15
 		 'include', 3,
 sub {
-#line 96 "Parser.eyp"
-my $w = $_[2];  $_[0]->parse_input($w . ".mad"); $_[0]->new_anode('DUMMY', "include $w"); }
-#line 6242 Parser.pm
+#line 79 "Parser.eyp"
+my $w = $_[2]; 
+ 			    $_[0]->push_frame(tag => 'INCLUDE');
+			    $_[0]->parse_include($w . ".mad");
+			    $_[0]->pop_frame('INCLUDE');
+			}
+#line 6019 Parser.pm
 	],
-	[#Rule include_21
+	[#Rule include_16
 		 'include', 3,
 sub {
-#line 99 "Parser.eyp"
-my $w = $_[2];  $_[0]->parse_input($w); $_[0]->new_anode('DUMMY', "include $w"); }
-#line 6249 Parser.pm
+#line 86 "Parser.eyp"
+my $w = $_[2]; 
+ 			    $_[0]->push_frame(tag => 'INCLUDE');
+			    $_[0]->parse_include($w);
+			    $_[0]->pop_frame('INCLUDE');
+			}
+#line 6030 Parser.pm
 	],
-	[#Rule use_22
+	[#Rule use_17
 		 'use', 3,
 sub {
+#line 94 "Parser.eyp"
+my $w = $_[2]; 
+			    $_[0]->use_perl($w . ".pm");
+			}
+#line 6039 Parser.pm
+	],
+	[#Rule unit_18
+		 'unit', 3, undef
+#line 6043 Parser.pm
+	],
+	[#Rule unitdecl_19
+		 'unitdecl', 1,
+sub {
 #line 103 "Parser.eyp"
-my $w = $_[2];  $_[0]->use_perl($w . ".pm"); $_[0]->new_anode('DUMMY', "use $w"); }
-#line 6256 Parser.pm
+my $w = $_[1]; 
+			    $_[0]->declare_unit($w);
+			}
+#line 6052 Parser.pm
 	],
-	[#Rule unit_23
-		 'unit', 3,
+	[#Rule unitdecl_20
+		 'unitdecl', 3,
 sub {
-#line 107 "Parser.eyp"
-my $w = $_[2];  declare_units($_[0], $w); $_[0]->new_node('UNIT', @{$w->{children}}); }
-#line 6263 Parser.pm
+#line 108 "Parser.eyp"
+my $w = $_[3]; 
+			    $_[0]->declare_unit($w);
+			}
+#line 6061 Parser.pm
 	],
-	[#Rule wordlist_24
-		 'wordlist', 1,
-sub {
-#line 111 "Parser.eyp"
-my $w = $_[1];  $_[0]->new_node('LIST', $_[0]->new_anode('STRING', $w)) }
-#line 6270 Parser.pm
-	],
-	[#Rule wordlist_25
-		 'wordlist', 3,
-sub {
-#line 114 "Parser.eyp"
-my $w = $_[3]; my $l = $_[1];  add_child($l, $_[0]->new_anode('STRING', $w)) }
-#line 6277 Parser.pm
-	],
-	[#Rule function_26
+	[#Rule function_21
 		 'function', 7,
 sub {
-#line 118 "Parser.eyp"
+#line 114 "Parser.eyp"
 my $u = $_[6]; my $p = $_[4]; my $name = $_[2]; 
 			    $_[0]->declare_function($name, $p, 'MAD_FUNC');
 			    merge_units($_[0]->new_anode('FUNDECL', $name, $p), $u);
 			}
-#line 6287 Parser.pm
+#line 6071 Parser.pm
 	],
-	[#Rule function_27
+	[#Rule function_22
 		 'function', 10,
 sub {
-#line 130 "Parser.eyp"
+#line 126 "Parser.eyp"
 my $u = $_[6]; my $p = $_[4]; my $q = $_[9]; my $name = $_[2]; 
 			    $_[0]->pop_frame('FUNDECL');
 			    merge_units($_[0]->new_anode('FUNDECL', $name, $p, $q), $u);
 			}
-#line 6297 Parser.pm
+#line 6081 Parser.pm
 	],
 	[#Rule _CODE
-		 '@27-7', 0,
+		 '@22-7', 0,
 sub {
-#line 124 "Parser.eyp"
+#line 120 "Parser.eyp"
 my $u = $_[6]; my $p = $_[4]; my $name = $_[2]; 
 			    $_[0]->declare_function($name, $p, 'MAD_FUNC');
 			    $_[0]->push_frame(tag => 'FUNDECL', name => $name,
 					      params => $p, units => $u);
 			}
-#line 6308 Parser.pm
+#line 6092 Parser.pm
 	],
-	[#Rule function_29
+	[#Rule function_24
 		 'function', 8,
 sub {
-#line 136 "Parser.eyp"
+#line 132 "Parser.eyp"
 my $u = $_[7]; my $p = $_[5]; my $name = $_[3]; 
 			    $_[0]->declare_function($name, $p, 'PERL_FUNC');
 			    merge_units($_[0]->new_anode('PERLFUNDECL', $name, $p), $u);
 			}
-#line 6318 Parser.pm
+#line 6102 Parser.pm
 	],
-	[#Rule function_30
+	[#Rule function_25
 		 'function', 11,
 sub {
-#line 148 "Parser.eyp"
+#line 144 "Parser.eyp"
 my $u = $_[7]; my $p = $_[5]; my $q = $_[10]; my $name = $_[3]; 
 			    $_[0]->pop_frame('PERLFUNDECL');
 			    merge_units($_[0]->new_anode('PERLFUNDECL', $name, $p, $q), $u);
 			}
-#line 6328 Parser.pm
+#line 6112 Parser.pm
 	],
 	[#Rule _CODE
-		 '@30-8', 0,
+		 '@25-8', 0,
 sub {
-#line 142 "Parser.eyp"
+#line 138 "Parser.eyp"
 my $u = $_[7]; my $p = $_[5]; my $name = $_[3]; 
 			    $_[0]->declare_function($name, $p, 'PERL_FUNC');
 			    $_[0]->push_frame(tag => 'PERLFUNDECL', name => $name,
 					      params => $p, units => $u);
 			}
-#line 6339 Parser.pm
+#line 6123 Parser.pm
 	],
-	[#Rule params_32
+	[#Rule params_27
 		 'params', 0,
 sub {
-#line 155 "Parser.eyp"
+#line 151 "Parser.eyp"
  $_[0]->new_node('PARAMS'); }
-#line 6346 Parser.pm
+#line 6130 Parser.pm
 	],
-	[#Rule params_33
+	[#Rule params_28
 		 'params', 1,
 sub {
-#line 158 "Parser.eyp"
+#line 154 "Parser.eyp"
  $_[2]; }
-#line 6353 Parser.pm
+#line 6137 Parser.pm
 	],
-	[#Rule paramlist_34
+	[#Rule paramlist_29
 		 'paramlist', 1,
 sub {
-#line 162 "Parser.eyp"
+#line 158 "Parser.eyp"
 my $p = $_[1]; 
 			    $_[0]->new_node('PARAMS', $p);
 			}
-#line 6362 Parser.pm
+#line 6146 Parser.pm
 	],
-	[#Rule paramlist_35
+	[#Rule paramlist_30
 		 'paramlist', 3,
 sub {
-#line 167 "Parser.eyp"
+#line 163 "Parser.eyp"
 my $l = $_[1]; my $p = $_[3]; 
 			    $_[0]->add_child($l, $p);
 			}
-#line 6371 Parser.pm
+#line 6155 Parser.pm
 	],
-	[#Rule param_36
+	[#Rule param_31
 		 'param', 1,
 sub {
-#line 173 "Parser.eyp"
+#line 169 "Parser.eyp"
  $_[1] }
-#line 6378 Parser.pm
+#line 6162 Parser.pm
 	],
-	[#Rule unitopt_37
+	[#Rule unitopt_32
 		 'unitopt', 0, undef
-#line 6382 Parser.pm
+#line 6166 Parser.pm
 	],
-	[#Rule unitopt_38
+	[#Rule unitopt_33
 		 'unitopt', 1,
 sub {
-#line 179 "Parser.eyp"
+#line 175 "Parser.eyp"
  $_[1] }
-#line 6389 Parser.pm
+#line 6173 Parser.pm
 	],
-	[#Rule unitspec_39
+	[#Rule unitspec_34
 		 'unitspec', 3,
 sub {
-#line 183 "Parser.eyp"
+#line 179 "Parser.eyp"
 my $ulist = $_[2];  merge_units($_[0]->new_node('UNITSPEC'), $ulist, 1) }
-#line 6396 Parser.pm
+#line 6180 Parser.pm
 	],
-	[#Rule unitlist_40
+	[#Rule unitspec_35
+		 'unitspec', 2,
+sub {
+#line 182 "Parser.eyp"
+ $_[0]->YYErrok(); undef; }
+#line 6187 Parser.pm
+	],
+	[#Rule unitlist_36
 		 'unitlist', 0,
 sub {
-#line 187 "Parser.eyp"
+#line 186 "Parser.eyp"
  $_[0]->new_node('UNITLIST') }
-#line 6403 Parser.pm
+#line 6194 Parser.pm
 	],
-	[#Rule unitlist_41
+	[#Rule unitlist_37
 		 'unitlist', 2,
 sub {
-#line 190 "Parser.eyp"
+#line 189 "Parser.eyp"
 
 			    my (@u) = $_[0]->validate_unit($_[2]);
 			    if ( $u[0] eq 'ERROR' ) {
-				$_[0]->YYError();
+				
 			    }
 			    else {
 				add_units($_[1], @u);
 			    }
 			}
-#line 6418 Parser.pm
+#line 6209 Parser.pm
 	],
-	[#Rule tl_across_42
+	[#Rule tl_across_38
 		 'tl_across', 6,
 sub {
-#line 207 "Parser.eyp"
+#line 206 "Parser.eyp"
 my $q = $_[5]; my $dl = $_[2]; 
 			    $_[0]->pop_frame('ACROSS');
 			    $_[0]->new_node('ACROSS', $dl, @{$q->{children}});
 			}
-#line 6428 Parser.pm
+#line 6219 Parser.pm
 	],
 	[#Rule _CODE
-		 '@42-3', 0,
+		 '@38-3', 0,
 sub {
-#line 202 "Parser.eyp"
+#line 201 "Parser.eyp"
 my $dl = $_[2]; 
 			    $_[0]->push_frame(tag => 'ACROSS', 
 					      dimlist => $dl->{children});
 			}
-#line 6438 Parser.pm
+#line 6229 Parser.pm
 	],
-	[#Rule stmtseq_44
+	[#Rule stmtseq_40
 		 'stmtseq', 0,
 sub {
-#line 214 "Parser.eyp"
+#line 213 "Parser.eyp"
  $_[0]->new_node('STMTSEQ') }
-#line 6445 Parser.pm
+#line 6236 Parser.pm
+	],
+	[#Rule stmtseq_41
+		 'stmtseq', 2,
+sub {
+#line 216 "Parser.eyp"
+ add_child($_[1], $_[2]) }
+#line 6243 Parser.pm
+	],
+	[#Rule stmtseq_42
+		 'stmtseq', 2,
+sub {
+#line 219 "Parser.eyp"
+ add_child($_[1], $_[2]) }
+#line 6250 Parser.pm
+	],
+	[#Rule stmtseq_43
+		 'stmtseq', 2,
+sub {
+#line 222 "Parser.eyp"
+ add_child($_[1], $_[2]) }
+#line 6257 Parser.pm
+	],
+	[#Rule stmtseq_44
+		 'stmtseq', 2,
+sub {
+#line 225 "Parser.eyp"
+ add_child($_[1], $_[2]) }
+#line 6264 Parser.pm
 	],
 	[#Rule stmtseq_45
 		 'stmtseq', 2,
 sub {
-#line 217 "Parser.eyp"
+#line 228 "Parser.eyp"
  add_child($_[1], $_[2]) }
-#line 6452 Parser.pm
+#line 6271 Parser.pm
 	],
-	[#Rule stmtseq_46
-		 'stmtseq', 2,
-sub {
-#line 220 "Parser.eyp"
- add_child($_[1], $_[2]) }
-#line 6459 Parser.pm
-	],
-	[#Rule stmtseq_47
-		 'stmtseq', 2,
-sub {
-#line 223 "Parser.eyp"
- add_child($_[1], $_[2]) }
-#line 6466 Parser.pm
-	],
-	[#Rule stmtseq_48
-		 'stmtseq', 2,
-sub {
-#line 226 "Parser.eyp"
- add_child($_[1], $_[2]) }
-#line 6473 Parser.pm
-	],
-	[#Rule stmtseq_49
-		 'stmtseq', 2,
-sub {
-#line 229 "Parser.eyp"
- add_child($_[1], $_[2]) }
-#line 6480 Parser.pm
-	],
-	[#Rule block_50
+	[#Rule block_46
 		 'block', 4,
 sub {
-#line 237 "Parser.eyp"
+#line 236 "Parser.eyp"
 
 			    $_[0]->pop_frame('BLOCK');
 			    $_[0]->new_dnode('BLOCK', $_[2]);
 			}
-#line 6490 Parser.pm
+#line 6281 Parser.pm
 	],
 	[#Rule _CODE
-		 '@50-1', 0,
+		 '@46-1', 0,
 sub {
-#line 233 "Parser.eyp"
+#line 232 "Parser.eyp"
  
 			    $_[0]->push_frame(tag => 'BLOCK'); 
 			}
-#line 6499 Parser.pm
+#line 6290 Parser.pm
 	],
-	[#Rule perlblock_52
+	[#Rule perlblock_48
 		 'perlblock', 5,
 sub {
-#line 249 "Parser.eyp"
+#line 248 "Parser.eyp"
 my $q = $_[4]; 
 			    $_[0]->pop_frame('PERLBLOCK');
 			    $_[0]->new_node('PERLBLOCK', @{$q->{children}});
 			}
-#line 6509 Parser.pm
+#line 6300 Parser.pm
 	],
 	[#Rule _CODE
-		 '@52-2', 0,
+		 '@48-2', 0,
 sub {
-#line 244 "Parser.eyp"
+#line 243 "Parser.eyp"
 
 			    $_[0]->lex_mode('perl');
 			    $_[0]->push_frame(tag => 'PERLBLOCK');
 			}
-#line 6519 Parser.pm
+#line 6310 Parser.pm
 	],
-	[#Rule perlblock_54
+	[#Rule perlblock_50
 		 'perlblock', 4,
 sub {
-#line 260 "Parser.eyp"
+#line 259 "Parser.eyp"
 my $q = $_[3]; 
 			    $_[0]->pop_frame('PERLBLOCK');
 			    $_[0]->new_node('PERLBLOCK', @{$q->{children}});
 			}
-#line 6529 Parser.pm
+#line 6320 Parser.pm
 	],
 	[#Rule _CODE
-		 '@54-1', 0,
+		 '@50-1', 0,
 sub {
-#line 255 "Parser.eyp"
+#line 254 "Parser.eyp"
 
 			    $_[0]->lex_mode('pperl');
 			    $_[0]->push_frame(tag => 'PERLBLOCK');
 			}
-#line 6539 Parser.pm
+#line 6330 Parser.pm
 	],
-	[#Rule phaseblock_56
+	[#Rule phaseblock_52
 		 'phaseblock', 5,
 sub {
-#line 271 "Parser.eyp"
+#line 270 "Parser.eyp"
 my $p = $_[1]; my $q = $_[4]; 
 			    $_[0]->pop_frame('BLOCK');
 			    $_[0]->new_node($p, @{$q->{children}});
 			}
-#line 6549 Parser.pm
+#line 6340 Parser.pm
 	],
 	[#Rule _CODE
-		 '@56-2', 0,
+		 '@52-2', 0,
 sub {
-#line 267 "Parser.eyp"
+#line 266 "Parser.eyp"
 my $p = $_[1]; 
 			    $_[0]->push_frame(tag => 'BLOCK', phase => $p);
 			}
-#line 6558 Parser.pm
+#line 6349 Parser.pm
 	],
-	[#Rule phase_58
+	[#Rule phase_54
 		 'phase', 1, undef
-#line 6562 Parser.pm
+#line 6353 Parser.pm
 	],
-	[#Rule phase_59
+	[#Rule phase_55
 		 'phase', 1, undef
-#line 6566 Parser.pm
+#line 6357 Parser.pm
 	],
-	[#Rule phase_60
+	[#Rule phase_56
 		 'phase', 1, undef
-#line 6570 Parser.pm
+#line 6361 Parser.pm
 	],
-	[#Rule phase_61
+	[#Rule phase_57
 		 'phase', 1, undef
-#line 6574 Parser.pm
+#line 6365 Parser.pm
 	],
-	[#Rule line_62
+	[#Rule line_58
 		 'line', 4,
 sub {
-#line 291 "Parser.eyp"
+#line 290 "Parser.eyp"
 my $e = $_[3]; my $p = $_[1]; 
 			    $_[0]->pop_frame('line');
 			    $_[0]->new_node($p, $e);
 			}
-#line 6584 Parser.pm
+#line 6375 Parser.pm
 	],
 	[#Rule _CODE
-		 '@62-1', 0,
+		 '@58-1', 0,
 sub {
-#line 287 "Parser.eyp"
+#line 286 "Parser.eyp"
 my $p = $_[1]; 
 			    $_[0]->push_frame(tag => 'line', phase => $p);
 			}
-#line 6593 Parser.pm
+#line 6384 Parser.pm
 	],
-	[#Rule line_64
+	[#Rule line_60
 		 'line', 1,
 sub {
-#line 297 "Parser.eyp"
+#line 296 "Parser.eyp"
  $_[1] }
-#line 6600 Parser.pm
+#line 6391 Parser.pm
 	],
-	[#Rule line_65
+	[#Rule line_61
 		 'line', 1,
 sub {
-#line 300 "Parser.eyp"
+#line 299 "Parser.eyp"
  $_[1]; }
-#line 6607 Parser.pm
+#line 6398 Parser.pm
 	],
-	[#Rule line_66
+	[#Rule line_62
 		 'line', 1,
 sub {
-#line 303 "Parser.eyp"
+#line 302 "Parser.eyp"
  $_[1]; }
-#line 6614 Parser.pm
+#line 6405 Parser.pm
 	],
-	[#Rule line_67
+	[#Rule line_63
 		 'line', 2,
 sub {
-#line 306 "Parser.eyp"
+#line 305 "Parser.eyp"
 my $e = $_[1];  $e; }
-#line 6621 Parser.pm
+#line 6412 Parser.pm
 	],
-	[#Rule line_68
+	[#Rule line_64
 		 'line', 3,
 sub {
-#line 309 "Parser.eyp"
+#line 308 "Parser.eyp"
 my $v = $_[2]; 
 			    $_[0]->see_var($v, PLAIN_VAR);
 			}
-#line 6630 Parser.pm
+#line 6421 Parser.pm
 	],
-	[#Rule line_69
+	[#Rule line_65
 		 'line', 6,
 sub {
-#line 319 "Parser.eyp"
+#line 318 "Parser.eyp"
 my $e = $_[5]; my $v = $_[2]; 
 			    $_[0]->pop_frame('CONST');
 			    $_[0]->new_anode('ASSIGN', '=', $v, $e);
 			}
-#line 6640 Parser.pm
+#line 6431 Parser.pm
 	],
 	[#Rule _CODE
-		 '@69-3', 0,
+		 '@65-3', 0,
 sub {
-#line 314 "Parser.eyp"
+#line 313 "Parser.eyp"
 my $v = $_[2]; 
 			    $_[0]->see_var($v, CONST_VAR);
 			    $_[0]->push_frame(tag => 'CONST', phase => INIT_PHASE);
 			}
-#line 6650 Parser.pm
+#line 6441 Parser.pm
 	],
-	[#Rule across_71
+	[#Rule vardecl_67
+		 'vardecl', 2,
+sub {
+#line 325 "Parser.eyp"
+my $u = $_[2]; my $v = $_[1];  merge_units($v, $u) }
+#line 6448 Parser.pm
+	],
+	[#Rule vardecl_68
+		 'vardecl', 3,
+sub {
+#line 328 "Parser.eyp"
+my $u = $_[3]; my $d = $_[2]; my $v = $_[1];  merge_units(add_child($v, $d), $u) }
+#line 6455 Parser.pm
+	],
+	[#Rule package_69
+		 'package', 3,
+sub {
+#line 332 "Parser.eyp"
+my $w = $_[2];  $_[0]->set_package($w); $_[0]->new_anode('PACKAGE', $w); }
+#line 6462 Parser.pm
+	],
+	[#Rule across_70
 		 'across', 6,
 sub {
-#line 331 "Parser.eyp"
+#line 341 "Parser.eyp"
 my $q = $_[5]; my $dl = $_[2]; 
 			    $_[0]->pop_frame('ACROSS');
 			    $_[0]->new_child('ACROSS', $dl, @{$q->{children}});
 			}
-#line 6660 Parser.pm
+#line 6472 Parser.pm
 	],
 	[#Rule _CODE
-		 '@71-3', 0,
+		 '@70-3', 0,
 sub {
-#line 326 "Parser.eyp"
+#line 336 "Parser.eyp"
 my $dl = $_[2]; 
 			    $_[0]->push_frame(tag => 'ACROSS', 
 					      dimlist => $dl->{children});
 			}
-#line 6670 Parser.pm
+#line 6482 Parser.pm
 	],
-	[#Rule dimlist_73
+	[#Rule dimlist_72
 		 'dimlist', 1,
 sub {
-#line 338 "Parser.eyp"
+#line 348 "Parser.eyp"
 my $d = $_[1];  $_[0]->new_node('DIMLIST', $d); }
-#line 6677 Parser.pm
+#line 6489 Parser.pm
 	],
-	[#Rule dimlist_74
+	[#Rule dimlist_73
 		 'dimlist', 2,
 sub {
-#line 341 "Parser.eyp"
+#line 351 "Parser.eyp"
 my $l = $_[1]; my $d = $_[2];  add_child($l, $d); }
-#line 6684 Parser.pm
+#line 6496 Parser.pm
+	],
+	[#Rule dimspec_74
+		 'dimspec', 4,
+sub {
+#line 355 "Parser.eyp"
+my $l = $_[2]; my $d = $_[3];  add_child($d, $l); }
+#line 6503 Parser.pm
 	],
 	[#Rule dimspec_75
 		 'dimspec', 4,
 sub {
-#line 345 "Parser.eyp"
+#line 358 "Parser.eyp"
 my $l = $_[2]; my $d = $_[3];  add_child($d, $l); }
-#line 6691 Parser.pm
+#line 6510 Parser.pm
 	],
-	[#Rule dimspec_76
-		 'dimspec', 4,
-sub {
-#line 348 "Parser.eyp"
-my $l = $_[2]; my $d = $_[3];  add_child($d, $l); }
-#line 6698 Parser.pm
+	[#Rule label_76
+		 'label', 0, undef
+#line 6514 Parser.pm
 	],
 	[#Rule label_77
-		 'label', 0, undef
-#line 6702 Parser.pm
-	],
-	[#Rule label_78
 		 'label', 2,
 sub {
-#line 353 "Parser.eyp"
+#line 363 "Parser.eyp"
 my $w = $_[1];  $_[0]->new_anode('LABEL', $w); }
-#line 6709 Parser.pm
+#line 6521 Parser.pm
 	],
-	[#Rule sideff_79
+	[#Rule sideff_78
 		 'sideff', 1,
 sub {
-#line 357 "Parser.eyp"
+#line 367 "Parser.eyp"
  $_[1] }
-#line 6716 Parser.pm
+#line 6528 Parser.pm
+	],
+	[#Rule sideff_79
+		 'sideff', 3,
+sub {
+#line 370 "Parser.eyp"
+my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('AND', $r, $l) }
+#line 6535 Parser.pm
 	],
 	[#Rule sideff_80
 		 'sideff', 3,
 sub {
-#line 360 "Parser.eyp"
-my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('AND', $r, $l) }
-#line 6723 Parser.pm
-	],
-	[#Rule sideff_81
-		 'sideff', 3,
-sub {
-#line 363 "Parser.eyp"
+#line 373 "Parser.eyp"
 my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('OR', $r, $l) }
-#line 6730 Parser.pm
+#line 6542 Parser.pm
 	],
-	[#Rule cond_82
+	[#Rule cond_81
 		 'cond', 9,
 sub {
-#line 369 "Parser.eyp"
+#line 379 "Parser.eyp"
 my $e = $_[4]; my $c = $_[1]; my $q = $_[7]; my $x = $_[9];  
 			    $_[0]->pop_frame($c);
 			    $_[0]->new_node($c, $e, $q, $x);
 			}
-#line 6740 Parser.pm
+#line 6552 Parser.pm
 	],
 	[#Rule _CODE
-		 '@82-2', 0,
+		 '@81-2', 0,
 sub {
-#line 367 "Parser.eyp"
+#line 377 "Parser.eyp"
 my $c = $_[1];  $_[0]->push_frame(tag => $c); }
-#line 6747 Parser.pm
+#line 6559 Parser.pm
+	],
+	[#Rule condword_83
+		 'condword', 1,
+sub {
+#line 386 "Parser.eyp"
+ 'IF' }
+#line 6566 Parser.pm
 	],
 	[#Rule condword_84
 		 'condword', 1,
 sub {
-#line 376 "Parser.eyp"
- 'IF' }
-#line 6754 Parser.pm
-	],
-	[#Rule condword_85
-		 'condword', 1,
-sub {
-#line 378 "Parser.eyp"
+#line 388 "Parser.eyp"
  'UNLESS' }
-#line 6761 Parser.pm
+#line 6573 Parser.pm
+	],
+	[#Rule else_85
+		 'else', 0, undef
+#line 6577 Parser.pm
 	],
 	[#Rule else_86
-		 'else', 0, undef
-#line 6765 Parser.pm
-	],
-	[#Rule else_87
 		 'else', 5,
 sub {
-#line 388 "Parser.eyp"
+#line 398 "Parser.eyp"
 my $q = $_[4];  
 			    $_[0]->pop_frame('ELSE');
 			    $_[0]->new_node('ELSE', $q);
 			}
-#line 6775 Parser.pm
+#line 6587 Parser.pm
 	],
 	[#Rule _CODE
-		 '@87-2', 0,
+		 '@86-2', 0,
 sub {
-#line 384 "Parser.eyp"
+#line 394 "Parser.eyp"
 
 			    $_[0]->push_frame(tag => 'ELSE');
 			}
-#line 6784 Parser.pm
+#line 6596 Parser.pm
 	],
-	[#Rule else_89
+	[#Rule else_88
 		 'else', 9,
 sub {
-#line 396 "Parser.eyp"
+#line 406 "Parser.eyp"
 my $e = $_[4]; my $q = $_[7]; my $x = $_[9]; 
 			    $_[0]->pop_frame('ELSIF');
 			    $_[0]->new_node('ELSIF', $e, $q, $x);
 			}
-#line 6794 Parser.pm
+#line 6606 Parser.pm
 	],
 	[#Rule _CODE
-		 '@89-2', 0,
+		 '@88-2', 0,
 sub {
-#line 394 "Parser.eyp"
+#line 404 "Parser.eyp"
  $_[0]->push_frame(tag => 'ELSIF'); }
-#line 6801 Parser.pm
+#line 6613 Parser.pm
 	],
-	[#Rule loop_91
+	[#Rule loop_90
 		 'loop', 8,
 sub {
-#line 407 "Parser.eyp"
+#line 417 "Parser.eyp"
 my $e = $_[4]; my $c = $_[1]; my $q = $_[7]; 
 			    $_[0]->pop_frame($c);
 			    $_[0]->new_node($c, $e, $q);
 			}
-#line 6811 Parser.pm
+#line 6623 Parser.pm
 	],
 	[#Rule _CODE
-		 '@91-2', 0,
+		 '@90-2', 0,
 sub {
-#line 403 "Parser.eyp"
+#line 413 "Parser.eyp"
 my $c = $_[1]; 
 			    $_[0]->push_frame(tag => $c);
 			}
-#line 6820 Parser.pm
+#line 6632 Parser.pm
 	],
-	[#Rule loop_93
+	[#Rule loop_92
 		 'loop', 9,
 sub {
-#line 417 "Parser.eyp"
+#line 427 "Parser.eyp"
 my $e = $_[5]; my $q = $_[8]; my $i = $_[3]; 
 			    $_[0]->see_var($i, ASSIGN_VAR);
 			    $_[0]->pop_frame('FOREACH');
 			    $_[0]->new_node('FOREACH', $i, $e, $q);
 			}
-#line 6831 Parser.pm
+#line 6643 Parser.pm
 	],
 	[#Rule _CODE
-		 '@93-1', 0,
+		 '@92-1', 0,
 sub {
-#line 413 "Parser.eyp"
+#line 423 "Parser.eyp"
 
 			    $_[0]->push_frame(tag => 'FOREACH');
 			}
-#line 6840 Parser.pm
+#line 6652 Parser.pm
 	],
-	[#Rule loop_95
+	[#Rule loop_94
 		 'loop', 12,
 sub {
-#line 428 "Parser.eyp"
+#line 438 "Parser.eyp"
 my $e2 = $_[6]; my $e1 = $_[4]; my $q = $_[11]; my $e3 = $_[8]; 
 			    $_[0]->pop_frame('FOR');
 			    $_[0]->new_node('FOR', $e1, $e2, $e3, $q);
 			}
-#line 6850 Parser.pm
+#line 6662 Parser.pm
 	],
 	[#Rule _CODE
-		 '@95-2', 0,
+		 '@94-2', 0,
 sub {
-#line 424 "Parser.eyp"
+#line 434 "Parser.eyp"
 
 			    $_[0]->push_frame('FOR');
 			}
-#line 6859 Parser.pm
+#line 6671 Parser.pm
 	],
-	[#Rule argexpr_97
-		 'argexpr', 0,
-sub {
-#line 435 "Parser.eyp"
- $_[0]->new_node('NULLARGS'); }
-#line 6866 Parser.pm
-	],
-	[#Rule argexpr_98
-		 'argexpr', 1,
-sub {
-#line 438 "Parser.eyp"
- $_[1]; }
-#line 6873 Parser.pm
-	],
-	[#Rule arglist_99
-		 'arglist', 1,
-sub {
-#line 442 "Parser.eyp"
-my $t = $_[1];  $_[0]->new_node('ARGS', $t); }
-#line 6880 Parser.pm
-	],
-	[#Rule arglist_100
-		 'arglist', 3,
+	[#Rule expr_96
+		 'expr', 3,
 sub {
 #line 445 "Parser.eyp"
-my $a = $_[1]; my $t = $_[3];  add_child($a, $t); }
-#line 6887 Parser.pm
-	],
-	[#Rule expr_101
-		 'expr', 3,
-sub {
-#line 449 "Parser.eyp"
 my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('AND', $l, $r) }
-#line 6894 Parser.pm
+#line 6678 Parser.pm
 	],
-	[#Rule expr_102
+	[#Rule expr_97
 		 'expr', 3,
 sub {
-#line 452 "Parser.eyp"
+#line 448 "Parser.eyp"
 my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('OR', $l, $r) }
-#line 6901 Parser.pm
+#line 6685 Parser.pm
 	],
-	[#Rule expr_103
+	[#Rule expr_98
 		 'expr', 3,
 sub {
-#line 455 "Parser.eyp"
+#line 451 "Parser.eyp"
 my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('XOR', $l, $r) }
-#line 6908 Parser.pm
+#line 6692 Parser.pm
 	],
-	[#Rule expr_104
+	[#Rule expr_99
 		 'expr', 2,
 sub {
-#line 458 "Parser.eyp"
+#line 454 "Parser.eyp"
 my $e = $_[2];  $_[0]->new_node('NOT', $e) }
-#line 6915 Parser.pm
+#line 6699 Parser.pm
 	],
-	[#Rule expr_105
+	[#Rule expr_100
 		 'expr', 1,
+sub {
+#line 457 "Parser.eyp"
+ $_[1] }
+#line 6706 Parser.pm
+	],
+	[#Rule term_101
+		 'term', 1,
 sub {
 #line 461 "Parser.eyp"
  $_[1] }
-#line 6922 Parser.pm
+#line 6713 Parser.pm
+	],
+	[#Rule term_102
+		 'term', 1,
+sub {
+#line 464 "Parser.eyp"
+ $_[1] }
+#line 6720 Parser.pm
+	],
+	[#Rule term_103
+		 'term', 5,
+sub {
+#line 467 "Parser.eyp"
+my $c = $_[5]; my $a = $_[1]; my $b = $_[3];  $_[0]->new_node('TRI', $a, $b, $c) }
+#line 6727 Parser.pm
+	],
+	[#Rule term_104
+		 'term', 3,
+sub {
+#line 470 "Parser.eyp"
+ $_[2] }
+#line 6734 Parser.pm
+	],
+	[#Rule term_105
+		 'term', 1,
+sub {
+#line 473 "Parser.eyp"
+ $_[1] }
+#line 6741 Parser.pm
 	],
 	[#Rule term_106
 		 'term', 1,
 sub {
-#line 465 "Parser.eyp"
+#line 476 "Parser.eyp"
  $_[1] }
-#line 6929 Parser.pm
+#line 6748 Parser.pm
 	],
 	[#Rule term_107
 		 'term', 1,
 sub {
-#line 468 "Parser.eyp"
+#line 479 "Parser.eyp"
  $_[1] }
-#line 6936 Parser.pm
+#line 6755 Parser.pm
 	],
 	[#Rule term_108
-		 'term', 5,
+		 'term', 1,
 sub {
-#line 471 "Parser.eyp"
-my $c = $_[5]; my $a = $_[1]; my $b = $_[3];  $_[0]->new_node('TRI', $a, $b, $c) }
-#line 6943 Parser.pm
+#line 482 "Parser.eyp"
+ $_[0]->new_anode('NUM', $_[1]) }
+#line 6762 Parser.pm
 	],
 	[#Rule term_109
-		 'term', 3,
+		 'term', 1,
 sub {
-#line 474 "Parser.eyp"
- $_[2] }
-#line 6950 Parser.pm
+#line 485 "Parser.eyp"
+ $_[0]->new_anode('STR', $_[1]) }
+#line 6769 Parser.pm
 	],
 	[#Rule term_110
 		 'term', 1,
 sub {
-#line 477 "Parser.eyp"
+#line 488 "Parser.eyp"
  $_[1] }
-#line 6957 Parser.pm
+#line 6776 Parser.pm
 	],
 	[#Rule term_111
 		 'term', 1,
 sub {
-#line 480 "Parser.eyp"
+#line 492 "Parser.eyp"
  $_[1] }
-#line 6964 Parser.pm
+#line 6783 Parser.pm
 	],
 	[#Rule term_112
-		 'term', 1,
+		 'term', 2,
 sub {
-#line 483 "Parser.eyp"
- $_[1] }
-#line 6971 Parser.pm
+#line 495 "Parser.eyp"
+my $e = $_[2];  $_[0]->new_node('RETURN', $e) }
+#line 6790 Parser.pm
 	],
 	[#Rule term_113
-		 'term', 1,
+		 'term', 2,
 sub {
-#line 486 "Parser.eyp"
- $_[0]->new_anode('NUM', $_[1]) }
-#line 6978 Parser.pm
+#line 498 "Parser.eyp"
+my $u = $_[2]; my $t = $_[1];  merge_units($t, $u) }
+#line 6797 Parser.pm
 	],
 	[#Rule term_114
 		 'term', 1,
 sub {
-#line 489 "Parser.eyp"
- $_[0]->new_anode('STR', $_[1]) }
-#line 6985 Parser.pm
-	],
-	[#Rule term_115
-		 'term', 1,
-sub {
-#line 492 "Parser.eyp"
- $_[1] }
-#line 6992 Parser.pm
-	],
-	[#Rule term_116
-		 'term', 1,
-sub {
-#line 496 "Parser.eyp"
- $_[1] }
-#line 6999 Parser.pm
-	],
-	[#Rule term_117
-		 'term', 1,
-sub {
-#line 499 "Parser.eyp"
- $_[1] }
-#line 7006 Parser.pm
-	],
-	[#Rule term_118
-		 'term', 2,
-sub {
-#line 502 "Parser.eyp"
-my $e = $_[2];  $_[0]->new_node('RETURN', $e) }
-#line 7013 Parser.pm
-	],
-	[#Rule term_119
-		 'term', 2,
-sub {
-#line 505 "Parser.eyp"
-my $u = $_[2]; my $t = $_[1];  merge_units($t, $u) }
-#line 7020 Parser.pm
-	],
-	[#Rule term_120
-		 'term', 1,
-sub {
-#line 508 "Parser.eyp"
+#line 501 "Parser.eyp"
  $_[0]->new_node('YADAYADA'); }
-#line 7027 Parser.pm
+#line 6804 Parser.pm
 	],
-	[#Rule termbinop_121
+	[#Rule termbinop_115
 		 'termbinop', 3,
 sub {
-#line 512 "Parser.eyp"
+#line 505 "Parser.eyp"
 my $l = $_[1]; my $r = $_[3]; my $op = $_[2]; 
 			    $_[0]->see_var($l, ASSIGN_VAR);
 			    $_[0]->new_anode('ASSIGN', $op, $l, $r);
 			}
-#line 7037 Parser.pm
+#line 6814 Parser.pm
 	],
-	[#Rule termbinop_122
+	[#Rule termbinop_116
 		 'termbinop', 3,
 sub {
-#line 518 "Parser.eyp"
+#line 511 "Parser.eyp"
 my $l = $_[1]; my $r = $_[3]; 
 			    $_[0]->see_var($l, ASSIGN_VAR);
 			    $_[0]->new_anode('ASSIGN', '=', $l, $r);
 			}
-#line 7047 Parser.pm
+#line 6824 Parser.pm
+	],
+	[#Rule termbinop_117
+		 'termbinop', 3,
+sub {
+#line 517 "Parser.eyp"
+my $l = $_[1]; my $r = $_[3]; my $op = $_[2];  $_[0]->new_anode('ADDOP', $op, $l, $r); }
+#line 6831 Parser.pm
+	],
+	[#Rule termbinop_118
+		 'termbinop', 3,
+sub {
+#line 520 "Parser.eyp"
+my $l = $_[1]; my $r = $_[3]; my $op = $_[2];  $_[0]->new_anode('MULOP', $op, $l, $r); }
+#line 6838 Parser.pm
+	],
+	[#Rule termbinop_119
+		 'termbinop', 3,
+sub {
+#line 523 "Parser.eyp"
+my $l = $_[1]; my $r = $_[3];  $_[0]->new_anode('MULOP', '%', $l, $r); }
+#line 6845 Parser.pm
+	],
+	[#Rule termbinop_120
+		 'termbinop', 3,
+sub {
+#line 526 "Parser.eyp"
+my $l = $_[1]; my $r = $_[3]; my $op = $_[2];  $_[0]->new_anode('POWOP', $op, $l, $r); }
+#line 6852 Parser.pm
+	],
+	[#Rule termbinop_121
+		 'termbinop', 3,
+sub {
+#line 529 "Parser.eyp"
+my $l = $_[1]; my $r = $_[3]; my $op = $_[2];  $_[0]->new_anode('RELOP', $op, $l, $r); }
+#line 6859 Parser.pm
+	],
+	[#Rule termbinop_122
+		 'termbinop', 3,
+sub {
+#line 532 "Parser.eyp"
+my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('DOTDOT', $l, $r); }
+#line 6866 Parser.pm
 	],
 	[#Rule termbinop_123
 		 'termbinop', 3,
 sub {
-#line 524 "Parser.eyp"
-my $l = $_[1]; my $r = $_[3]; my $op = $_[2];  $_[0]->new_anode('ADDOP', $op, $l, $r); }
-#line 7054 Parser.pm
+#line 535 "Parser.eyp"
+my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('AND', $l, $r); }
+#line 6873 Parser.pm
 	],
 	[#Rule termbinop_124
 		 'termbinop', 3,
 sub {
-#line 527 "Parser.eyp"
-my $l = $_[1]; my $r = $_[3]; my $op = $_[2];  $_[0]->new_anode('MULOP', $op, $l, $r); }
-#line 7061 Parser.pm
+#line 538 "Parser.eyp"
+my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('OR', $l, $r); }
+#line 6880 Parser.pm
 	],
 	[#Rule termbinop_125
 		 'termbinop', 3,
 sub {
-#line 530 "Parser.eyp"
-my $l = $_[1]; my $r = $_[3];  $_[0]->new_anode('MULOP', '%', $l, $r); }
-#line 7068 Parser.pm
-	],
-	[#Rule termbinop_126
-		 'termbinop', 3,
-sub {
-#line 533 "Parser.eyp"
-my $l = $_[1]; my $r = $_[3]; my $op = $_[2];  $_[0]->new_anode('POWOP', $op, $l, $r); }
-#line 7075 Parser.pm
-	],
-	[#Rule termbinop_127
-		 'termbinop', 3,
-sub {
-#line 536 "Parser.eyp"
-my $l = $_[1]; my $r = $_[3]; my $op = $_[2];  $_[0]->new_anode('RELOP', $op, $l, $r); }
-#line 7082 Parser.pm
-	],
-	[#Rule termbinop_128
-		 'termbinop', 3,
-sub {
-#line 539 "Parser.eyp"
-my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('DOTDOT', $l, $r); }
-#line 7089 Parser.pm
-	],
-	[#Rule termbinop_129
-		 'termbinop', 3,
-sub {
-#line 542 "Parser.eyp"
-my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('AND', $l, $r); }
-#line 7096 Parser.pm
-	],
-	[#Rule termbinop_130
-		 'termbinop', 3,
-sub {
-#line 545 "Parser.eyp"
-my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('OR', $l, $r); }
-#line 7103 Parser.pm
-	],
-	[#Rule termbinop_131
-		 'termbinop', 3,
-sub {
-#line 548 "Parser.eyp"
+#line 541 "Parser.eyp"
 my $l = $_[1]; my $r = $_[3];  $_[0]->new_node('DOR', $l, $r); }
-#line 7110 Parser.pm
+#line 6887 Parser.pm
 	],
-	[#Rule termunop_132
+	[#Rule termunop_126
 		 'termunop', 2,
 sub {
-#line 554 "Parser.eyp"
+#line 547 "Parser.eyp"
 my $t = $_[2]; my $op = $_[1];  $op eq '-' ? $_[0]->new_node('UMINUS', $t) : $t }
-#line 7117 Parser.pm
+#line 6894 Parser.pm
 	],
-	[#Rule termunop_133
+	[#Rule termunop_127
 		 'termunop', 2,
 sub {
-#line 557 "Parser.eyp"
+#line 550 "Parser.eyp"
 my $t = $_[2];  $_[0]->new_node('NOT', $t) }
-#line 7124 Parser.pm
+#line 6901 Parser.pm
 	],
-	[#Rule termunop_134
+	[#Rule termunop_128
 		 'termunop', 2,
 sub {
-#line 560 "Parser.eyp"
+#line 553 "Parser.eyp"
  $_[1]->{incr} = 'POST'; $_[1] }
-#line 7131 Parser.pm
+#line 6908 Parser.pm
 	],
-	[#Rule termunop_135
+	[#Rule termunop_129
 		 'termunop', 2,
 sub {
-#line 563 "Parser.eyp"
+#line 556 "Parser.eyp"
  $_[2]->{incr} = 'PRE'; $_[2] }
-#line 7138 Parser.pm
+#line 6915 Parser.pm
 	],
-	[#Rule varexpr_136
+	[#Rule varexpr_130
 		 'varexpr', 1,
 sub {
-#line 567 "Parser.eyp"
+#line 560 "Parser.eyp"
 my $v = $_[1]; 
 			    $_[0]->see_var($v, PLAIN_VAR);
 			}
-#line 7147 Parser.pm
+#line 6924 Parser.pm
 	],
-	[#Rule varexpr_137
+	[#Rule varexpr_131
 		 'varexpr', 2,
 sub {
-#line 572 "Parser.eyp"
+#line 565 "Parser.eyp"
 my $d = $_[2]; my $v = $_[1]; 
 			    add_child($v, $d);
 			    $_[0]->see_var($v, PLAIN_VAR);
 			}
-#line 7157 Parser.pm
+#line 6934 Parser.pm
 	],
-	[#Rule varexpr_138
+	[#Rule varexpr_132
 		 'varexpr', 3,
 sub {
-#line 578 "Parser.eyp"
+#line 571 "Parser.eyp"
 my $v = $_[1]; my $f = $_[3]; 
 			    $_[0]->see_var($v, PLAIN_VAR);
 			    $_[0]->new_anode('DOTFLD', $f, $v);
 			}
-#line 7167 Parser.pm
+#line 6944 Parser.pm
 	],
-	[#Rule varexpr_139
+	[#Rule varexpr_133
 		 'varexpr', 6,
 sub {
-#line 584 "Parser.eyp"
+#line 577 "Parser.eyp"
 my $a = $_[5]; my $m = $_[3]; my $v = $_[1]; 
 			    $_[0]->see_var($v, PLAIN_VAR);
 			    $_[0]->new_anode('METHOD', $m, $v, $a);
 			}
-#line 7177 Parser.pm
+#line 6954 Parser.pm
 	],
-	[#Rule dynvar_140
+	[#Rule dynvar_134
 		 'dynvar', 2,
 sub {
-#line 591 "Parser.eyp"
+#line 584 "Parser.eyp"
 my $v = $_[2]; 
 			    $_[0]->see_var($v, DYN_VAR);
 			}
-#line 7186 Parser.pm
+#line 6963 Parser.pm
 	],
-	[#Rule simplevar_141
+	[#Rule simplevar_135
 		 'simplevar', 1,
 sub {
-#line 597 "Parser.eyp"
+#line 590 "Parser.eyp"
  $_[1] }
-#line 7193 Parser.pm
+#line 6970 Parser.pm
 	],
-	[#Rule simplevar_142
+	[#Rule simplevar_136
 		 'simplevar', 1,
 sub {
-#line 600 "Parser.eyp"
+#line 593 "Parser.eyp"
  $_[1] }
-#line 7200 Parser.pm
+#line 6977 Parser.pm
 	],
-	[#Rule simplevar_143
+	[#Rule simplevar_137
 		 'simplevar', 1,
 sub {
-#line 603 "Parser.eyp"
+#line 596 "Parser.eyp"
  $_[1] }
-#line 7207 Parser.pm
+#line 6984 Parser.pm
 	],
-	[#Rule scalarvar_144
+	[#Rule scalarvar_138
 		 'scalarvar', 1,
 sub {
-#line 607 "Parser.eyp"
+#line 600 "Parser.eyp"
 my $v = $_[1];  $_[0]->see_var($v, PLAIN_VAR); }
-#line 7214 Parser.pm
+#line 6991 Parser.pm
 	],
-	[#Rule scalarvar_145
+	[#Rule scalarvar_139
 		 'scalarvar', 2,
 sub {
-#line 610 "Parser.eyp"
+#line 603 "Parser.eyp"
 my $v = $_[2];  $_[0]->see_var($v, DYN_VAR); }
-#line 7221 Parser.pm
+#line 6998 Parser.pm
 	],
-	[#Rule scalar_146
+	[#Rule scalar_140
 		 'scalar', 2,
 sub {
-#line 614 "Parser.eyp"
+#line 607 "Parser.eyp"
  $_[0]->new_anode('SCALARV', $_[2]); }
-#line 7228 Parser.pm
+#line 7005 Parser.pm
 	],
-	[#Rule array_147
+	[#Rule array_141
 		 'array', 2,
 sub {
-#line 618 "Parser.eyp"
+#line 611 "Parser.eyp"
  $_[0]->new_anode('ARRAYV', $_[2]); }
-#line 7235 Parser.pm
+#line 7012 Parser.pm
 	],
-	[#Rule set_148
+	[#Rule set_142
 		 'set', 2,
 sub {
-#line 622 "Parser.eyp"
+#line 615 "Parser.eyp"
  $_[0]->new_anode('SETV', $_[2]); }
-#line 7242 Parser.pm
+#line 7019 Parser.pm
 	],
-	[#Rule indexvar_149
+	[#Rule indexvar_143
 		 'indexvar', 1,
 sub {
-#line 626 "Parser.eyp"
+#line 619 "Parser.eyp"
  $_[0]->new_node('INDEXVAR'); }
-#line 7249 Parser.pm
+#line 7026 Parser.pm
 	],
-	[#Rule indexvar_150
+	[#Rule indexvar_144
 		 'indexvar', 2,
 sub {
-#line 629 "Parser.eyp"
+#line 622 "Parser.eyp"
 my $n = $_[2];  $_[0]->new_anode('INDEXVAR', $n); }
-#line 7256 Parser.pm
+#line 7033 Parser.pm
 	],
-	[#Rule indexvar_151
+	[#Rule indexvar_145
 		 'indexvar', 2,
 sub {
-#line 632 "Parser.eyp"
+#line 625 "Parser.eyp"
 my $w = $_[2];  $_[0]->new_anode('INDEXVAR', $w); }
-#line 7263 Parser.pm
+#line 7040 Parser.pm
 	],
-	[#Rule subexpr_152
+	[#Rule subexpr_146
 		 'subexpr', 1,
 sub {
-#line 636 "Parser.eyp"
+#line 629 "Parser.eyp"
 my $d = $_[1];  $_[0]->new_node('SUBSCRIPT', $d); }
-#line 7270 Parser.pm
+#line 7047 Parser.pm
 	],
-	[#Rule subexpr_153
+	[#Rule subexpr_147
 		 'subexpr', 2,
 sub {
-#line 639 "Parser.eyp"
+#line 632 "Parser.eyp"
 my $l = $_[1]; my $d = $_[2];  add_child($l, $d); }
-#line 7277 Parser.pm
+#line 7054 Parser.pm
 	],
-	[#Rule subspec_154
+	[#Rule subspec_148
 		 'subspec', 2,
 sub {
-#line 643 "Parser.eyp"
+#line 636 "Parser.eyp"
  $_[0]->new_node('EMPTYDIM') }
-#line 7284 Parser.pm
+#line 7061 Parser.pm
 	],
-	[#Rule subspec_155
+	[#Rule subspec_149
 		 'subspec', 3,
 sub {
-#line 646 "Parser.eyp"
+#line 639 "Parser.eyp"
  $_[2] }
-#line 7291 Parser.pm
+#line 7068 Parser.pm
 	],
-	[#Rule funcall_156
+	[#Rule funcall_150
 		 'funcall', 4,
 sub {
-#line 650 "Parser.eyp"
+#line 643 "Parser.eyp"
 my $a = $_[3]; my $fun = $_[1];  $_[0]->new_anode('FUNCALL', $fun, @{$a->{children}}) }
-#line 7298 Parser.pm
+#line 7075 Parser.pm
 	],
-	[#Rule funcall_157
+	[#Rule funcall_151
 		 'funcall', 6,
 sub {
-#line 653 "Parser.eyp"
+#line 646 "Parser.eyp"
 my $a = $_[3]; my $fld = $_[6]; my $fun = $_[1];  $_[0]->new_anode('DOTFLD', $fld,
 				            $_[0]->new_node('FUNCALL', $fun, 
 						   @{$a->{children}}) ) }
-#line 7307 Parser.pm
+#line 7084 Parser.pm
 	],
-	[#Rule objname_158
+	[#Rule objname_152
 		 'objname', 1,
 sub {
-#line 659 "Parser.eyp"
-my $n = $_[1];  $_[0]->new_anode('NEWOBJ', $n) }
-#line 7314 Parser.pm
+#line 652 "Parser.eyp"
+my $n = $_[1];  $_[0]->new_anode('FUNCALL', $n) }
+#line 7091 Parser.pm
 	],
-	[#Rule objblock_159
-		 'objblock', 2,
+	[#Rule argexpr_153
+		 'argexpr', 0, undef
+#line 7095 Parser.pm
+	],
+	[#Rule argexpr_154
+		 'argexpr', 1,
 sub {
-#line 663 "Parser.eyp"
-my $p = $_[2]; my $n = $_[1];  $_[0]->new_anode('NEWOBJ', $n, $p) }
-#line 7321 Parser.pm
+#line 658 "Parser.eyp"
+ $_[1] }
+#line 7102 Parser.pm
 	],
-	[#Rule pairblock_160
-		 'pairblock', 3,
+	[#Rule arglist_155
+		 'arglist', 1,
 sub {
-#line 667 "Parser.eyp"
- $_[0]->new_dnode('PAIRBLOCK', $_[2]) }
-#line 7328 Parser.pm
+#line 662 "Parser.eyp"
+my $t = $_[1];  $_[0]->new_node('ARGS', $t); }
+#line 7109 Parser.pm
 	],
-	[#Rule pairblock_161
-		 'pairblock', 4,
+	[#Rule arglist_156
+		 'arglist', 3,
 sub {
-#line 670 "Parser.eyp"
- $_[0]->new_dnode('PAIRBLOCK', $_[2]) }
-#line 7335 Parser.pm
+#line 665 "Parser.eyp"
+my $a = $_[1]; my $t = $_[3];  add_child($a, $t); }
+#line 7116 Parser.pm
 	],
-	[#Rule pairlist_162
-		 'pairlist', 1,
+	[#Rule arg_157
+		 'arg', 1,
 sub {
-#line 674 "Parser.eyp"
-my $p = $_[1];  $_[0]->new_node('LIST', $p) }
-#line 7342 Parser.pm
+#line 669 "Parser.eyp"
+ $_[1] }
+#line 7123 Parser.pm
 	],
-	[#Rule pairlist_163
-		 'pairlist', 3,
+	[#Rule arg_158
+		 'arg', 1,
 sub {
-#line 677 "Parser.eyp"
-my $l = $_[1]; my $p = $_[3];  add_child($l, $p) }
-#line 7349 Parser.pm
+#line 672 "Parser.eyp"
+ $_[1] }
+#line 7130 Parser.pm
 	],
-	[#Rule pair_164
+	[#Rule pair_159
 		 'pair', 3,
 sub {
-#line 681 "Parser.eyp"
-my $left = $_[1]; my $right = $_[3];  $_[0]->new_anode('KEY', $left, $right) }
-#line 7356 Parser.pm
+#line 676 "Parser.eyp"
+my $value = $_[3]; my $tag = $_[1];  $_[0]->new_anode('KEY', $tag, $value) }
+#line 7137 Parser.pm
 	],
-	[#Rule flow_165
+	[#Rule flow_160
 		 'flow', 5,
 sub {
-#line 685 "Parser.eyp"
+#line 680 "Parser.eyp"
 my $so = $_[1]; my $sn = $_[5]; my $coeff = $_[3]; my $op = $_[2]; 
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, 
 			                    $_[0]->new_anode('MULOP', $op, $so, $coeff));
 			}
-#line 7368 Parser.pm
+#line 7149 Parser.pm
 	],
-	[#Rule flow_166
+	[#Rule flow_161
 		 'flow', 5,
 sub {
-#line 693 "Parser.eyp"
+#line 688 "Parser.eyp"
 my $so = $_[5]; my $sn = $_[1]; my $coeff = $_[3]; my $op = $_[2]; 
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, 
 					    $_[0]->new_anode('MULOP', $op, $sn, $coeff));
 			}
-#line 7380 Parser.pm
+#line 7161 Parser.pm
 	],
-	[#Rule flow_167
+	[#Rule flow_162
 		 'flow', 5,
 sub {
-#line 701 "Parser.eyp"
+#line 696 "Parser.eyp"
 my $so = $_[1]; my $sn = $_[3]; my $coeff = $_[5]; my $op = $_[4]; 
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn,
 					    $_[0]->new_anode('MULOP', $op, $sn, $coeff));
 			}
-#line 7392 Parser.pm
+#line 7173 Parser.pm
 	],
-	[#Rule flow_168
+	[#Rule flow_163
 		 'flow', 5,
 sub {
-#line 709 "Parser.eyp"
+#line 704 "Parser.eyp"
 my $so = $_[3]; my $sn = $_[1]; my $coeff = $_[5]; my $op = $_[4]; 
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, 
 					    $_[0]->new_anode('MULOP', $op, $so, $coeff));
 			}
-#line 7404 Parser.pm
+#line 7185 Parser.pm
 	],
-	[#Rule flow_169
+	[#Rule flow_164
 		 'flow', 6,
 sub {
-#line 717 "Parser.eyp"
+#line 712 "Parser.eyp"
 my $rate = $_[3]; my $so = $_[1]; my $sn = $_[6]; 
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
-#line 7415 Parser.pm
+#line 7196 Parser.pm
 	],
-	[#Rule flow_170
+	[#Rule flow_165
 		 'flow', 6,
 sub {
-#line 724 "Parser.eyp"
+#line 719 "Parser.eyp"
 my $so = $_[6]; my $rate = $_[3]; my $sn = $_[1]; 
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
-#line 7426 Parser.pm
+#line 7207 Parser.pm
 	],
-	[#Rule flow_171
+	[#Rule flow_166
 		 'flow', 6,
 sub {
-#line 731 "Parser.eyp"
+#line 726 "Parser.eyp"
 my $rate = $_[5]; my $so = $_[1]; my $sn = $_[3]; 
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
-#line 7437 Parser.pm
+#line 7218 Parser.pm
 	],
-	[#Rule flow_172
+	[#Rule flow_167
 		 'flow', 6,
 sub {
-#line 738 "Parser.eyp"
+#line 733 "Parser.eyp"
 my $rate = $_[5]; my $so = $_[3]; my $sn = $_[1]; 
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
 			    $_[0]->new_node('FLOW', $so, $sn, $rate);
 			}
-#line 7448 Parser.pm
+#line 7229 Parser.pm
 	]
 ],
-#line 7451 Parser.pm
+#line 7232 Parser.pm
     yybypass       => 0,
     yybuildingtree => 0,
     yyprefix       => '',
@@ -7476,97 +7257,97 @@ my $rate = $_[5]; my $so = $_[3]; my $sn = $_[1];
          'tl_decl_12', 
          'tl_decl_13', 
          'tl_decl_14', 
-         'tl_decl_15', 
-         'tl_decl_16', 
-         'vardecl_17', 
-         'vardecl_18', 
-         'package_19', 
-         'include_20', 
-         'include_21', 
-         'use_22', 
-         'unit_23', 
-         'wordlist_24', 
-         'wordlist_25', 
-         'function_26', 
-         'function_27', 
+         'include_15', 
+         'include_16', 
+         'use_17', 
+         'unit_18', 
+         'unitdecl_19', 
+         'unitdecl_20', 
+         'function_21', 
+         'function_22', 
          '_CODE', 
-         'function_29', 
-         'function_30', 
+         'function_24', 
+         'function_25', 
          '_CODE', 
-         'params_32', 
-         'params_33', 
-         'paramlist_34', 
-         'paramlist_35', 
-         'param_36', 
-         'unitopt_37', 
-         'unitopt_38', 
-         'unitspec_39', 
-         'unitlist_40', 
-         'unitlist_41', 
-         'tl_across_42', 
+         'params_27', 
+         'params_28', 
+         'paramlist_29', 
+         'paramlist_30', 
+         'param_31', 
+         'unitopt_32', 
+         'unitopt_33', 
+         'unitspec_34', 
+         'unitspec_35', 
+         'unitlist_36', 
+         'unitlist_37', 
+         'tl_across_38', 
          '_CODE', 
+         'stmtseq_40', 
+         'stmtseq_41', 
+         'stmtseq_42', 
+         'stmtseq_43', 
          'stmtseq_44', 
          'stmtseq_45', 
-         'stmtseq_46', 
-         'stmtseq_47', 
-         'stmtseq_48', 
-         'stmtseq_49', 
-         'block_50', 
+         'block_46', 
          '_CODE', 
-         'perlblock_52', 
+         'perlblock_48', 
          '_CODE', 
-         'perlblock_54', 
+         'perlblock_50', 
          '_CODE', 
-         'phaseblock_56', 
+         'phaseblock_52', 
          '_CODE', 
-         'phase_58', 
-         'phase_59', 
-         'phase_60', 
-         'phase_61', 
+         'phase_54', 
+         'phase_55', 
+         'phase_56', 
+         'phase_57', 
+         'line_58', 
+         '_CODE', 
+         'line_60', 
+         'line_61', 
          'line_62', 
-         '_CODE', 
+         'line_63', 
          'line_64', 
          'line_65', 
-         'line_66', 
-         'line_67', 
-         'line_68', 
-         'line_69', 
          '_CODE', 
-         'across_71', 
+         'vardecl_67', 
+         'vardecl_68', 
+         'package_69', 
+         'across_70', 
          '_CODE', 
+         'dimlist_72', 
          'dimlist_73', 
-         'dimlist_74', 
+         'dimspec_74', 
          'dimspec_75', 
-         'dimspec_76', 
+         'label_76', 
          'label_77', 
-         'label_78', 
+         'sideff_78', 
          'sideff_79', 
          'sideff_80', 
-         'sideff_81', 
-         'cond_82', 
+         'cond_81', 
          '_CODE', 
+         'condword_83', 
          'condword_84', 
-         'condword_85', 
+         'else_85', 
          'else_86', 
-         'else_87', 
          '_CODE', 
-         'else_89', 
+         'else_88', 
          '_CODE', 
-         'loop_91', 
+         'loop_90', 
          '_CODE', 
-         'loop_93', 
+         'loop_92', 
          '_CODE', 
-         'loop_95', 
+         'loop_94', 
          '_CODE', 
-         'argexpr_97', 
-         'argexpr_98', 
-         'arglist_99', 
-         'arglist_100', 
-         'expr_101', 
-         'expr_102', 
-         'expr_103', 
-         'expr_104', 
-         'expr_105', 
+         'expr_96', 
+         'expr_97', 
+         'expr_98', 
+         'expr_99', 
+         'expr_100', 
+         'term_101', 
+         'term_102', 
+         'term_103', 
+         'term_104', 
+         'term_105', 
          'term_106', 
          'term_107', 
          'term_108', 
@@ -7576,68 +7357,63 @@ my $rate = $_[5]; my $so = $_[3]; my $sn = $_[1];
          'term_112', 
          'term_113', 
          'term_114', 
-         'term_115', 
-         'term_116', 
-         'term_117', 
-         'term_118', 
-         'term_119', 
-         'term_120', 
+         'termbinop_115', 
+         'termbinop_116', 
+         'termbinop_117', 
+         'termbinop_118', 
+         'termbinop_119', 
+         'termbinop_120', 
          'termbinop_121', 
          'termbinop_122', 
          'termbinop_123', 
          'termbinop_124', 
          'termbinop_125', 
-         'termbinop_126', 
-         'termbinop_127', 
-         'termbinop_128', 
-         'termbinop_129', 
-         'termbinop_130', 
-         'termbinop_131', 
-         'termunop_132', 
-         'termunop_133', 
-         'termunop_134', 
-         'termunop_135', 
-         'varexpr_136', 
-         'varexpr_137', 
-         'varexpr_138', 
-         'varexpr_139', 
-         'dynvar_140', 
-         'simplevar_141', 
-         'simplevar_142', 
-         'simplevar_143', 
-         'scalarvar_144', 
-         'scalarvar_145', 
-         'scalar_146', 
-         'array_147', 
-         'set_148', 
-         'indexvar_149', 
-         'indexvar_150', 
-         'indexvar_151', 
-         'subexpr_152', 
-         'subexpr_153', 
-         'subspec_154', 
-         'subspec_155', 
-         'funcall_156', 
-         'funcall_157', 
-         'objname_158', 
-         'objblock_159', 
-         'pairblock_160', 
-         'pairblock_161', 
-         'pairlist_162', 
-         'pairlist_163', 
-         'pair_164', 
+         'termunop_126', 
+         'termunop_127', 
+         'termunop_128', 
+         'termunop_129', 
+         'varexpr_130', 
+         'varexpr_131', 
+         'varexpr_132', 
+         'varexpr_133', 
+         'dynvar_134', 
+         'simplevar_135', 
+         'simplevar_136', 
+         'simplevar_137', 
+         'scalarvar_138', 
+         'scalarvar_139', 
+         'scalar_140', 
+         'array_141', 
+         'set_142', 
+         'indexvar_143', 
+         'indexvar_144', 
+         'indexvar_145', 
+         'subexpr_146', 
+         'subexpr_147', 
+         'subspec_148', 
+         'subspec_149', 
+         'funcall_150', 
+         'funcall_151', 
+         'objname_152', 
+         'argexpr_153', 
+         'argexpr_154', 
+         'arglist_155', 
+         'arglist_156', 
+         'arg_157', 
+         'arg_158', 
+         'pair_159', 
+         'flow_160', 
+         'flow_161', 
+         'flow_162', 
+         'flow_163', 
+         'flow_164', 
          'flow_165', 
          'flow_166', 
-         'flow_167', 
-         'flow_168', 
-         'flow_169', 
-         'flow_170', 
-         'flow_171', 
-         'flow_172', );
+         'flow_167', );
   $self;
 }
 
-#line 745 "Parser.eyp"
+#line 740 "Parser.eyp"
 
 
 use Carp;
@@ -7702,12 +7478,6 @@ sub parse_input {
     
     if ( $filename ne '' ) {
 	
-	# identify the directory path of the current filename (if any) so that
-	# we can look up the next filename in the same directory.
-	
-	my ($base) = ($self->{my_filename} =~ m{(.*/)});  
-	$filename = "$base/$filename" if $base ne '';
-	
 	# Read the entire file as if it were a single line, by locally
 	# undefining $/ ($INPUT_RECORD_SEPARATOR).
 	
@@ -7737,28 +7507,56 @@ sub parse_input {
 	$input = <STDIN>;
     }
     
+    # Remember the name of the file we are reading from, the starting line
+    # number (1) and the contents that we read in.
+    
+    $self->{my_filename} = $filename;
+    $self->{my_line} = 1;
+    $self->{my_input} = \$input;
+}
+
+
+sub parse_include {
+
+    my ($self, $filename) = @_;
+    my $input;
+    
+    # identify the directory path of the current filename (if any) so that
+    # we can look up the next filename in the same directory.
+    
+    my ($base) = ($self->{my_filename} =~ m{(.*/)});  
+    $filename = "$base$filename" if $base ne '';
+    
+    # Read the entire file as if it were a single line, by locally
+    # undefining $/ ($INPUT_RECORD_SEPARATOR).
+    
+    local $/;
+    
+    # Open the file, or die trying.  Read the contents into $input.
+    
+    open my $ifh, "<", $filename or die "Error reading file \"$filename\": $!";
+    $input = <$ifh>;
+
     # If we actually got some input, process it.
     
     if ( $input =~ /\S/ ) {
 	
-	# If we are in the middle of handling another file, record that
-	# information on the input stack.
+	# Push the current file's information on the stack, so that we can
+	# return to it when we're done with this included file.
 	
-	if ( $self->{my_filename} ne '' ) {
-	    unshift @{$self->{my_input_stack}}, {file => $self->{my_filename}, 
-						 line => $self->{my_line}, 
-						 input => $self->{my_input}};
-	}
+	unshift @{$self->{my_input_stack}}, {file => $self->{my_filename}, 
+					     line => $self->{my_line}, 
+					     input => $self->{my_input}};
 	
 	# Now remember the name of the file we are reading from, the starting
-	# line number (1) and the contents that were read in.  Also start out
-	# in the default package.
+	# line number (1) and the contents that were read in.
 	
 	$self->{my_filename} = $filename;
 	$self->{my_line} = 1;
 	$self->{my_input} = \$input;
     }
 }
+
 
 # pop_input ( )
 # 
@@ -7813,33 +7611,6 @@ sub lex_mode {
     $self->{brcount} = 1;
 }
 
-# validate_unit ( $raw )
-# 
-# Validate the unit specification contained in $raw.  If its syntax is
-# incorrect, return 'ERROR'.  Otherwise, figure out the unit's power and
-# return a list containing the unit that many times.  For example, <m^2> means
-# "meters squared" and would result in the list ("m", "m").  Units that would
-# appear in the denominator are prefixed with "~".  For example, <s^-2> means
-# "per second per second" and would result in the list ("~s", "~s").
-
-sub validate_unit {
-    my ($self, $raw) = @_;
-    my ($invert, $unit, $count);
-    
-    if ( $raw =~ m{^([/*]?)\s*([a-zA-Z0-9]+)(\^([0-9]+))?$} ) {
-	$unit = $1 eq '/' ? "~$2" : $2;
-	$count = $4 ne '' ? $4+0 : 1;
-	return ($unit) x $count;
-    }
-    elsif ( $raw =~ m{^\*?\s*([a-zA-Z]+)\^-([0-9]+)$} ) {
-	$unit = "~$1";
-	$count = $2 ne '' ? $2+0 : 1;
-	return ($unit) x $count;
-    }
-    else {
-	return 'ERROR';
-    }
-}
 
 # count_brace ( $adjustment )
 # 
@@ -7861,31 +7632,44 @@ sub count_brace {
     }
 }
 
-# my_error ( $msg )
+# my_syntax ( $msg )
 # 
 # Terminate parsing because of an error.
 
 sub my_syntax {
-    my ($self, $msg, $filename, $line) = @_;
+    my ($self, $msg) = @_;
     
-    $filename = $self->{my_filename} unless defined $filename;
-    $line = $self->{my_line} unless defined $line;
+    my $filename = $self->{error_filename} || $self->{my_filename};
+    my $line = $self->{error_line} || $self->{my_line};
     
-    if ( $msg ne '' ) {
-        die "Syntax error at $filename line $line: $msg\n";
+    $self->{error_filename} = undef;
+    $self->{error_line} = undef;
+    
+    my $token = $self->YYCurval();
+    my $near = ", near '$token'" if $token;
+    
+    $msg = $self->{my_error} unless defined $msg;
+    $self->{my_error} = undef;
+    
+    if ( $msg ) {
+        warn "Syntax error at $filename line $line$near: $msg\n";
     }
     else {
-        die "Syntax error at $filename line $line.\n";
+	my @expected = $self->YYExpect();
+	if ( @expected == 1 ) {
+	    warn "Syntax error at $filename line $line$near: expected $expected[0]";
+	}
+	else {
+	    warn "Syntax error at $filename line $line$near.\n";
+	}
     }
 }
 
 sub my_error {
     my ($self, $msg, $filename, $line) = @_;
     
-    $filename = $self->{my_filename} unless defined $filename;
-    $line = $self->{my_line} unless defined $line;
-    
-    die "Error at $self->{my_filename} line $self->{my_line}: $msg\n";
+    $self->my_syntax($msg);
+    ${$$self{NBERR}} += 1;
 }
 
 sub my_warning {
@@ -8023,7 +7807,7 @@ sub my_lexer {
 	    # (i.e. sin, push, etc.) if followed by a parenthesis, and a
 	    # bareword otherwise.
 	    
-	    m{\G(\w(?<!\d)\w*(?=\())}gc		and return ('FUNC', $1);
+	    m{\G(\w(?<!\d)\w*(?=\s*\())}gc		and return ('FUNC', $1);
 	    m{\G(\w(?<!\d)\w*)}gc		and return ('WORD', $1);
 	    
 	    # Now check for numeric and string literals
@@ -8105,7 +7889,7 @@ sub my_lex_wrapper {
 =cut
 
 
-#line 8108 Parser.pm
+#line 7892 Parser.pm
 
 
 

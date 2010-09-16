@@ -46,7 +46,7 @@ step {
     }
 }
 
-function year_days ($yr) {
+function year_days ($yr) <day> {
     if ( $yr % 4 == 0 && ($yr % 100 != 0 || $yr % 400 == 0) ) {
 	return 366;
     } else {

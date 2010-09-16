@@ -129,7 +129,7 @@ sub see_var {
     
     # If this is a dynamic variable, its name gets stored in the current
     # frame, and the node is marked so that dynamic resolution will be used
-    # when compiling it.
+    # when compiling it.  In this case, $pkg is ignored.
     
     if ( $type == DYN_VAR ) {
 	$self->{cf}{dynamic}{$name} = 1;
@@ -189,13 +189,25 @@ sub declare_function {
 }
 
 
-# use_perl
+# use_perl ( $module )
 # 
-# 
+# Call "require" on the perl module $module.  (We can't use "use" because
+# we're doing compilation right now, during Perl's run phase.)
 
 sub use_perl {
     
     my ($self, $module) = @_;
+    
+    $module =~ s{::}{/};
+    eval {
+	require "Mad/Obj/$module";
+    };
+    
+    if ( $@ ) {
+	$@ =~ s/ at Mad.*$//;
+	$self->my_error($@);
+    }
+    # NEEDS: import
 }
 
 
@@ -203,20 +215,59 @@ sub use_perl {
 # 
 # Declare all of the units given by the children of $node.
 
-sub declare_units {
-    my ($self, $node) = @_;
+sub declare_unit {
+    my ($self, $unit) = @_;
     my $model = $self->{model};
     
-    foreach my $child (@{$node->{children}}) {
-	
-	# Make the declaration, and if something goes wrong then give the
-	# appropriate error message.
-	
-	unless ( $model->declare_unit($child->{attr}) ) {
-	    if ( $model->{err} eq 'UNIT_DECL_REPEATED' ) {
-		$self->my_warning("Unit '$child->{attr}' was already defined");
-	    }
+    $model->declare_unit($unit);
+
+#    if ( $model->declare_unit($unit) == 0 and 
+#	 $model->{err} eq 'UNIT_DECL_REPEATED' ) {
+#	$self->my_warning("Unit '$child->{attr}' was already defined");
+#    }
+}
+
+
+# validate_unit ( $raw )
+# 
+# Validate the unit specification contained in $raw.  If its syntax is
+# incorrect, return 'ERROR'.  Otherwise, figure out the unit's power and
+# return a list containing the unit that many times.  For example, <m^2> means
+# "meters squared" and would result in the list ("m", "m").  Units that would
+# appear in the denominator are prefixed with "~".  For example, <s^-2> means
+# "per second per second" and would result in the list ("~s", "~s").
+
+sub validate_unit {
+    my ($self, $raw) = @_;
+    my ($invert, $unit, $count);
+    
+    if ( $raw =~ m{^([/*]?)\s*([a-zA-Z0-9]+)(\^([0-9]+))?$} ) {
+	$unit = $1 eq '/' ? "~$2" : $2;
+	$count = $4 ne '' ? $4+0 : 1;
+	if ( $self->{model}->has_unit($unit) ) {
+	    return ($unit) x $count;
 	}
+	else {
+	    $unit =~ s/^~//;
+	    $self->{my_error} = "unit '$unit' must be declared before it is used";
+	    return 'ERROR';
+	}
+    }
+    elsif ( $raw =~ m{^\*?\s*([a-zA-Z]+)\^-([0-9]+)$} ) {
+	$unit = "~$1";
+	$count = $2 ne '' ? $2+0 : 1;
+	if ( $self->{model}->has_unit($unit) ) {
+	    return ($unit) x $count;
+	}
+	else {
+	    $unit =~ s/^~//;
+	    $self->{my_error} = "unit '$unit' must be declared before it is used";
+	    return 'ERROR';
+	}
+    }
+    else {
+	$self->{my_error} = "syntax error near '$raw'";
+	return 'ERROR';
     }
 }
 

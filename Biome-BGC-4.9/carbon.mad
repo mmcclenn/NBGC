@@ -27,87 +27,88 @@
 #
 
 use Pool;
+unit kgC;
 
 # The carbon cycle is defined by 26N+4 pools, where N is the number of
 # distinct vegetation types being modelled.
 
-init $soil_carbon_1 <kgC/m2> = Pool;	    # fast microbial carbon recycling
+init $soil_carbon_1 <kgC/m^2> = Pool;	    # fast microbial carbon recycling
 
-init $soil_carbon_2 <kgC/m2> = Pool;	    # medium microbial carbon recycling
+init $soil_carbon_2 <kgC/m^2> = Pool;	    # medium microbial carbon recycling
 
-init $soil_carbon_3 <kgC/m2> = Pool;	    # slow microbial carbon recycling
+init $soil_carbon_3 <kgC/m^2> = Pool;	    # slow microbial carbon recycling
 
-init $soil_carbon_4 <kgC/m2> = Pool;	    # recalcitrant soil carbon (humus, slowest)
+init $soil_carbon_4 <kgC/m^2> = Pool;	    # recalcitrant soil carbon (humus, slowest)
 
 across [ %veg_types ] {
 
-    init $leaf_C <kgC/m2> = Pool;	    # carbon in leaves
+    init $leaf_C <kgC/m^2> = Pool;	    # carbon in leaves
      
-    init $leaf_storage_C <kgC/m2> = Pool;
+    init $leaf_storage_C <kgC/m^2> = Pool;
 
-    init $leaf_trans_C <kgC/m2> = Pool;
+    init $leaf_trans_C <kgC/m^2> = Pool;
 
-    init $fine_root_C <kgC/m2> = Pool;	    # carbon in fine roots
+    init $fine_root_C <kgC/m^2> = Pool;	    # carbon in fine roots
 
-    init $fine_root_storage_C <kgC/m2> = Pool;
+    init $fine_root_storage_C <kgC/m^2> = Pool;
 
-    init $fine_root_trans_C <kgC/m2> = Pool;
+    init $fine_root_trans_C <kgC/m^2> = Pool;
 
-    init $live_stem_C <kgC/m2> = Pool;	    # carbon in live stems
+    init $live_stem_C <kgC/m^2> = Pool;	    # carbon in live stems
 
-    init $live_stem_storage_C <kgC/m2> = Pool;
+    init $live_stem_storage_C <kgC/m^2> = Pool;
 
-    init $live_stem_trans_C <kgC/m2> = Pool;
+    init $live_stem_trans_C <kgC/m^2> = Pool;
 
-    init $dead_stem_C <kgC/m2> = Pool;	    # carbon in dead stems
+    init $dead_stem_C <kgC/m^2> = Pool;	    # carbon in dead stems
 
-    init $dead_stem_storage_C <kgC/m2> = Pool;
+    init $dead_stem_storage_C <kgC/m^2> = Pool;
 
-    init $dead_stem_trans_C <kgC/m2> = Pool;
+    init $dead_stem_trans_C <kgC/m^2> = Pool;
 
-    init $live_branch_C <kgC/m2> = Pool;	    # carbon in live branches
+    init $live_branch_C <kgC/m^2> = Pool;	    # carbon in live branches
 
-    init $live_branch_storage_C <kgC/m2> = Pool;
+    init $live_branch_storage_C <kgC/m^2> = Pool;
 
-    init $live_branch_trans_C <kgC/m2> = Pool;
+    init $live_branch_trans_C <kgC/m^2> = Pool;
 
-    init $dead_branch_C <kgC/m2> = Pool;	    # carbon in dead branches
+    init $dead_branch_C <kgC/m^2> = Pool;	    # carbon in dead branches
 
-    init $dead_branch_storage_C <kgC/m2> = Pool;
+    init $dead_branch_storage_C <kgC/m^2> = Pool;
 
-    init $dead_branch_trans_C <kgC/m2> = Pool;
+    init $dead_branch_trans_C <kgC/m^2> = Pool;
 
-    init $live_coarse_root_C <kgC/m2> = Pool;	# carbon in live coarse roots
+    init $live_coarse_root_C <kgC/m^2> = Pool;	# carbon in live coarse roots
 
-    init $live_coarse_root_storage_C <kgC/m2> = Pool;
+    init $live_coarse_root_storage_C <kgC/m^2> = Pool;
 
-    init $live_coarse_root_trans_C <kgC/m2> = Pool;
+    init $live_coarse_root_trans_C <kgC/m^2> = Pool;
 
-    init $dead_coarse_root_C <kgC/m2> = Pool;	# carbon in dead coarse roots
+    init $dead_coarse_root_C <kgC/m^2> = Pool;	# carbon in dead coarse roots
 
-    init $dead_coarse_root_storage_C <kgC/m2> = Pool;
+    init $dead_coarse_root_storage_C <kgC/m^2> = Pool;
 
-    init $dead_coarse_root_trans_C <kgC/m2> = Pool;
+    init $dead_coarse_root_trans_C <kgC/m^2> = Pool;
 
-    init $growth_resp_storage_C <kgC/m2> = Pool;	# growth/respiration
+    init $growth_resp_storage_C <kgC/m^2> = Pool;	# growth/respiration
                                                 # storage carbon 
 
-    init $growth_resp_trans_C <kgC/m2> = Pool;	# growth/respiration
+    init $growth_resp_trans_C <kgC/m^2> = Pool;	# growth/respiration
                                                 # transfer carbon
 
-    init $coarse_woody_debris_C <kgC/m2> = Pool; # coarse woody debris
+    init $coarse_woody_debris_C <kgC/m^2> = Pool; # coarse woody debris
                                                 # carbon
 
-    init $litter_carbon_1 <kgC/m2> = Pool;	# litter labile carbon
+    init $litter_carbon_1 <kgC/m^2> = Pool;	# litter labile carbon
 
-    init $litter_carbon_2 <kgC/m2> = Pool;	# litter unshielded cellulose
+    init $litter_carbon_2 <kgC/m^2> = Pool;	# litter unshielded cellulose
                                                 # carbon
 
-    init $litter_carbon_3 <kgC/m2> = Pool;	# litter shielded cellulose
+    init $litter_carbon_3 <kgC/m^2> = Pool;	# litter shielded cellulose
                                                 # carbon 
 
-    init $litter_carbon_4 <kgC/m2> = Pool;	# litter lignin C
+    init $litter_carbon_4 <kgC/m^2> = Pool;	# litter lignin C
 
-    init $temp_photosynthate_C <kgC/m2> = Pool;  # temporary photosynthate
+    init $temp_photosynthate_C <kgC/m^2> = Pool;  # temporary photosynthate
                                                 # pool 
 }

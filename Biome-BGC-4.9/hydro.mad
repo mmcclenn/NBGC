@@ -26,6 +26,8 @@
 # Copyright (c) 2010, University of Wisconsin-Madison
 #
 
+unit kgH2O;
+
 # The hydrological cycle is represented by N+2 water pools, where N is the
 # number of vegetation types:
 

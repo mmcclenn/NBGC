@@ -233,11 +233,14 @@ sub declare_unit {
     
     my ($self, $new, $old) = @_;
     
+    $self->{err} = undef;
+    
     # First check to see if the new unit has already been defined.
     
     if ( $self->{unit}{$new} ) {
-	$self->{err} = 'UNIT_DECL_REPEATED';
-	return 0;
+	#$self->{err} = 'UNIT_DECL_REPEATED';
+	#return 0;
+	return $self->{unit}{$new};
     }
     
     # Then check to see if we are aliasing to an existing unit.
@@ -245,7 +248,8 @@ sub declare_unit {
     if ( $old ) {
 	if ( $self->{unit}{$old} ) {
 	    $self->{unit}{$new} = $self->{unit}{$old};
-	    return 1;
+	    $self->{unit}{"~$new"} = $self->{unit}{"~$old"};
+	    return $self->{unit}{$old};
 	}
 	else {
 	    $self->{err} = 'UNIT_NOT_FOUND';
@@ -253,14 +257,36 @@ sub declare_unit {
 	}
     }
     
-    # Otherwise, we are declaring an entirely new unit.
+    # Otherwise, we are declaring an entirely new unit.  The unit and its
+    # inverse get assigned a unique prime number, which will be used to
+    # unit-balance each equation.
     
     else {
 	my $i = $self->{unit_index}++;
 	$self->{unit}{$new} = $PRIME_NUMBER[$i];
-	return 1;
+	$self->{unit}{"~$new"} = $PRIME_NUMBER[$i];
+	return $self->{unit}{$new};
     }
 }
+
+
+# has_unit ( $unit )
+# 
+# If the given unit is defined in this model, return the prime number that has
+# been assigned to it (true).  Otherwise, return 0 (false).
+
+sub has_unit {
+
+    my ($self, $unit) = @_;
+
+    if ( defined $self->{unit}{$unit} ) {
+	return $self->{unit}{$unit};
+    }
+    else {
+	return 0;
+    }
+}
+
 
 sub parse_init_stmt {
 
@@ -633,6 +659,7 @@ sub setup_units {
     foreach my $unit (@INITIAL_UNITS) {
 	my $i = $self->{unit_index}++;
 	$self->{unit}{$unit} = $PRIME_NUMBER[$i];
+	$self->{unit}{"~$unit"} = $PRIME_NUMBER[$i];
     }
     
     while (@UNIT_ALIASES) {
@@ -640,6 +667,7 @@ sub setup_units {
 	my $old = shift @UNIT_ALIASES;
 	
 	$self->{unit}{$new} = $self->{unit}{$old};
+	$self->{unit}{"~$new"} = $self->{unit}{$old};
     }
 }
 
