@@ -35,41 +35,31 @@ program	:	progstart progseq
 	;
 
 progseq :	/* null */
-			{ $_[0]->new_node('PROGSEQ') }
 
 	|	progseq tl_decl
-			{ add_child($_[1], $_[2]) }
 	
-  	|	progseq tl_across
-			{ add_child($_[1], $_[2]) }
+	|	progseq tl_across
 	
-	|	progseq block
-			{ add_child($_[1], $_[2]) }
+	|	progseq tl_block
 	
-	|	progseg perlblock
-			{ add_child($_[1], $_[2]) }
+	|	progseg tl_perlblock
 	
-	|	progseq phaseblock
-			{ add_child($_[1], $_[2]) }
+	|	progseq tl_line
 	
 	|	progseq flow
-			{ add_child($_[1], $_[2]) }
 	
 	|	progseq line
-			{ add_child($_[1], $_[2]) }
+			{ $_[0]->add_stmt($_[2]) if $_[2]; }
 	;
 
 progstart:	/* null */
 	;
 
 tl_decl	:	include
-			{ $_[1] }
 	
 	|	use
-			{ $_[1] }
 	
 	|	unit
-			{ $_[1] }
 	
 	|	function
 			{ $_[1] }
@@ -107,43 +97,6 @@ unitdecl:	WORD.w
 	|	unitdecl ',' WORD.w
 			{
 			    $_[0]->declare_unit($w);
-			}
-	;
-
-function:	FUNCTION FUNC.name '(' params.p ')' unitopt.u ';'
-			{
-			    $_[0]->declare_function($name, $p, 'MAD_FUNC');
-			    merge_units($_[0]->new_anode('FUNDECL', $name, $p), $u);
-			}
-	
-	|	FUNCTION FUNC.name '(' params.p ')' unitopt.u '{'
-			{
-			    $_[0]->declare_function($name, $p, 'MAD_FUNC');
-			    $_[0]->push_frame(tag => 'FUNDECL', name => $name,
-					      params => $p, units => $u);
-			}
-		stmtseq.q '}'
- 			{
-			    $_[0]->pop_frame('FUNDECL');
-			    merge_units($_[0]->new_anode('FUNDECL', $name, $p, $q), $u);
-			}
-
-	|	PERL FUNCTION FUNC.name '(' params.p ')' unitopt.u ';'
-			{
-			    $_[0]->declare_function($name, $p, 'PERL_FUNC');
-			    merge_units($_[0]->new_anode('PERLFUNDECL', $name, $p), $u);
-			}
-	
-	|	PERL FUNCTION FUNC.name '(' params.p ')' unitopt.u '{'
-			{
-			    $_[0]->declare_function($name, $p, 'PERL_FUNC');
-			    $_[0]->push_frame(tag => 'PERLFUNDECL', name => $name,
-					      params => $p, units => $u);
-			}
-		perlseq.q '}'
-			{
-			    $_[0]->pop_frame('PERLFUNDECL');
-			    merge_units($_[0]->new_anode('PERLFUNDECL', $name, $p, $q), $u);
 			}
 	;
 
@@ -197,122 +150,110 @@ unitlist:	/* null */
 			}
 	;
 
-tl_across :	ACROSS dimlist.dl '{'
+tl_across :	phase.p ACROSS dimlist.dl '{'
 			{
-			    $_[0]->push_frame(tag => 'ACROSS', 
+			    $_[0]->push_frame(tag => 'ACROSS', phase => $p,
 					      dimlist => $dl->{children});
 			}
-		progseq.q '}'
+		progseq '}'
 			{
 			    $_[0]->pop_frame('ACROSS');
-			    $_[0]->new_node('ACROSS', $dl, @{$q->{children}});
 			}
 	;
 
-stmtseq :	/* null */
-			{ $_[0]->new_node('STMTSEQ') }
-		
-	|	stmtseq across
-			{ add_child($_[1], $_[2]) }
-	
-	|	stmtseq block
-			{ add_child($_[1], $_[2]) }
-	
-	|	stmtseq perlblock
-			{ add_child($_[1], $_[2]) }
-	
-	|	stmtseq phaseblock
-			{ add_child($_[1], $_[2]) }
-	
-	|	stmtseq line
-			{ add_child($_[1], $_[2]) }
-	;
-
-block	:	'{'
-			{ 
-			    $_[0]->push_frame(tag => 'BLOCK'); 
-			}
-		stmtseq '}'
-			{
-			    $_[0]->pop_frame('BLOCK');
-			    $_[0]->new_dnode('BLOCK', $_[2]);
-			}
-	;
-
-perlblock :	PERL '{'
-			{
-			    $_[0]->lex_mode('perl');
-			    $_[0]->push_frame(tag => 'PERLBLOCK');
-			}
-		perlseq.q '}'
-		        {
-			    $_[0]->pop_frame('PERLBLOCK');
-			    $_[0]->new_node('PERLBLOCK', @{$q->{children}});
-			}
-			
-	|	'%{' 
-			{
-			    $_[0]->lex_mode('pperl');
-			    $_[0]->push_frame(tag => 'PERLBLOCK');
-			} 
-		perlseq.q '%}'
-			{
-			    $_[0]->pop_frame('PERLBLOCK');
-			    $_[0]->new_node('PERLBLOCK', @{$q->{children}});
-			}
-	;
-
-phaseblock :	phase.p '{'
+tl_block :	phase.p '{'
 			{
 			    $_[0]->push_frame(tag => 'BLOCK', phase => $p);
 			}
-		stmtseq.q '}'
+		progseq '}'
 			{
 			    $_[0]->pop_frame('BLOCK');
-			    $_[0]->new_node($p, @{$q->{children}});
 			}
 	;
 
-phase	:	INIT
-	
-	|	CALC
-	
-	|	STEP
-	
-	|	FINAL
+tl_perlblock :	phase.p PERL '{'
+			{
+			    $_[0]->lex_mode('perl');
+			    $_[0]->push_frame(tag => 'PERLBLOCK', phase => $p);
+			    $_[0]->add_leftbrace();
+			}
+		tl_perlseq '}'
+		        {
+			    $_[0]->add_rightbrace();
+			    $_[0]->pop_frame('PERLBLOCK');
+			}
+			
+	|	phase.p '%{'
+			{
+			    $_[0]->lex_mode('pperl');
+			    #$_[0]->push_frame(tag => 'PERLBLOCK', phase => $p);
+			} 
+		tl_perlseq '%}'
+			{
+			    #$_[0]->pop_frame('PERLBLOCK');
+			}
 	;
 
-line	:	phase.p
+tl_perlseq :	/* null */
+
+	|	tl_perlseq PERLPART
+			{
+			    $_[0]->add_perl($_[2]);
+			}
+	;
+
+tl_line :	phaseword.p
 			{
 			    $_[0]->push_frame(tag => 'line', phase => $p);
 			}
 		sideff.e ';'
 			{
+			    $_[0]->add_stmt($e);
 			    $_[0]->pop_frame('line');
-			    $_[0]->new_node($p, $e);
 			}
+	;
+
+phase	:	/* null */
+			{ $_[0]->{cf}{phase} }
 	
-	|	package
+	|	phaseword
+			{ $_[1] }
+	;
+
+phaseword :	INIT
 			{ $_[1] }
 	
-	|	cond
-			{ $_[1]; }
+	|	CALC
+			{ $_[1] }
 	
-	|	loop
-			{ $_[1]; }
+	|	STEP
+			{ $_[1] }
+	
+	|	FINAL
+			{ $_[1] }
+	;
+
+line	:	package
+			{ undef }
 	
 	|	sideff.e ';'
-			{ $e; }
+			{ $e }
+	
+	|	cond
+			{ $_[1] }
+	
+	|	loop
+			{ $_[1] }
 	
 	|	VAR vardecl.v ';'
 			{
-			    $_[0]->see_var($v, PLAIN_VAR);
+			    $_[0]->see_var($v, PLAIN_VAR); undef;
 			}
 	
 	|	CONST vardecl.v '=' 
 			{
 			    $_[0]->see_var($v, CONST_VAR);
-			    $_[0]->push_frame(tag => 'CONST', phase => INIT_PHASE);
+			    $_[0]->push_frame(tag => 'CONST', phase => 'INIT');
 			}
 		      expr.e ';'
 			{
@@ -321,46 +262,8 @@ line	:	phase.p
 			}
 	;
 
-vardecl	:	simplevar.v unitopt.u
-			{ merge_units($v, $u) }
-	
-	|	simplevar.v dimspec.d unitopt.u
-			{ merge_units(add_child($v, $d), $u) }
-	;
-
 package	:	PACKAGE WORD.w ';'
-			{ $_[0]->set_package($w); $_[0]->new_anode('PACKAGE', $w); }
-	;
-
-across	:	ACROSS dimlist.dl '{'
-			{
-			    $_[0]->push_frame(tag => 'ACROSS', 
-					      dimlist => $dl->{children});
-			}
-		stmtseq.q '}'
-			{
-			    $_[0]->pop_frame('ACROSS');
-			    $_[0]->new_child('ACROSS', $dl, @{$q->{children}});
-			}
-	;
-
-dimlist :	dimspec.d
-			{ $_[0]->new_node('DIMLIST', $d); }
-	 
-	|	dimlist.l dimspec.d
-			{ add_child($l, $d); }
-	;
-
-dimspec	:	'[' label.l array.d ']'
-			{ add_child($d, $l); }
-	
-	|	'[' label.l set.d ']'
-			{ add_child($d, $l); }
-	;
-
-label	:	/* null */
-	|	WORD.w ':'
-			{ $_[0]->new_anode('LABEL', $w); }
+			{ $_[0]->set_package($w); undef }
 	;
 
 sideff	:	expr
@@ -439,6 +342,86 @@ loop	:	loopword.c '('
 			    $_[0]->pop_frame('FOR');
 			    $_[0]->new_node('FOR', $e1, $e2, $e3, $q);
 			}
+	;
+
+stmtseq :	/* null */
+			{ $_[0]->new_node('STMTSEQ') }
+		
+	|	stmtseq across
+			{ add_child($_[1], $_[2]) }
+	
+	|	stmtseq block
+			{ add_child($_[1], $_[2]) }
+	
+	|	stmtseq perlblock
+			{ add_child($_[1], $_[2]) }
+	
+	|	stmtseq line
+			{ add_child($_[1], $_[2]) }
+	;
+
+across	:	ACROSS dimlist.dl '{'
+			{
+			    $_[0]->push_frame(tag => 'ACROSS', 
+					      dimlist => $dl->{children});
+			}
+		stmtseq.q '}'
+			{
+			    $_[0]->pop_frame('ACROSS');
+			    $_[0]->new_node('ACROSS', $dl, @{$q->{children}});
+			}
+	;
+
+block	:	'{'
+			{ 
+			    $_[0]->push_frame(tag => 'BLOCK'); 
+			}
+		stmtseq.q '}'
+			{
+			    $_[0]->pop_frame('BLOCK');
+			    $_[0]->new_node('BLOCK', @{$q->{children}});
+			}
+	;
+
+perlblock :	PERL '{'
+			{
+			    $_[0]->lex_mode('perl');
+			    $_[0]->push_frame(tag => 'PERLBLOCK');
+			}
+		perlseq.q '}'
+		        {
+			    $_[0]->pop_frame('PERLBLOCK');
+			    $_[0]->new_node('PERLBLOCK', @{$q->{children}});
+			}
+			
+	|	'%{' 
+			{
+			    $_[0]->lex_mode('pperl');
+			    #$_[0]->push_frame(tag => 'PERLBLOCK');
+			} 
+		perlseq.q '%}'
+			{
+			    #$_[0]->pop_frame('PERLBLOCK');
+			    $q;
+			}
+	;
+
+perlseq	:	/* null */
+			{
+			    $_[0]->new_node('PERLSEQ');
+			}
+	
+	|	perlseq PERLPART
+			{
+			    $_[0]->add_child($_[1], $_[2]);
+			}
+	;
+
+vardecl	:	simplevar.v unitopt.u
+			{ merge_units($v, $u) }
+	
+	|	simplevar.v dimspec.d unitopt.u
+			{ merge_units(add_child($v, $d), $u) }
 	;
 
 expr	:	expr.l ANDOP expr.r
@@ -625,6 +608,25 @@ indexvar:	'$^'
 			{ $_[0]->new_anode('INDEXVAR', $w); }
 	;
 
+dimlist :	dimspec.d
+			{ $_[0]->new_node('DIMLIST', $d); }
+	 
+	|	dimlist.l dimspec.d
+			{ add_child($l, $d); }
+	;
+
+dimspec	:	'[' label.l array.d ']'
+			{ add_child($d, $l); }
+	
+	|	'[' label.l set.d ']'
+			{ add_child($d, $l); }
+	;
+
+label	:	/* null */
+	|	WORD.w ':'
+			{ $_[0]->new_anode('LABEL', $w); }
+	;
+
 subexpr :	subspec.d
 			{ $_[0]->new_node('SUBSCRIPT', $d); }
 	 
@@ -680,7 +682,7 @@ flow	:      	scalar.so MULOP.op expr.coeff FLOWRIGHT scalar.sn
 			{
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
-			    $_[0]->new_node('FLOW', $so, $sn, 
+			    $_[0]->add_flow($so, $sn, 
 			                    $_[0]->new_anode('MULOP', $op, $so, $coeff));
 			}
 
@@ -688,7 +690,7 @@ flow	:      	scalar.so MULOP.op expr.coeff FLOWRIGHT scalar.sn
 			{
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
-			    $_[0]->new_node('FLOW', $so, $sn, 
+			    $_[0]->add_flow($so, $sn, 
 					    $_[0]->new_anode('MULOP', $op, $sn, $coeff));
 			}
 
@@ -696,7 +698,7 @@ flow	:      	scalar.so MULOP.op expr.coeff FLOWRIGHT scalar.sn
 			{
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
-			    $_[0]->new_node('FLOW', $so, $sn,
+			    $_[0]->add_flow($so, $sn,
 					    $_[0]->new_anode('MULOP', $op, $sn, $coeff));
 			}
 
@@ -704,7 +706,7 @@ flow	:      	scalar.so MULOP.op expr.coeff FLOWRIGHT scalar.sn
 			{
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
-			    $_[0]->new_node('FLOW', $so, $sn, 
+			    $_[0]->add_flow($so, $sn, 
 					    $_[0]->new_anode('MULOP', $op, $so, $coeff));
 			}
 
@@ -712,28 +714,64 @@ flow	:      	scalar.so MULOP.op expr.coeff FLOWRIGHT scalar.sn
 			{
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
-			    $_[0]->new_node('FLOW', $so, $sn, $rate);
+			    $_[0]->add_flow($so, $sn, $rate);
 			}
 
 	|	scalar.sn '(' expr.rate ')' FLOWLEFT scalar.so
 			{
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
-			    $_[0]->new_node('FLOW', $so, $sn, $rate);
+			    $_[0]->add_flow($so, $sn, $rate);
 			}
 
 	|	scalar.so FLOWRIGHT scalar.sn '(' expr.rate ')'
 			{
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
-			    $_[0]->new_node('FLOW', $so, $sn, $rate);
+			    $_[0]->add_flow($so, $sn, $rate);
 			}
 
 	|	scalar.sn FLOWLEFT scalar.so '(' expr.rate ')'
 			{
 			    $_[0]->see_var($so, ASSIGN_VAR);
 			    $_[0]->see_var($sn, ASSIGN_VAR);
-			    $_[0]->new_node('FLOW', $so, $sn, $rate);
+			    $_[0]->add_flow($so, $sn, $rate);
+			}
+	;
+
+function:	FUNCTION FUNC.name '(' params.p ')' unitopt.u ';'
+			{
+			    $_[0]->declare_function($name, 'MAD_FUNC', $p, $u);
+			}
+	
+	|	FUNCTION FUNC.name '(' params.p ')' unitopt.u '{'
+			{
+			    $_[0]->declare_function($name, 'MAD_FUNC', $p, $u);
+			    $_[0]->push_frame(tag => 'FUNDECL', name => $name,
+					      params => $p);
+			}
+		stmtseq.q '}'
+ 			{
+			    $_[0]->pop_frame('FUNDECL');
+			    $_[0]->define_function($name, $q);
+			}
+
+	|	PERL FUNCTION FUNC.name '(' params.p ')' unitopt.u ';'
+			{
+			    $_[0]->declare_function($name, $p, 'PERL_FUNC');
+			    merge_units($_[0]->new_anode('PERLFUNDECL', $name, $p), $u);
+			}
+	
+	|	PERL FUNCTION FUNC.name '(' params.p ')' unitopt.u '{'
+			{
+			    $_[0]->declare_function($name, $p, 'PERL_FUNC');
+			    $_[0]->push_frame(tag => 'PERLFUNDECL', name => $name,
+					      params => $p, units => $u);
+			}
+		perlseq.q '}'
+			{
+			    $_[0]->pop_frame('PERLFUNDECL');
+			    merge_units($_[0]->new_anode('PERLFUNDECL', $name, $p, $q), $u);
 			}
 	;
 

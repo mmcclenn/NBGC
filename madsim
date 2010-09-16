@@ -99,7 +99,7 @@ my $tree = $parser->YYParse( yylex => \&Mad::Parser::my_lexer,
 my $errcount = $parser->YYNberr();
 
 if ( $errcount == 0 ) {
-    $parser->printout($tree);
+#    $parser->printout($tree);
 }
 else {
     print STDERR "Found $errcount errors.\n";

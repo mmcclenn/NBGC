@@ -177,6 +177,55 @@ sub see_var {
 }
 
 
+# add_stmt ( $node )
+# 
+# Add the given statement to the model, using the context given by the current
+# frame. 
+
+sub add_stmt {
+    
+    my ($self, $node) = @_;
+    
+    print "Phase: $self->{cf}{phase}\n";
+    $self->printout($node);
+}
+
+
+# add_flow ( $source, $sink, $rate )
+# 
+# Add the given flow to the model.
+
+sub add_flow {
+
+    my ($self, $so, $sn, $rate) = @_;
+    
+    print "Flow: $so ==> $sn\n";
+    $self->printout($rate);
+}
+
+
+# add_perl ( $perl )
+# 
+# Add the given Perl statement to the model, in the context of the current
+# frame.
+
+sub add_perl {
+
+    my ($self, $perlstmt) = @_;
+    
+    print "<<<Perl<<<\n$perlstmt\n>>>Perl>>>\n";
+}
+
+
+sub add_leftbrace {
+
+}
+
+sub add_rightbrace {
+
+}
+
+
 # declare_function
 # 
 # 
@@ -188,6 +237,14 @@ sub declare_function {
     return undef;
 }
 
+
+sub define_function {
+    
+    my ($self, $name, $node) = @_;
+    
+    print "Function: $name\n";
+    $self->printout($node);
+}
 
 # use_perl ( $module )
 # 
