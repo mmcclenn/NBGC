@@ -104,6 +104,9 @@ sub see_var {
     # Determine the variable's package.  Was it specified explicitly?
 
     if ( $name =~ /([a-zA-Z0-9_:]*)::([a-zA-Z0-9_])/ ) {
+	if ( $type == DYN_VAR ) {
+	    $self->my_error("dynamic variables must not have '::' in their names.");
+	}
 	$pkg = $1 || 'main';
 	$name = $2;
     }
@@ -149,7 +152,6 @@ sub see_var {
     elsif ( $type eq CONST_VAR and $model->has_lvalue($name, $pkg) ) {
 	my ($ofile, $oline) = $model->where_used($name, $pkg);
 	$self->my_error("$name is also set at $ofile line $oline.");
-	$self->YYError("abc");
     }
     
     # If it's being used as an lvalue (i.e. is being assigned a value), make
@@ -158,7 +160,6 @@ sub see_var {
     elsif ( $type eq ASSIGN_VAR and $model->has_constant($name, $pkg) ) {
 	my ($ofile, $oline) = $model->where_used($name, $pkg);
 	$self->my_error("$name was declared as a constant at $ofile line $oline.");
-	$self->YYError("def");
     }
     
     # Otherwise, we add a note to the model about this variable.
@@ -168,6 +169,8 @@ sub see_var {
 			$node->{filename}, $node->{line});
 	
 	$node->{lvalue} = 1 if $type eq ASSIGN_VAR;
+	$node->{pkg} = $pkg;
+	$node->{name} = $name;
     }
     
     # Return the node as the value of this function, so that the parser
@@ -186,8 +189,11 @@ sub add_stmt {
     
     my ($self, $node) = @_;
     
-    print "Phase: $self->{cf}{phase}\n";
-    $self->printout($node);
+    my $model = $self->{model};
+    my $phase = $self->{cf}{phase};
+    my $package = $self->{cf}{package};
+    
+    $model->add_stmt($phase, $package, $node);
 }
 
 
@@ -199,8 +205,10 @@ sub add_flow {
 
     my ($self, $so, $sn, $rate) = @_;
     
-    print "Flow: $so ==> $sn\n";
-    $self->printout($rate);
+    my $model = $self->{model};
+    my $package = $self->{cf}{package};
+    
+    $model->add_flow($package, $so, $sn, $rate);
 }
 
 
@@ -213,16 +221,28 @@ sub add_perl {
 
     my ($self, $perlstmt) = @_;
     
-    print "<<<Perl<<<\n$perlstmt\n>>>Perl>>>\n";
+    my $model = $self->{model};
+    my $phase = $self->{cf}{phase};
+    my $package = $self->{cf}{package};
+    
+    $model->add_perl($phase, $package, $perlstmt);
 }
 
 
 sub add_leftbrace {
-
+    
+    my $self = $_[0];
+    my $phase = $self->{cf}{phase};
+    
+    $self->{model}->add_perl($phase, undef, '{');
 }
 
 sub add_rightbrace {
 
+    my $self = $_[0];
+    my $phase = $self->{cf}{phase};
+    
+    $self->{model}->add_perl($phase, undef, '}');
 }
 
 
@@ -234,7 +254,10 @@ sub declare_function {
 
     my ($self, $name, $args, $type) = @_;
     
-    return undef;
+    my $model = $self->{model};
+    my $package = $self->{cf}{package};
+    
+    $model->declare_function($package, $name, $args, $type);
 }
 
 
@@ -242,8 +265,10 @@ sub define_function {
     
     my ($self, $name, $node) = @_;
     
-    print "Function: $name\n";
-    $self->printout($node);
+    my $model = $self->{model};
+    my $package = $self->{cf}{package};
+
+    $model->define_function($package, $name, $node);
 }
 
 # use_perl ( $module )
